@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { RootStackParamList } from "../types/navigation";
+import { useAuth } from "../context/AuthContext";
 
 type SignUpScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -24,6 +25,7 @@ interface SignUpScreenProps {
 }
 
 export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
+  const { signUp } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,14 +79,13 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      // TODO: Implement actual sign up with Better Auth
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      Alert.alert("Success", "Your account has been created successfully!", [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("SignIn"),
-        },
-      ]);
+      const result = await signUp(email, password, name.trim());
+      if (result.success) {
+        Alert.alert("Success", "Your account has been created successfully!");
+        // Navigation handled by AppNavigator based on auth state
+      } else {
+        Alert.alert("Error", result.error || "Failed to create account");
+      }
     } catch (error) {
       Alert.alert("Error", "An unexpected error occurred. Please try again.");
     } finally {

@@ -1,27 +1,22 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Button } from "../components/Button";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types/navigation";
+import { useAuth } from "../context/AuthContext";
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Home"
->;
+export const HomeScreen: React.FC = () => {
+  const { user, signOut } = useAuth();
 
-interface HomeScreenProps {
-  navigation: HomeScreenNavigationProp;
-}
-
-export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const handleSignOut = () => {
-    navigation.replace("SignIn");
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to MinyanNow!</Text>
-      <Text style={styles.subtitle}>You are logged in</Text>
+      <Text style={styles.subtitle}>
+        {user?.name ? `Hello, ${user.name}!` : "You are logged in"}
+      </Text>
+      <Text style={styles.email}>{user?.email}</Text>
       <Button title="Sign Out" onPress={handleSignOut} variant="outline" />
     </View>
   );
@@ -42,7 +37,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
+    color: "#374151",
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 14,
     color: "#6B7280",
     marginBottom: 32,
   },

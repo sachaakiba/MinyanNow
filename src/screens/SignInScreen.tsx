@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { RootStackParamList } from "../types/navigation";
+import { useAuth } from "../context/AuthContext";
 
 type SignInScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -24,6 +25,7 @@ interface SignInScreenProps {
 }
 
 export const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,10 +57,12 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      // TODO: Implement actual sign in with Better Auth
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      Alert.alert("Success", "You have been signed in successfully!");
-      navigation.replace("Home");
+      const result = await signIn(email, password);
+      if (result.success) {
+        // Navigation handled by AppNavigator based on auth state
+      } else {
+        Alert.alert("Error", result.error || "Failed to sign in");
+      }
     } catch (error) {
       Alert.alert("Error", "An unexpected error occurred. Please try again.");
     } finally {
