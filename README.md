@@ -1,50 +1,122 @@
-# Welcome to your Expo app 👋
+# MinyanNow
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native (Expo) application with authentication using Better Auth and Prisma with Neon PostgreSQL database.
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+- Node.js 18+
+- npm or yarn
+- Expo CLI
+
+## Setup
+
+1. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. **Set up the database:**
 
    ```bash
-   npx expo start
+   npm run db:push
+   npm run db:generate
    ```
 
-In the output, you'll find options to open the app in a
+3. **Configure environment variables:**
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   The `.env` file is already configured with:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+   - `DATABASE_URL` - Neon PostgreSQL connection string
+   - `BETTER_AUTH_SECRET` - Secret key for authentication
+   - `BETTER_AUTH_URL` - Auth server URL
+   - `EXPO_PUBLIC_API_URL` - API URL for the mobile app
 
-## Get a fresh project
+## Running the Application
 
-When you're ready, run:
+You need to run both the backend server and the Expo app:
+
+### 1. Start the Authentication Server
 
 ```bash
-npm run reset-project
+npm run server
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This starts the Express server on `http://localhost:3000` with Better Auth endpoints.
 
-## Learn more
+### 2. Start the Expo App
 
-To learn more about developing your project with Expo, look at the following resources:
+In a new terminal:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm start
+```
 
-## Join the community
+Then:
 
-Join our community of developers creating universal apps.
+- Press `i` to open iOS simulator
+- Press `a` to open Android emulator
+- Scan QR code with Expo Go app on your device
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Project Structure
+
+```
+MinyanNow/
+├── prisma/
+│   └── schema.prisma       # Database schema
+├── src/
+│   ├── api/
+│   │   └── server.ts       # Express server with Better Auth
+│   ├── components/
+│   │   ├── Button.tsx
+│   │   └── Input.tsx
+│   ├── lib/
+│   │   ├── auth.ts         # Better Auth server config
+│   │   ├── auth-client.ts  # Better Auth client for React Native
+│   │   └── prisma.ts       # Prisma client
+│   ├── navigation/
+│   │   └── AppNavigator.tsx
+│   ├── screens/
+│   │   ├── SignInScreen.tsx
+│   │   ├── SignUpScreen.tsx
+│   │   └── HomeScreen.tsx
+│   └── types/
+│       └── navigation.ts
+├── App.tsx
+├── package.json
+└── .env
+```
+
+## Available Scripts
+
+- `npm start` - Start Expo development server
+- `npm run android` - Start on Android
+- `npm run ios` - Start on iOS
+- `npm run web` - Start web version
+- `npm run server` - Start the authentication server
+- `npm run db:push` - Push schema changes to database
+- `npm run db:generate` - Generate Prisma client
+- `npm run db:studio` - Open Prisma Studio
+
+## Authentication Endpoints
+
+The server exposes the following Better Auth endpoints:
+
+- `POST /api/auth/sign-up/email` - Create new account
+- `POST /api/auth/sign-in/email` - Sign in with email/password
+- `POST /api/auth/sign-out` - Sign out
+- `GET /api/auth/session` - Get current session
+
+## Tech Stack
+
+- **Frontend:** React Native with Expo
+- **Navigation:** React Navigation (Native Stack)
+- **Authentication:** Better Auth
+- **Database:** Neon PostgreSQL
+- **ORM:** Prisma
+- **Backend:** Express.js
+
+## Notes for Development
+
+- When testing on a physical device, update `EXPO_PUBLIC_API_URL` in `.env` to your machine's local IP address (e.g., `http://192.168.1.x:3000`)
+- The database schema includes `User`, `Session`, `Account`, and `Verification` models required by Better Auth
