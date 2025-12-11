@@ -10,7 +10,8 @@
     "server": "tsx src/api/server.ts",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "tsx scripts/seed-paris-events.ts"
   },
   "dependencies": {
     "@better-auth/expo": "^1.4.6",

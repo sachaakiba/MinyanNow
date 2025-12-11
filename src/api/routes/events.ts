@@ -31,7 +31,7 @@ router.get("/my/organized", userGuard, async (req, res) => {
 // Get all events (public, with filters)
 router.get("/", async (req, res) => {
   try {
-    const { type, city, date, lat, lng, radius } = req.query;
+    const { type, city, date, lat, lng, radius, includeFull } = req.query;
 
     const where: any = {};
 
@@ -64,14 +64,21 @@ router.get("/", async (req, res) => {
       orderBy: { date: "asc" },
     });
 
-    // Filter by radius if coordinates provided
+    // Filter out full events (unless includeFull=true)
     let filteredEvents = events;
+    if (includeFull !== "true") {
+      filteredEvents = events.filter(
+        (event) => event.currentCount < event.maxParticipants
+      );
+    }
+
+    // Filter by radius if coordinates provided
     if (lat && lng && radius) {
       const userLat = parseFloat(lat as string);
       const userLng = parseFloat(lng as string);
       const maxRadius = parseFloat(radius as string); // in km
 
-      filteredEvents = events.filter((event) => {
+      filteredEvents = filteredEvents.filter((event) => {
         const distance = getDistanceFromLatLonInKm(
           userLat,
           userLng,

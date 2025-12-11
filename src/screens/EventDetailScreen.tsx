@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -21,6 +22,8 @@ import {
   EVENT_TYPE_ICONS,
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+
+const { width } = Dimensions.get("window");
 
 type EventDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -57,7 +60,6 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       const data = await eventsApi.getById(eventId);
       setEvent(data);
 
-      // Check if user has a request
       const userRequest = data.requests.find((r) => r.userId === user?.id);
       setMyRequest(userRequest || null);
     } catch (error) {
@@ -154,11 +156,29 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+    const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+    const months = [
+      "janvier",
+      "février",
+      "mars",
+      "avril",
+      "mai",
+      "juin",
+      "juillet",
+      "août",
+      "septembre",
+      "octobre",
+      "novembre",
+      "décembre",
+    ];
+    return `${days[date.getDay()]} ${date.getDate()} ${
+      months[date.getMonth()]
+    }`;
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -177,6 +197,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   const isOrganizer = event.organizerId === user?.id;
   const needed = event.maxParticipants - event.currentCount;
   const isFull = needed <= 0;
+  const progress = event.currentCount / event.maxParticipants;
   const pendingRequests = event.requests.filter((r) => r.status === "PENDING");
   const acceptedRequests = event.requests.filter(
     (r) => r.status === "ACCEPTED"
@@ -184,84 +205,141 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Retour</Text>
-        </TouchableOpacity>
-        {isOrganizer && (
-          <TouchableOpacity onPress={handleDeleteEvent}>
-            <Text style={styles.deleteButton}>Supprimer</Text>
+      {/* Header with gradient effect */}
+      <View style={styles.headerSection}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
-        )}
+          {isOrganizer && (
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={handleDeleteEvent}
+            >
+              <Text style={styles.deleteBtnText}>🗑️</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Event Icon */}
+        <View style={styles.iconContainer}>
+          <Text style={styles.eventIcon}>{EVENT_TYPE_ICONS[event.type]}</Text>
+        </View>
+
+        <Text style={styles.eventType}>{EVENT_TYPE_LABELS[event.type]}</Text>
+        <Text style={styles.eventTitle}>{event.title}</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Event Type Badge */}
-        <View style={styles.typeBadge}>
-          <Text style={styles.typeIcon}>{EVENT_TYPE_ICONS[event.type]}</Text>
-          <Text style={styles.typeLabel}>{EVENT_TYPE_LABELS[event.type]}</Text>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Progress Card */}
+        <View style={styles.card}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressTitle}>Participants</Text>
+            <Text style={styles.progressCount}>
+              {event.currentCount}/{event.maxParticipants}
+            </Text>
+          </View>
+
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[
+                styles.progressBar,
+                { width: `${progress * 100}%` },
+                isFull ? styles.progressFull : null,
+              ]}
+            />
+          </View>
+
+          {!isFull && (
+            <Text style={styles.neededText}>
+              {needed} place{needed > 1 ? "s" : ""} restante
+              {needed > 1 ? "s" : ""}
+            </Text>
+          )}
+
+          {isFull && <Text style={styles.fullText}>✓ Complet</Text>}
         </View>
 
-        <Text style={styles.title}>{event.title}</Text>
+        {/* Details Card */}
+        <View style={styles.card}>
+          <View style={styles.detailItem}>
+            <View style={styles.detailIconContainer}>
+              <Text style={styles.detailIcon}>📅</Text>
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Date</Text>
+              <Text style={styles.detailValue}>{formatDate(event.date)}</Text>
+            </View>
+          </View>
 
+          <View style={styles.divider} />
+
+          <View style={styles.detailItem}>
+            <View style={styles.detailIconContainer}>
+              <Text style={styles.detailIcon}>🕐</Text>
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Heure</Text>
+              <Text style={styles.detailValue}>{formatTime(event.date)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.detailItem}>
+            <View style={styles.detailIconContainer}>
+              <Text style={styles.detailIcon}>📍</Text>
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Lieu</Text>
+              <Text style={styles.detailValue}>{event.address}</Text>
+              <Text style={styles.detailSubvalue}>{event.city}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Description Card */}
         {event.description && (
-          <Text style={styles.description}>{event.description}</Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Description</Text>
+            <Text style={styles.descriptionText}>{event.description}</Text>
+          </View>
         )}
 
-        {/* Participants visualization */}
-        <View style={styles.participantsSection}>
-          <Text style={styles.sectionTitle}>Participants</Text>
-          <View style={styles.participantsGrid}>
-            {Array.from({ length: event.maxParticipants }).map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.participantCircle,
-                  index < event.currentCount
-                    ? styles.circleFilled
-                    : styles.circleEmpty,
-                ]}
-              >
-                {index < event.currentCount && (
-                  <Text style={styles.circleText}>✓</Text>
-                )}
-              </View>
-            ))}
-          </View>
-          <Text style={styles.participantsCount}>
-            {event.currentCount}/{event.maxParticipants}
-            {!isFull && ` • ${needed} manquant${needed > 1 ? "s" : ""}`}
-          </Text>
-        </View>
-
-        {/* Event Details */}
-        <View style={styles.detailsSection}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>📅</Text>
-            <Text style={styles.detailText}>{formatDate(event.date)}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>📍</Text>
-            <Text style={styles.detailText}>
-              {event.address}, {event.city}
-            </Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>👤</Text>
-            <Text style={styles.detailText}>
-              Organisé par {event.organizer.name || event.organizer.email}
-            </Text>
+        {/* Organizer Card */}
+        <View style={styles.card}>
+          <View style={styles.organizerRow}>
+            <View style={styles.organizerAvatar}>
+              <Text style={styles.organizerAvatarText}>
+                {(event.organizer.name || event.organizer.email)
+                  .charAt(0)
+                  .toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.organizerInfo}>
+              <Text style={styles.organizerLabel}>Organisé par</Text>
+              <Text style={styles.organizerName}>
+                {event.organizer.name || event.organizer.email}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Action Button for non-organizers */}
+        {/* Action Section for non-organizers */}
         {!isOrganizer && (
           <View style={styles.actionSection}>
             {myRequest ? (
-              <View>
+              <>
                 <View
                   style={[
-                    styles.statusBadge,
+                    styles.statusCard,
                     myRequest.status === "ACCEPTED"
                       ? styles.statusAccepted
                       : myRequest.status === "PENDING"
@@ -269,97 +347,122 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                       : styles.statusRejected,
                   ]}
                 >
+                  <Text style={styles.statusIcon}>
+                    {myRequest.status === "ACCEPTED"
+                      ? "✓"
+                      : myRequest.status === "PENDING"
+                      ? "⏳"
+                      : "✕"}
+                  </Text>
                   <Text style={styles.statusText}>
                     {myRequest.status === "ACCEPTED"
-                      ? "✓ Vous participez"
+                      ? "Vous participez"
                       : myRequest.status === "PENDING"
-                      ? "⏳ Demande en attente"
-                      : "✕ Demande refusée"}
+                      ? "Demande en attente"
+                      : "Demande refusée"}
                   </Text>
                 </View>
                 {myRequest.status !== "REJECTED" && (
-                  <Button
-                    title="Annuler ma participation"
+                  <TouchableOpacity
+                    style={styles.cancelLink}
                     onPress={handleCancelRequest}
-                    variant="outline"
-                    loading={actionLoading}
-                    style={styles.cancelButton}
-                  />
+                    disabled={actionLoading}
+                  >
+                    <Text style={styles.cancelLinkText}>
+                      Annuler ma participation
+                    </Text>
+                  </TouchableOpacity>
                 )}
-              </View>
+              </>
             ) : isFull ? (
-              <View style={styles.fullBadge}>
-                <Text style={styles.fullText}>Événement complet</Text>
+              <View style={styles.fullCard}>
+                <Text style={styles.fullCardText}>Événement complet</Text>
               </View>
             ) : (
-              <Button
-                title="Demander à rejoindre"
+              <TouchableOpacity
+                style={styles.joinButton}
                 onPress={handleRequestJoin}
-                loading={actionLoading}
-              />
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Text style={styles.joinButtonText}>Rejoindre</Text>
+                    <Text style={styles.joinButtonArrow}>→</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             )}
           </View>
         )}
 
         {/* Requests Management for organizer */}
-        {isOrganizer && (
-          <View style={styles.requestsSection}>
-            <Text style={styles.sectionTitle}>
-              Demandes en attente ({pendingRequests.length})
+        {isOrganizer && pendingRequests.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              Demandes ({pendingRequests.length})
             </Text>
-            {pendingRequests.length === 0 ? (
-              <Text style={styles.emptyText}>Aucune demande en attente</Text>
-            ) : (
-              pendingRequests.map((request) => (
-                <View key={request.id} style={styles.requestCard}>
-                  <View style={styles.requestInfo}>
-                    <Text style={styles.requestName}>
-                      {request.user.name || request.user.email}
-                    </Text>
-                    {request.message && (
-                      <Text style={styles.requestMessage}>
-                        {request.message}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={styles.requestActions}>
-                    <TouchableOpacity
-                      style={styles.acceptButton}
-                      onPress={() => handleAcceptRequest(request.id)}
-                      disabled={actionLoading}
-                    >
-                      <Text style={styles.acceptButtonText}>✓</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.rejectButton}
-                      onPress={() => handleRejectRequest(request.id)}
-                      disabled={actionLoading}
-                    >
-                      <Text style={styles.rejectButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))
-            )}
-
-            <Text style={[styles.sectionTitle, styles.marginTop]}>
-              Participants acceptés ({acceptedRequests.length})
-            </Text>
-            {acceptedRequests.length === 0 ? (
-              <Text style={styles.emptyText}>
-                Aucun participant pour le moment
-              </Text>
-            ) : (
-              acceptedRequests.map((request) => (
-                <View key={request.id} style={styles.participantCard}>
-                  <Text style={styles.participantName}>
-                    ✓ {request.user.name || request.user.email}
+            {pendingRequests.map((request) => (
+              <View key={request.id} style={styles.requestItem}>
+                <View style={styles.requestAvatar}>
+                  <Text style={styles.requestAvatarText}>
+                    {(request.user.name || request.user.email)
+                      .charAt(0)
+                      .toUpperCase()}
                   </Text>
                 </View>
-              ))
-            )}
+                <View style={styles.requestInfo}>
+                  <Text style={styles.requestName}>
+                    {request.user.name || request.user.email}
+                  </Text>
+                </View>
+                <View style={styles.requestActions}>
+                  <TouchableOpacity
+                    style={styles.acceptBtn}
+                    onPress={() => handleAcceptRequest(request.id)}
+                    disabled={actionLoading}
+                  >
+                    <Text style={styles.acceptBtnText}>✓</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.rejectBtn}
+                    onPress={() => handleRejectRequest(request.id)}
+                    disabled={actionLoading}
+                  >
+                    <Text style={styles.rejectBtnText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
           </View>
         )}
+
+        {/* Accepted participants for organizer */}
+        {isOrganizer && acceptedRequests.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              Participants ({acceptedRequests.length})
+            </Text>
+            {acceptedRequests.map((request) => (
+              <View key={request.id} style={styles.participantItem}>
+                <View style={styles.participantAvatar}>
+                  <Text style={styles.participantAvatarText}>
+                    {(request.user.name || request.user.email)
+                      .charAt(0)
+                      .toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.participantName}>
+                  {request.user.name || request.user.email}
+                </Text>
+                <Text style={styles.checkMark}>✓</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <View style={styles.bottomSpacing} />
       </ScrollView>
     </View>
   );
@@ -368,238 +471,384 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
   centered: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    backgroundColor: "#F8FAFC",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  headerSection: {
+    backgroundColor: "#4F46E5",
     paddingTop: 60,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    paddingBottom: 32,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
-  backButton: {
-    fontSize: 16,
-    color: "#4F46E5",
-    fontWeight: "500",
+  headerTop: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 20,
   },
-  deleteButton: {
-    fontSize: 16,
-    color: "#EF4444",
-    fontWeight: "500",
+  backBtn: {
+    width: 40,
+    height: 40,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 12,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  backBtnText: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "600" as const,
+  },
+  deleteBtn: {
+    width: 40,
+    height: 40,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 12,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  deleteBtnText: {
+    fontSize: 18,
+  },
+  iconContainer: {
+    width: 72,
+    height: 72,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 24,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    alignSelf: "center" as const,
+    marginBottom: 16,
+  },
+  eventIcon: {
+    fontSize: 36,
+  },
+  eventType: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.8)",
+    textAlign: "center" as const,
+    fontWeight: "500" as const,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  eventTitle: {
+    fontSize: 24,
+    fontWeight: "700" as const,
+    color: "#FFFFFF",
+    textAlign: "center" as const,
   },
   content: {
     flex: 1,
-    padding: 16,
+    marginTop: -16,
   },
-  typeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: "#EEF2FF",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#1E293B",
+    marginBottom: 16,
+  },
+  progressHeader: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
     marginBottom: 12,
   },
-  typeIcon: {
+  progressTitle: {
     fontSize: 16,
-    marginRight: 6,
+    fontWeight: "600" as const,
+    color: "#1E293B",
   },
-  typeLabel: {
-    fontSize: 14,
-    fontWeight: "600",
+  progressCount: {
+    fontSize: 18,
+    fontWeight: "700" as const,
     color: "#4F46E5",
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: "#E2E8F0",
+    borderRadius: 4,
+    overflow: "hidden" as const,
   },
-  description: {
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  participantsSection: {
-    backgroundColor: "#F9FAFB",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 12,
-  },
-  participantsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-  participantCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  circleFilled: {
+  progressBar: {
+    height: "100%",
     backgroundColor: "#4F46E5",
+    borderRadius: 4,
   },
-  circleEmpty: {
-    backgroundColor: "#E5E7EB",
-    borderWidth: 2,
-    borderColor: "#D1D5DB",
-    borderStyle: "dashed",
+  progressFull: {
+    backgroundColor: "#10B981",
   },
-  circleText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+  neededText: {
+    fontSize: 13,
+    color: "#64748B",
+    marginTop: 10,
+    textAlign: "center" as const,
   },
-  participantsCount: {
+  fullText: {
     fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
+    color: "#10B981",
+    fontWeight: "600" as const,
+    marginTop: 10,
+    textAlign: "center" as const,
   },
-  detailsSection: {
-    marginBottom: 24,
+  detailItem: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingVertical: 4,
   },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
+  detailIconContainer: {
+    width: 44,
+    height: 44,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 12,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 14,
   },
   detailIcon: {
-    fontSize: 18,
-    marginRight: 12,
+    fontSize: 20,
   },
-  detailText: {
-    fontSize: 16,
-    color: "#374151",
+  detailContent: {
     flex: 1,
   },
-  actionSection: {
-    marginBottom: 24,
+  detailLabel: {
+    fontSize: 12,
+    color: "#94A3B8",
+    fontWeight: "500" as const,
+    marginBottom: 2,
   },
-  statusBadge: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 12,
+  detailValue: {
+    fontSize: 16,
+    color: "#1E293B",
+    fontWeight: "600" as const,
+  },
+  detailSubvalue: {
+    fontSize: 14,
+    color: "#64748B",
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginVertical: 14,
+  },
+  descriptionText: {
+    fontSize: 15,
+    color: "#475569",
+    lineHeight: 24,
+  },
+  organizerRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+  },
+  organizerAvatar: {
+    width: 48,
+    height: 48,
+    backgroundColor: "#4F46E5",
+    borderRadius: 24,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 14,
+  },
+  organizerAvatarText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "700" as const,
+  },
+  organizerInfo: {
+    flex: 1,
+  },
+  organizerLabel: {
+    fontSize: 12,
+    color: "#94A3B8",
+    fontWeight: "500" as const,
+    marginBottom: 2,
+  },
+  organizerName: {
+    fontSize: 16,
+    color: "#1E293B",
+    fontWeight: "600" as const,
+  },
+  actionSection: {
+    marginBottom: 16,
+  },
+  statusCard: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    padding: 18,
+    borderRadius: 16,
+    gap: 10,
   },
   statusAccepted: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: "#DCFCE7",
   },
   statusPending: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#FEF9C3",
   },
   statusRejected: {
     backgroundColor: "#FEE2E2",
   },
+  statusIcon: {
+    fontSize: 20,
+  },
   statusText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
+    fontWeight: "600" as const,
+    color: "#1E293B",
   },
-  cancelButton: {
-    marginTop: 8,
+  cancelLink: {
+    alignItems: "center" as const,
+    marginTop: 12,
   },
-  fullBadge: {
-    backgroundColor: "#F3F4F6",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  fullText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  requestsSection: {
-    marginBottom: 40,
-  },
-  marginTop: {
-    marginTop: 24,
-  },
-  emptyText: {
+  cancelLinkText: {
     fontSize: 14,
-    color: "#9CA3AF",
-    fontStyle: "italic",
+    color: "#EF4444",
+    fontWeight: "500" as const,
   },
-  requestCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8,
+  fullCard: {
+    backgroundColor: "#F1F5F9",
+    padding: 18,
+    borderRadius: 16,
+    alignItems: "center" as const,
+  },
+  fullCardText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#64748B",
+  },
+  joinButton: {
+    backgroundColor: "#4F46E5",
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    padding: 18,
+    borderRadius: 16,
+    gap: 10,
+  },
+  joinButtonText: {
+    fontSize: 17,
+    fontWeight: "600" as const,
+    color: "#FFFFFF",
+  },
+  joinButtonArrow: {
+    fontSize: 18,
+    color: "#FFFFFF",
+  },
+  requestItem: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  requestAvatar: {
+    width: 40,
+    height: 40,
+    backgroundColor: "#E0E7FF",
+    borderRadius: 20,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 12,
+  },
+  requestAvatarText: {
+    color: "#4F46E5",
+    fontSize: 16,
+    fontWeight: "600" as const,
   },
   requestInfo: {
     flex: 1,
   },
   requestName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  requestMessage: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginTop: 4,
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: "#1E293B",
   },
   requestActions: {
-    flexDirection: "row",
+    flexDirection: "row" as const,
     gap: 8,
   },
-  acceptButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  acceptBtn: {
+    width: 36,
+    height: 36,
     backgroundColor: "#10B981",
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 18,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
-  acceptButtonText: {
+  acceptBtnText: {
     color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "700" as const,
   },
-  rejectButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  rejectBtn: {
+    width: 36,
+    height: 36,
     backgroundColor: "#EF4444",
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 18,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
-  rejectButtonText: {
+  rejectBtnText: {
     color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "700" as const,
   },
-  participantCard: {
-    backgroundColor: "#D1FAE5",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+  participantItem: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  participantAvatar: {
+    width: 36,
+    height: 36,
+    backgroundColor: "#DCFCE7",
+    borderRadius: 18,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 12,
+  },
+  participantAvatarText: {
+    color: "#10B981",
+    fontSize: 14,
+    fontWeight: "600" as const,
   },
   participantName: {
+    flex: 1,
+    fontSize: 15,
+    color: "#1E293B",
+    fontWeight: "500" as const,
+  },
+  checkMark: {
+    color: "#10B981",
     fontSize: 16,
-    color: "#065F46",
-    fontWeight: "500",
+    fontWeight: "600" as const,
+  },
+  bottomSpacing: {
+    height: 40,
   },
 });

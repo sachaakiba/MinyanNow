@@ -1,84 +1,137 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_ICONS } from "../lib/api";
 
 interface EventCardProps {
   event: Event;
   onPress: () => void;
   onRequestJoin?: () => void;
+  isLoading?: boolean;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({
   event,
   onPress,
   onRequestJoin,
+  isLoading = false,
 }) => {
   const needed = event.maxParticipants - event.currentCount;
   const isFull = needed <= 0;
+  const progress = event.currentCount / event.maxParticipants;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
+    const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+    const months = [
+      "jan",
+      "fév",
+      "mar",
+      "avr",
+      "mai",
+      "juin",
+      "juil",
+      "août",
+      "sep",
+      "oct",
+      "nov",
+      "déc",
+    ];
+    return `${days[date.getDay()]} ${date.getDate()} ${
+      months[date.getMonth()]
+    }`;
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
+    <View style={styles.card}>
+      {/* Header avec type et organisateur */}
       <View style={styles.header}>
         <View style={styles.typeContainer}>
-          <Text style={styles.typeIcon}>{EVENT_TYPE_ICONS[event.type]}</Text>
-          <Text style={styles.typeLabel}>{EVENT_TYPE_LABELS[event.type]}</Text>
+          <View style={styles.iconBadge}>
+            <Text style={styles.typeIcon}>{EVENT_TYPE_ICONS[event.type]}</Text>
+          </View>
+          <View>
+            <Text style={styles.typeLabel}>
+              {EVENT_TYPE_LABELS[event.type]}
+            </Text>
+            <Text style={styles.organizer}>
+              par{" "}
+              {event.organizer?.name ||
+                event.organizer?.email ||
+                "Organisateur"}
+            </Text>
+          </View>
         </View>
-        <View
-          style={[
-            styles.statusBadge,
-            isFull ? styles.statusFull : styles.statusOpen,
-          ]}
-        >
-          <Text style={styles.statusText}>
-            {isFull ? "Complet" : `${needed} manquant${needed > 1 ? "s" : ""}`}
-          </Text>
-        </View>
+        <TouchableOpacity style={styles.detailsButton} onPress={onPress}>
+          <Text style={styles.detailsButtonText}>Détails</Text>
+          <Text style={styles.detailsArrow}>›</Text>
+        </TouchableOpacity>
       </View>
 
+      {/* Titre */}
       <Text style={styles.title} numberOfLines={1}>
         {event.title}
       </Text>
 
-      <View style={styles.infoRow}>
-        <Text style={styles.infoIcon}>📅</Text>
-        <Text style={styles.infoText}>{formatDate(event.date)}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.infoIcon}>📍</Text>
-        <Text style={styles.infoText} numberOfLines={1}>
-          {event.address}, {event.city}
-        </Text>
-      </View>
-
-      <View style={styles.footer}>
-        <View style={styles.participantsContainer}>
-          {Array.from({ length: event.maxParticipants }).map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.participantDot,
-                index < event.currentCount ? styles.dotFilled : styles.dotEmpty,
-              ]}
-            />
-          ))}
+      {/* Infos principales */}
+      <View style={styles.infoContainer}>
+        <View style={styles.infoItem}>
+          <Text style={styles.infoIcon}>📅</Text>
+          <Text style={styles.infoValue}>{formatDate(event.date)}</Text>
         </View>
-        <Text style={styles.participantsText}>
-          {event.currentCount}/{event.maxParticipants}
-        </Text>
+        <View style={styles.infoDivider} />
+        <View style={styles.infoItem}>
+          <Text style={styles.infoIcon}>🕐</Text>
+          <Text style={styles.infoValue}>{formatTime(event.date)}</Text>
+        </View>
+        <View style={styles.infoDivider} />
+        <View style={styles.infoItem}>
+          <Text style={styles.infoIcon}>📍</Text>
+          <Text style={styles.infoValue} numberOfLines={1}>
+            {event.city}
+          </Text>
+        </View>
       </View>
 
+      {/* Progress bar des participants */}
+      <View style={styles.progressSection}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressLabel}>Participants</Text>
+          <Text style={styles.progressCount}>
+            {event.currentCount}/{event.maxParticipants}
+          </Text>
+        </View>
+        <View style={styles.progressBarContainer}>
+          <View
+            style={[
+              styles.progressBar,
+              { width: `${progress * 100}%` },
+              isFull ? styles.progressFull : null,
+            ]}
+          />
+        </View>
+        {!isFull && (
+          <Text style={styles.neededText}>
+            {needed} place{needed > 1 ? "s" : ""} restante
+            {needed > 1 ? "s" : ""}
+          </Text>
+        )}
+      </View>
+
+      {/* Bouton rejoindre */}
       {onRequestJoin && !isFull && (
         <TouchableOpacity
           style={styles.joinButton}
@@ -86,121 +139,190 @@ export const EventCard: React.FC<EventCardProps> = ({
             e.stopPropagation();
             onRequestJoin();
           }}
+          disabled={isLoading}
+          activeOpacity={0.8}
         >
-          <Text style={styles.joinButtonText}>Demander à rejoindre</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <>
+              <Text style={styles.joinButtonText}>Rejoindre</Text>
+              <Text style={styles.joinButtonArrow}>→</Text>
+            </>
+          )}
         </TouchableOpacity>
       )}
-    </TouchableOpacity>
+
+      {isFull && (
+        <View style={styles.fullBadge}>
+          <Text style={styles.fullBadgeText}>✓ Événement complet</Text>
+        </View>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 10,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 14,
   },
   typeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    flex: 1,
+  },
+  iconBadge: {
+    width: 44,
+    height: 44,
+    backgroundColor: "#F0F0FF",
+    borderRadius: 14,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginRight: 12,
   },
   typeIcon: {
-    fontSize: 20,
-    marginRight: 8,
+    fontSize: 22,
   },
   typeLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "600" as const,
+    color: "#4F46E5",
+  },
+  organizer: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 2,
+  },
+  detailsButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  detailsButtonText: {
+    fontSize: 13,
+    fontWeight: "500" as const,
     color: "#6B7280",
   },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusOpen: {
-    backgroundColor: "#FEF3C7",
-  },
-  statusFull: {
-    backgroundColor: "#D1FAE5",
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#92400E",
+  detailsArrow: {
+    fontSize: 16,
+    color: "#9CA3AF",
+    marginLeft: 4,
   },
   title: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "700" as const,
     color: "#111827",
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 6,
+  infoContainer: {
+    flexDirection: "row" as const,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  infoItem: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   infoIcon: {
     fontSize: 14,
-    marginRight: 8,
+    marginRight: 6,
   },
-  infoText: {
-    fontSize: 14,
-    color: "#6B7280",
-    flex: 1,
+  infoValue: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: "#374151",
   },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
-  },
-  participantsContainer: {
-    flexDirection: "row",
-    gap: 4,
-  },
-  participantDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  dotFilled: {
-    backgroundColor: "#4F46E5",
-  },
-  dotEmpty: {
+  infoDivider: {
+    width: 1,
+    height: 20,
     backgroundColor: "#E5E7EB",
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
   },
-  participantsText: {
+  progressSection: {
+    marginBottom: 16,
+  },
+  progressHeader: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 13,
+    fontWeight: "500" as const,
+    color: "#6B7280",
+  },
+  progressCount: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700" as const,
     color: "#4F46E5",
+  },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 3,
+    overflow: "hidden" as const,
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: "#4F46E5",
+    borderRadius: 3,
+  },
+  progressFull: {
+    backgroundColor: "#10B981",
+  },
+  neededText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 6,
+    textAlign: "center" as const,
   },
   joinButton: {
     backgroundColor: "#4F46E5",
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginTop: 12,
+    borderRadius: 14,
+    paddingVertical: 14,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 8,
   },
   joinButtonText: {
     color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600" as const,
+  },
+  joinButtonArrow: {
+    color: "#FFFFFF",
+    fontSize: 18,
+  },
+  fullBadge: {
+    backgroundColor: "#DCFCE7",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center" as const,
+  },
+  fullBadgeText: {
+    color: "#059669",
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "600" as const,
   },
 });

@@ -444,18 +444,50 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           <Text style={styles.addressArrow}>›</Text>
         </TouchableOpacity>
 
-        <Input
-          label="Nombre de participants max"
-          placeholder="10"
-          value={maxParticipants}
-          onChangeText={setMaxParticipants}
-          keyboardType="number-pad"
-        />
+        {/* Participants Picker */}
+        <Text style={styles.sectionTitle}>Nombre de participants</Text>
+        <View style={styles.participantsPicker}>
+          <TouchableOpacity
+            style={[
+              styles.participantsBtn,
+              parseInt(maxParticipants) <= 1
+                ? styles.participantsBtnDisabled
+                : null,
+            ]}
+            onPress={() => {
+              const current = parseInt(maxParticipants) || 10;
+              if (current > 1) setMaxParticipants(String(current - 1));
+            }}
+            disabled={parseInt(maxParticipants) <= 1}
+          >
+            <Text style={styles.participantsBtnText}>−</Text>
+          </TouchableOpacity>
+
+          <View style={styles.participantsValueContainer}>
+            <Text style={styles.participantsValue}>{maxParticipants}</Text>
+            <Text style={styles.participantsLabel}>personnes</Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.participantsBtn,
+              parseInt(maxParticipants) >= 10
+                ? styles.participantsBtnDisabled
+                : null,
+            ]}
+            onPress={() => {
+              const current = parseInt(maxParticipants) || 10;
+              if (current < 10) setMaxParticipants(String(current + 1));
+            }}
+            disabled={parseInt(maxParticipants) >= 10}
+          >
+            <Text style={styles.participantsBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.participantsInfo}>
           <Text style={styles.participantsInfoText}>
-            💡 Pour un événement religieux, 10 hommes sont généralement
-            nécessaires
+            💡 Maximum 10 personnes pour un minyan
           </Text>
         </View>
 
@@ -725,6 +757,45 @@ const styles = StyleSheet.create({
   googleSeparator: {
     height: 1,
     backgroundColor: "#F3F4F6",
+  },
+  participantsPicker: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  participantsBtn: {
+    width: 48,
+    height: 48,
+    backgroundColor: "#4F46E5",
+    borderRadius: 24,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  participantsBtnDisabled: {
+    backgroundColor: "#E5E7EB",
+  },
+  participantsBtnText: {
+    fontSize: 24,
+    fontWeight: "600" as const,
+    color: "#FFFFFF",
+  },
+  participantsValueContainer: {
+    flex: 1,
+    alignItems: "center" as const,
+  },
+  participantsValue: {
+    fontSize: 36,
+    fontWeight: "700" as const,
+    color: "#111827",
+  },
+  participantsLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 4,
   },
   participantsInfo: {
     backgroundColor: "#FEF3C7",

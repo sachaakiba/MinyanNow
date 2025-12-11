@@ -30,7 +30,7 @@ interface MapScreenProps {
 export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
-  const slideAnim = useRef(new Animated.Value(300)).current;
+  const slideAnim = useRef(new Animated.Value(400)).current;
 
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
@@ -74,17 +74,18 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   };
 
   useEffect(() => {
+    console.log("Selected event changed:", selectedEvent?.title);
     if (selectedEvent) {
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
-        tension: 50,
-        friction: 8,
+        tension: 65,
+        friction: 10,
       }).start();
     } else {
       Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 200,
+        toValue: 400,
+        duration: 250,
         useNativeDriver: true,
       }).start();
     }
@@ -110,6 +111,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         lng: currentLocation.coords.longitude,
         radius: 50, // 50km radius
       });
+      console.log("Fetched events:", fetchedEvents.length);
       setEvents(fetchedEvents);
     } catch (err) {
       console.error("Error loading data:", err);
@@ -120,13 +122,14 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   };
 
   const handleMarkerPress = (event: Event) => {
+    console.log("Marker pressed:", event.title);
     setSelectedEvent(event);
     mapRef.current?.animateToRegion(
       {
         latitude: event.latitude,
-        longitude: event.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        longitude: event.longitude - 0.002, // Légèrement décalé pour voir la card
+        latitudeDelta: 0.015,
+        longitudeDelta: 0.015,
       },
       300
     );
@@ -199,7 +202,11 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
                 latitude: event.latitude,
                 longitude: event.longitude,
               }}
-              onPress={() => handleMarkerPress(event)}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleMarkerPress(event);
+              }}
+              tracksViewChanges={false}
             >
               <View style={styles.markerContainer}>
                 <View
