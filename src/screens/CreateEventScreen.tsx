@@ -479,7 +479,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         </TouchableOpacity>
 
         {/* Participants Picker */}
-        <Text style={styles.sectionTitle}>Nombre de participants</Text>
+        <Text style={styles.sectionTitle}>Combien de personnes ?</Text>
         <View style={styles.participantsPicker}>
           <TouchableOpacity
             style={[

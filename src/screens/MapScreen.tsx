@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   View,
   StyleSheet,
@@ -8,19 +14,20 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, {
+  Marker,
+  Circle,
+  PROVIDER_GOOGLE,
+  Region,
+} from "react-native-maps";
 import * as Location from "expo-location";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
-import {
-  eventsApi,
-  requestsApi,
-  Event,
-  EventRequest,
-  EVENT_TYPE_ICONS,
-} from "../lib/api";
-import { EventCard } from "../components/EventCard";
+import { eventsApi, requestsApi, Event, EventRequest } from "../lib/api";
+import { ClusterMarker } from "../components/ClusterMarker";
+import { EventCarousel } from "../components/EventCarousel";
+import { clusterEvents, getGridSizeForZoom, Cluster } from "../lib/clustering";
 import { useAuth } from "../context/AuthContext";
 
 const { width, height } = Dimensions.get("window");
@@ -47,9 +54,24 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [myPendingParticipationsCount, setMyPendingParticipationsCount] =
     useState(0);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
+  const [requestLoading, setRequestLoading] = useState(false);
+
+  // Calcule les clusters basés sur les événements et le niveau de zoom
+  const clusters = useMemo(() => {
+    const gridSize = currentRegion
+      ? getGridSizeForZoom(currentRegion.latitudeDelta)
+      : 1;
+    return clusterEvents(events, gridSize);
+  }, [events, currentRegion?.latitudeDelta]);
+
+  // Set des IDs des événements déjà demandés
+  const requestedEventIds = useMemo(() => {
+    return new Set(myRequests.map((req) => req.eventId));
+  }, [myRequests]);
 
   // Reload data when screen comes into focus
   useFocusEffect(
@@ -73,23 +95,9 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
     }
   }, [location]);
 
-  const centerOnUser = () => {
-    if (location && mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        },
-        500
-      );
-    }
-  };
-
+  // Animation du carousel
   useEffect(() => {
-    console.log("Selected event changed:", selectedEvent?.title);
-    if (selectedEvent) {
+    if (selectedCluster) {
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -103,7 +111,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         useNativeDriver: true,
       }).start();
     }
-  }, [selectedEvent]);
+  }, [selectedCluster]);
 
   const loadLocationAndEvents = async () => {
     try {
@@ -155,18 +163,15 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
     }
   };
 
-  // Check if user has already requested to join an event
-  const hasRequestedEvent = (eventId: string): boolean => {
-    return myRequests.some((req) => req.eventId === eventId);
-  };
+  const handleClusterPress = (cluster: Cluster) => {
+    console.log("Cluster pressed:", cluster.events.length, "events");
+    setSelectedCluster(cluster);
 
-  const handleMarkerPress = (event: Event) => {
-    console.log("Marker pressed:", event.title);
-    setSelectedEvent(event);
+    // Centre la carte sur le cluster
     mapRef.current?.animateToRegion(
       {
-        latitude: event.latitude,
-        longitude: event.longitude - 0.002, // Légèrement décalé pour voir la card
+        latitude: cluster.latitude,
+        longitude: cluster.longitude,
         latitudeDelta: 0.015,
         longitudeDelta: 0.015,
       },
@@ -174,37 +179,34 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
     );
   };
 
-  const handleEventPress = () => {
-    if (selectedEvent) {
-      navigation.navigate("EventDetail", { eventId: selectedEvent.id });
-    }
+  const handleEventPress = (event: Event) => {
+    navigation.navigate("EventDetail", { eventId: event.id });
   };
 
-  const [requestLoading, setRequestLoading] = useState(false);
-
-  const handleRequestJoin = async () => {
-    if (!selectedEvent) return;
-
+  const handleRequestJoin = async (event: Event) => {
     setRequestLoading(true);
     try {
-      await requestsApi.create(selectedEvent.id);
-      // Show success and close card
-      setSelectedEvent(null);
-      // Reload events to update the UI
+      await requestsApi.create(event.id);
+      // Ferme le carousel et recharge les données
+      setSelectedCluster(null);
       loadLocationAndEvents();
       // Navigate to participations to see the request
       navigation.navigate("MyParticipations");
     } catch (error: any) {
       console.error("Error joining event:", error);
       // If there's an error, navigate to detail page to see more info
-      navigation.navigate("EventDetail", { eventId: selectedEvent.id });
+      navigation.navigate("EventDetail", { eventId: event.id });
     } finally {
       setRequestLoading(false);
     }
   };
 
-  const closeCard = () => {
-    setSelectedEvent(null);
+  const closeCarousel = () => {
+    setSelectedCluster(null);
+  };
+
+  const handleRegionChange = (region: Region) => {
+    setCurrentRegion(region);
   };
 
   if (loading) {
@@ -244,48 +246,54 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         }}
         showsUserLocation
         showsMyLocationButton
-        onPress={closeCard}
+        onPress={closeCarousel}
+        onRegionChangeComplete={handleRegionChange}
       >
-        {events.map((event) => {
-          const needed = event.maxParticipants - event.currentCount;
-          const isFull = needed <= 0;
-          const isUrgent = needed <= 3 && needed > 0;
+        {clusters.map((cluster) => {
+          // Convertit le rayon en degrés vers mètres (1° ≈ 111km)
+          const radiusMeters = cluster.radiusDeg * 111000;
+          const isUrgent = cluster.hasUrgent;
 
           return (
-            <Marker
-              key={event.id}
-              coordinate={{
-                latitude: event.latitude,
-                longitude: event.longitude,
-              }}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleMarkerPress(event);
-              }}
-              tracksViewChanges={false}
-            >
-              <View style={styles.markerContainer}>
-                <View
-                  style={[
-                    styles.marker,
-                    isFull
-                      ? styles.markerFull
-                      : isUrgent
-                      ? styles.markerUrgent
-                      : styles.markerNormal,
-                  ]}
-                >
-                  <Text style={styles.markerIcon}>
-                    {EVENT_TYPE_ICONS[event.type]}
-                  </Text>
-                  <View style={styles.markerBadge}>
-                    <Text style={styles.markerCount}>
-                      {isFull ? "✓" : needed}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </Marker>
+            <React.Fragment key={cluster.id}>
+              {/* Cercle de zone */}
+              <Circle
+                center={{
+                  latitude: cluster.latitude,
+                  longitude: cluster.longitude,
+                }}
+                radius={radiusMeters}
+                fillColor={
+                  isUrgent
+                    ? "rgba(245, 158, 11, 0.25)"
+                    : "rgba(79, 70, 229, 0.25)"
+                }
+                strokeColor={
+                  isUrgent
+                    ? "rgba(245, 158, 11, 0.6)"
+                    : "rgba(79, 70, 229, 0.6)"
+                }
+                strokeWidth={2}
+              />
+              {/* Marqueur avec le compteur au centre */}
+              <Marker
+                coordinate={{
+                  latitude: cluster.latitude,
+                  longitude: cluster.longitude,
+                }}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleClusterPress(cluster);
+                }}
+                tracksViewChanges={false}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <ClusterMarker
+                  count={cluster.events.length}
+                  hasUrgent={cluster.hasUrgent}
+                />
+              </Marker>
+            </React.Fragment>
           );
         })}
       </MapView>
@@ -350,28 +358,22 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Event Card */}
-      {selectedEvent && (
+      {/* Event Carousel */}
+      {selectedCluster && (
         <Animated.View
           style={[
-            styles.cardContainer,
+            styles.carouselContainer,
             { transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <TouchableOpacity style={styles.closeButton} onPress={closeCard}>
-            <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
-          <EventCard
-            event={selectedEvent}
-            onPress={handleEventPress}
-            onRequestJoin={
-              selectedEvent.organizerId !== user?.id &&
-              !hasRequestedEvent(selectedEvent.id)
-                ? handleRequestJoin
-                : undefined
-            }
-            isLoading={requestLoading}
-            hasRequested={hasRequestedEvent(selectedEvent.id)}
+          <EventCarousel
+            events={selectedCluster.events}
+            onEventPress={handleEventPress}
+            onRequestJoin={handleRequestJoin}
+            onClose={closeCarousel}
+            isLoadingRequest={requestLoading}
+            currentUserId={user?.id}
+            requestedEventIds={requestedEventIds}
           />
         </Animated.View>
       )}
@@ -529,96 +531,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
   },
-  cardContainer: {
+  carouselContainer: {
     position: "absolute",
-    bottom: 110,
-    left: 16,
-    right: 16,
-  },
-  closeButton: {
-    position: "absolute",
-    top: -12,
-    right: -12,
-    zIndex: 10,
-    width: 28,
-    height: 28,
-    backgroundColor: "#6B7280",
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  legend: {
-    position: "absolute",
-    bottom: 40,
-    left: 16,
-    right: 16,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendText: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  markerContainer: {
-    alignItems: "center",
-  },
-  marker: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  markerNormal: {
-    backgroundColor: "#4F46E5",
-  },
-  markerUrgent: {
-    backgroundColor: "#F59E0B",
-  },
-  markerFull: {
-    backgroundColor: "#10B981",
-  },
-  markerIcon: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  markerBadge: {
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 4,
-  },
-  markerCount: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#4F46E5",
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });
