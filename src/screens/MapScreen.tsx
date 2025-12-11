@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -11,8 +11,15 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
-import { eventsApi, requestsApi, Event, EVENT_TYPE_ICONS } from "../lib/api";
+import {
+  eventsApi,
+  requestsApi,
+  Event,
+  EventRequest,
+  EVENT_TYPE_ICONS,
+} from "../lib/api";
 import { EventCard } from "../components/EventCard";
 import { useAuth } from "../context/AuthContext";
 
@@ -36,13 +43,20 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
     null
   );
   const [events, setEvents] = useState<Event[]>([]);
+  const [myRequests, setMyRequests] = useState<EventRequest[]>([]);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [myPendingParticipationsCount, setMyPendingParticipationsCount] =
+    useState(0);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadLocationAndEvents();
-  }, []);
+  // Reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadLocationAndEvents();
+    }, [])
+  );
 
   // Center map on user location when it's available
   useEffect(() => {
@@ -106,19 +120,44 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      const fetchedEvents = await eventsApi.getAll({
-        lat: currentLocation.coords.latitude,
-        lng: currentLocation.coords.longitude,
-        radius: 50, // 50km radius
-      });
+      // Fetch events, user's requests, and my events (for pending count) in parallel
+      const [fetchedEvents, fetchedRequests, myEvents] = await Promise.all([
+        eventsApi.getAll({
+          lat: currentLocation.coords.latitude,
+          lng: currentLocation.coords.longitude,
+          radius: 50, // 50km radius
+        }),
+        requestsApi.getMyRequests(),
+        eventsApi.getMyEvents(),
+      ]);
+
       console.log("Fetched events:", fetchedEvents.length);
       setEvents(fetchedEvents);
+      setMyRequests(fetchedRequests);
+
+      // Calculate total pending requests for my events (to validate)
+      const totalPending = myEvents.reduce(
+        (acc, event) => acc + (event._count?.requests || 0),
+        0
+      );
+      setPendingRequestsCount(totalPending);
+
+      // Calculate my pending participations (waiting for approval)
+      const myPendingCount = fetchedRequests.filter(
+        (req) => req.status === "PENDING"
+      ).length;
+      setMyPendingParticipationsCount(myPendingCount);
     } catch (err) {
       console.error("Error loading data:", err);
       setError("Erreur lors du chargement");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Check if user has already requested to join an event
+  const hasRequestedEvent = (eventId: string): boolean => {
+    return myRequests.some((req) => req.eventId === eventId);
   };
 
   const handleMarkerPress = (event: Event) => {
@@ -260,6 +299,15 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
             onPress={() => navigation.navigate("MyParticipations")}
           >
             <Text style={styles.headerButtonText}>📋</Text>
+            {myPendingParticipationsCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {myPendingParticipationsCount > 9
+                    ? "9+"
+                    : myPendingParticipationsCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerButton}
@@ -272,6 +320,13 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
             onPress={() => navigation.navigate("Profile")}
           >
             <Text style={styles.headerButtonText}>👤</Text>
+            {pendingRequestsCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {pendingRequestsCount > 9 ? "9+" : pendingRequestsCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -299,11 +354,13 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
             event={selectedEvent}
             onPress={handleEventPress}
             onRequestJoin={
-              selectedEvent.organizerId !== user?.id
+              selectedEvent.organizerId !== user?.id &&
+              !hasRequestedEvent(selectedEvent.id)
                 ? handleRequestJoin
                 : undefined
             }
             isLoading={requestLoading}
+            hasRequested={hasRequestedEvent(selectedEvent.id)}
           />
         </Animated.View>
       )}
@@ -367,6 +424,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerButton: {
+    position: "relative",
     width: 44,
     height: 44,
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -381,6 +439,25 @@ const styles = StyleSheet.create({
   },
   headerButtonText: {
     fontSize: 20,
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  notificationBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
   },
   centerButton: {
     position: "absolute",

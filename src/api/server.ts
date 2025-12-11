@@ -4,6 +4,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "../lib/auth";
 import eventsRouter from "./routes/events";
 import requestsRouter from "./routes/requests";
+import usersRouter from "./routes/users";
 import "dotenv/config";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(express.json());
 // API Routes
 app.use("/api/events", eventsRouter);
 app.use("/api/requests", requestsRouter);
+app.use("/api/users", usersRouter);
 
 // Health check
 app.get("/health", (req, res) => {

@@ -1,6 +1,10 @@
 import { Router } from "express";
 import prisma from "../../lib/prisma";
 import { userGuard, AuthenticatedRequest } from "../middleware/userGuard";
+import {
+  sendPushNotification,
+  NotificationTemplates,
+} from "../services/notifications";
 
 const router = Router();
 
@@ -11,9 +15,14 @@ router.post("/:eventId", userGuard, async (req, res) => {
     const { eventId } = req.params;
     const { message } = req.body;
 
-    // Check if event exists
+    // Check if event exists with organizer info
     const event = await prisma.event.findUnique({
       where: { id: eventId },
+      include: {
+        organizer: {
+          select: { id: true, name: true, email: true, pushToken: true },
+        },
+      },
     });
 
     if (!event) {
@@ -22,7 +31,9 @@ router.post("/:eventId", userGuard, async (req, res) => {
 
     // Can't request to join your own event
     if (event.organizerId === authReq.user.id) {
-      return res.status(400).json({ error: "You cannot request to join your own event" });
+      return res
+        .status(400)
+        .json({ error: "You cannot request to join your own event" });
     }
 
     // Check if already requested
@@ -36,7 +47,9 @@ router.post("/:eventId", userGuard, async (req, res) => {
     });
 
     if (existingRequest) {
-      return res.status(400).json({ error: "You have already requested to join this event" });
+      return res
+        .status(400)
+        .json({ error: "You have already requested to join this event" });
     }
 
     // Check if event is full
@@ -63,6 +76,30 @@ router.post("/:eventId", userGuard, async (req, res) => {
         },
       },
     });
+
+    console.log("✅ Request created:", {
+      requestId: request.id,
+      eventTitle: event.title,
+      participant: request.user.name || request.user.email,
+      organizerPushToken: event.organizer.pushToken ? "Present" : "Missing",
+    });
+
+    // 🔔 Send notification to organizer
+    const participantName = request.user.name || request.user.email;
+    const notification = NotificationTemplates.newRequest(
+      participantName,
+      event.title
+    );
+    
+    if (event.organizer.pushToken) {
+      console.log("📱 Sending push notification to organizer...");
+      await sendPushNotification(event.organizer.pushToken, {
+        ...notification,
+        data: { type: "new_request", eventId: event.id, requestId: request.id },
+      });
+    } else {
+      console.log("⚠️ No push token for organizer, skipping notification");
+    }
 
     res.status(201).json(request);
   } catch (error) {
@@ -112,7 +149,9 @@ router.get("/event/:eventId", userGuard, async (req, res) => {
     }
 
     if (event.organizerId !== authReq.user.id) {
-      return res.status(403).json({ error: "Not authorized to view these requests" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to view these requests" });
     }
 
     const requests = await prisma.eventRequest.findMany({
@@ -140,7 +179,12 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
 
     const request = await prisma.eventRequest.findUnique({
       where: { id: requestId },
-      include: { event: true },
+      include: {
+        event: true,
+        user: {
+          select: { id: true, name: true, email: true, pushToken: true },
+        },
+      },
     });
 
     if (!request) {
@@ -148,7 +192,9 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
     }
 
     if (request.event.organizerId !== authReq.user.id) {
-      return res.status(403).json({ error: "Not authorized to accept this request" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to accept this request" });
     }
 
     // Check if event is full
@@ -171,10 +217,34 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
     });
 
     // Update event current count
-    await prisma.event.update({
+    const updatedEvent = await prisma.event.update({
       where: { id: request.eventId },
       data: { currentCount: { increment: 1 } },
     });
+
+    // 🔔 Send notification to participant
+    const notification = NotificationTemplates.requestAccepted(
+      request.event.title
+    );
+    await sendPushNotification(request.user.pushToken, {
+      ...notification,
+      data: { type: "request_accepted", eventId: request.eventId },
+    });
+
+    // 🔔 If event is now full, notify organizer
+    if (updatedEvent.currentCount >= updatedEvent.maxParticipants) {
+      const organizer = await prisma.user.findUnique({
+        where: { id: request.event.organizerId },
+        select: { pushToken: true },
+      });
+      const fullNotification = NotificationTemplates.eventFull(
+        request.event.title
+      );
+      await sendPushNotification(organizer?.pushToken, {
+        ...fullNotification,
+        data: { type: "event_full", eventId: request.eventId },
+      });
+    }
 
     res.json(updatedRequest);
   } catch (error) {
@@ -191,7 +261,12 @@ router.put("/:requestId/reject", userGuard, async (req, res) => {
 
     const request = await prisma.eventRequest.findUnique({
       where: { id: requestId },
-      include: { event: true },
+      include: {
+        event: true,
+        user: {
+          select: { id: true, name: true, email: true, pushToken: true },
+        },
+      },
     });
 
     if (!request) {
@@ -199,7 +274,9 @@ router.put("/:requestId/reject", userGuard, async (req, res) => {
     }
 
     if (request.event.organizerId !== authReq.user.id) {
-      return res.status(403).json({ error: "Not authorized to reject this request" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to reject this request" });
     }
 
     // If was accepted, decrement count
@@ -218,6 +295,15 @@ router.put("/:requestId/reject", userGuard, async (req, res) => {
           select: { id: true, name: true, email: true },
         },
       },
+    });
+
+    // 🔔 Send notification to participant
+    const notification = NotificationTemplates.requestRejected(
+      request.event.title
+    );
+    await sendPushNotification(request.user.pushToken, {
+      ...notification,
+      data: { type: "request_rejected", eventId: request.eventId },
     });
 
     res.json(updatedRequest);
@@ -242,7 +328,9 @@ router.delete("/:requestId", userGuard, async (req, res) => {
     }
 
     if (request.userId !== authReq.user.id) {
-      return res.status(403).json({ error: "Not authorized to cancel this request" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to cancel this request" });
     }
 
     // If was accepted, decrement count

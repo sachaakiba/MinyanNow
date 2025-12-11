@@ -13,6 +13,7 @@ interface EventCardProps {
   onPress: () => void;
   onRequestJoin?: () => void;
   isLoading?: boolean;
+  hasRequested?: boolean;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({
@@ -20,6 +21,7 @@ export const EventCard: React.FC<EventCardProps> = ({
   onPress,
   onRequestJoin,
   isLoading = false,
+  hasRequested = false,
 }) => {
   const needed = event.maxParticipants - event.currentCount;
   const isFull = needed <= 0;
@@ -132,7 +134,7 @@ export const EventCard: React.FC<EventCardProps> = ({
       </View>
 
       {/* Bouton rejoindre */}
-      {onRequestJoin && !isFull && (
+      {onRequestJoin && !isFull && !hasRequested && (
         <TouchableOpacity
           style={styles.joinButton}
           onPress={(e) => {
@@ -151,6 +153,12 @@ export const EventCard: React.FC<EventCardProps> = ({
             </>
           )}
         </TouchableOpacity>
+      )}
+
+      {hasRequested && !isFull && (
+        <View style={styles.requestedBadge}>
+          <Text style={styles.requestedBadgeText}>⏳ Demande envoyée</Text>
+        </View>
       )}
 
       {isFull && (
@@ -322,6 +330,17 @@ const styles = StyleSheet.create({
   },
   fullBadgeText: {
     color: "#059669",
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  requestedBadge: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center" as const,
+  },
+  requestedBadgeText: {
+    color: "#92400E",
     fontSize: 14,
     fontWeight: "600" as const,
   },
