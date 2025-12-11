@@ -246,11 +246,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Center on me button */}
-      <TouchableOpacity style={styles.centerButton} onPress={centerOnUser}>
-        <Text style={styles.centerButtonText}>📍</Text>
-      </TouchableOpacity>
-
       {/* Refresh button */}
       <TouchableOpacity
         style={styles.refreshButton}
@@ -281,22 +276,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
           />
         </Animated.View>
       )}
-
-      {/* Legend */}
-      <View style={styles.legend}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, styles.markerNormal]} />
-          <Text style={styles.legendText}>Disponible</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, styles.markerUrgent]} />
-          <Text style={styles.legendText}>Urgent (≤3)</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, styles.markerFull]} />
-          <Text style={styles.legendText}>Complet</Text>
-        </View>
-      </View>
     </View>
   );
 };
