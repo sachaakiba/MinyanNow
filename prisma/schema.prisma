@@ -77,16 +77,16 @@ model Verification {
 
 // Event Types:
 // SHEVA_BERAKHOT - Semaine après le mariage (7 jours de bénédictions)
-// SHABBAT - Repas/prière de Shabbat
 // BRIT_MILA - Circoncision
-// BAR_MITZVAH - Bar Mitzvah
+// MINCHA - Prière de l'après-midi
+// ARVIT - Prière du soir (aussi appelée Maariv)
 // OTHER - Autre événement religieux
 
 enum EventType {
   SHEVA_BERAKHOT
-  SHABBAT
   BRIT_MILA
-  BAR_MITZVAH
+  MINCHA
+  ARVIT
   OTHER
 }
 

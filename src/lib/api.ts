@@ -5,9 +5,9 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 // Event Types
 export type EventType =
   | "SHEVA_BERAKHOT"
-  | "SHABBAT"
   | "BRIT_MILA"
-  | "BAR_MITZVAH"
+  | "MINCHA"
+  | "ARVIT"
   | "OTHER";
 
 export type EventRequestStatus = "PENDING" | "ACCEPTED" | "REJECTED";
@@ -173,16 +173,16 @@ export const requestsApi = {
 // Event type labels
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   SHEVA_BERAKHOT: "Sheva Berakhot",
-  SHABBAT: "Shabbat",
   BRIT_MILA: "Brit Mila",
-  BAR_MITZVAH: "Bar Mitzvah",
+  MINCHA: "Min'ha",
+  ARVIT: "Arvit",
   OTHER: "Autre",
 };
 
 export const EVENT_TYPE_ICONS: Record<EventType, string> = {
   SHEVA_BERAKHOT: "💒",
-  SHABBAT: "🕯️",
   BRIT_MILA: "👶",
-  BAR_MITZVAH: "📖",
+  MINCHA: "🌅",
+  ARVIT: "🌙",
   OTHER: "✡️",
 };

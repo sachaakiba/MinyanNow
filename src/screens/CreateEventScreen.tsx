@@ -44,9 +44,9 @@ interface CreateEventScreenProps {
 
 const EVENT_TYPES: EventType[] = [
   "SHEVA_BERAKHOT",
-  "SHABBAT",
   "BRIT_MILA",
-  "BAR_MITZVAH",
+  "MINCHA",
+  "ARVIT",
   "OTHER",
 ];
 
@@ -390,7 +390,12 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.sectionTitle}>Type d'événement</Text>
-        <View style={styles.typeGrid}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.typeSlider}
+          style={styles.typeSliderContainer}
+        >
           {EVENT_TYPES.map((eventType) => (
             <TouchableOpacity
               key={eventType}
@@ -411,7 +416,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
 
         <Input
           label="Titre *"
@@ -583,18 +588,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
   },
-  typeGrid: {
-    flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
-    gap: 8,
+  typeSliderContainer: {
+    marginHorizontal: -20,
     marginBottom: 24,
+  },
+  typeSlider: {
+    paddingHorizontal: 20,
+    gap: 10,
   },
   typeButton: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 24,
     backgroundColor: "#F3F4F6",
     borderWidth: 2,
     borderColor: "transparent",

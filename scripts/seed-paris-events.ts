@@ -62,26 +62,19 @@ const parisLocations = [
 
 const eventTypes = [
   "SHEVA_BERAKHOT",
-  "SHABBAT",
   "BRIT_MILA",
-  "BAR_MITZVAH",
+  "MINCHA",
+  "ARVIT",
   "OTHER",
 ] as const;
 
-const eventTitles: Record<typeof eventTypes[number], string[]> = {
+const eventTitles: Record<(typeof eventTypes)[number], string[]> = {
   SHEVA_BERAKHOT: [
     "Sheva Berakhot - Famille Cohen",
     "Sheva Berakhot David & Sarah",
     "Sheva Berakhot Lévy",
     "7ème jour - Mariage Abitbol",
     "Sheva Berakhot Bensimon",
-  ],
-  SHABBAT: [
-    "Repas de Shabbat communautaire",
-    "Kiddoush Shabbat",
-    "Oneg Shabbat",
-    "Seudah Shlishit",
-    "Shabbat entre amis",
   ],
   BRIT_MILA: [
     "Brit Mila - Famille Azoulay",
@@ -90,12 +83,19 @@ const eventTitles: Record<typeof eventTypes[number], string[]> = {
     "Brit Mila - Invitation",
     "Brit Mila Toledano",
   ],
-  BAR_MITZVAH: [
-    "Bar Mitzvah de Raphaël",
-    "Bar Mitzvah Samuel",
-    "Bar Mitzvah - Famille Ohayon",
-    "Bar Mitzvah Jonathan",
-    "Célébration Bar Mitzvah",
+  MINCHA: [
+    "Min'ha - Synagogue Beth El",
+    "Min'ha communautaire",
+    "Min'ha - Besoin de Minyan",
+    "Min'ha express",
+    "Min'ha - Azara",
+  ],
+  ARVIT: [
+    "Arvit - Synagogue Rachi",
+    "Arvit communautaire",
+    "Arvit - Minyan urgent",
+    "Arvit après le travail",
+    "Arvit - Centre communautaire",
   ],
   OTHER: [
     "Étude de Torah",
