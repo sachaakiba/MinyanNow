@@ -7,25 +7,42 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.minyannow.app",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBuZPiGZmaGOWVmFT4ewd6OSSG5sWY8VVc"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "MinyanNow a besoin de votre localisation pour afficher les événements à proximité."
+      }
     },
     "android": {
+      "package": "com.minyannow.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBuZPiGZmaGOWVmFT4ewd6OSSG5sWY8VVc"
+        }
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "googleMapsApiKey": "AIzaSyBuZPiGZmaGOWVmFT4ewd6OSSG5sWY8VVc"
     }
   }
 }

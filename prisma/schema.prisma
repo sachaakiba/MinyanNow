@@ -20,8 +20,10 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  sessions Session[]
-  accounts Account[]
+  sessions      Session[]
+  accounts      Account[]
+  events        Event[]
+  eventRequests EventRequest[]
 
   @@map("users")
 }
@@ -70,4 +72,73 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@map("verifications")
+}
+
+// Event Types:
+// SHEVA_BERAKHOT - Semaine après le mariage (7 jours de bénédictions)
+// SHABBAT - Repas/prière de Shabbat
+// BRIT_MILA - Circoncision
+// BAR_MITZVAH - Bar Mitzvah
+// OTHER - Autre événement religieux
+
+enum EventType {
+  SHEVA_BERAKHOT
+  SHABBAT
+  BRIT_MILA
+  BAR_MITZVAH
+  OTHER
+}
+
+enum EventRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  type        EventType
+  date        DateTime
+  endDate     DateTime?
+
+  // Location
+  address   String
+  city      String
+  latitude  Float
+  longitude Float
+
+  // Capacity
+  maxParticipants Int @default(10)
+  currentCount    Int @default(0)
+
+  // Relations
+  organizerId String
+  organizer   User   @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  requests EventRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("events")
+}
+
+model EventRequest {
+  id      String             @id @default(cuid())
+  status  EventRequestStatus @default(PENDING)
+  message String?
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, userId])
+  @@map("event_requests")
 }
