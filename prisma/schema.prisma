@@ -12,14 +12,26 @@ datasource db {
 
 // Better Auth models
 model User {
-  id            String   @id @default(cuid())
-  name          String?
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  image         String?
-  pushToken     String? // Expo push notification token
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  name                String?
+  email               String   @unique
+  emailVerified       Boolean  @default(false)
+  phoneNumber         String?  @unique
+  phoneNumberVerified Boolean  @default(false)
+  image               String?
+  pushToken           String? // Expo push notification token
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Informations de profil
+  firstName         String? // Prénom
+  lastName          String? // Nom de famille
+  hebrewName        String? // Prénom hébraïque (ex: Moshe ben Avraham)
+  dateOfBirth       DateTime? // Date de naissance
+  barMitzvahParasha String? // Paracha de la Bar Mitzvah
+  synagogue         String? // Synagogue fréquentée
+  community         String? // Communauté (Ashkénaze, Séfarade, etc.)
+  profileCompleted  Boolean   @default(false) // Profil complété
 
   sessions      Session[]
   accounts      Account[]
@@ -110,9 +122,11 @@ model Event {
   latitude  Float
   longitude Float
 
-  // Capacity
+  // Capacity - maxParticipants = nombre total nécessaire (ex: 10 pour un minyan)
   maxParticipants Int @default(10)
-  currentCount    Int @default(0)
+
+  // Participants initiaux (noms des personnes déjà présentes, JSON array)
+  initialParticipants String[] @default([])
 
   // Relations
   organizerId String

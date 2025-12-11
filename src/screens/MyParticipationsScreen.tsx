@@ -151,7 +151,7 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
           <View style={styles.detailRow}>
             <Text style={styles.detailIcon}>📍</Text>
             <Text style={styles.detailText} numberOfLines={1}>
-              {event.city}
+              {isConfirmed ? event.address : event.city}
             </Text>
           </View>
         </View>

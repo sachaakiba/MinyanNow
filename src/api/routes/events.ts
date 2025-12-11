@@ -21,7 +21,17 @@ router.get("/my/organized", userGuard, async (req, res) => {
       orderBy: { date: "asc" },
     });
 
-    res.json(events);
+    // Ajoute le currentCount calculé
+    const eventsWithCount = events.map((event) => {
+      // Pour les events organisés, on a besoin du count des acceptés
+      const initialCount = event.initialParticipants?.length || 0;
+      return {
+        ...event,
+        currentCount: initialCount,
+      };
+    });
+
+    res.json(eventsWithCount);
   } catch (error) {
     console.error("Error fetching my events:", error);
     res.status(500).json({ error: "Failed to fetch events" });
@@ -64,10 +74,17 @@ router.get("/", async (req, res) => {
       orderBy: { date: "asc" },
     });
 
+    // Calcule le currentCount = participants initiaux + demandes acceptées
+    const eventsWithCount = events.map((event) => ({
+      ...event,
+      currentCount:
+        (event.initialParticipants?.length || 0) + event._count.requests,
+    }));
+
     // Filter out full events (unless includeFull=true)
-    let filteredEvents = events;
+    let filteredEvents = eventsWithCount;
     if (includeFull !== "true") {
-      filteredEvents = events.filter(
+      filteredEvents = eventsWithCount.filter(
         (event) => event.currentCount < event.maxParticipants
       );
     }
@@ -119,7 +136,16 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    res.json(event);
+    // Calcule le currentCount
+    const acceptedCount = event.requests.filter(
+      (r) => r.status === "ACCEPTED"
+    ).length;
+    const currentCount = (event.initialParticipants?.length || 0) + acceptedCount;
+
+    res.json({
+      ...event,
+      currentCount,
+    });
   } catch (error) {
     console.error("Error fetching event:", error);
     res.status(500).json({ error: "Failed to fetch event" });
@@ -141,11 +167,17 @@ router.post("/", userGuard, async (req, res) => {
       latitude,
       longitude,
       maxParticipants,
+      initialParticipants,
     } = req.body;
 
     if (!title || !type || !date || !address || !city || !latitude || !longitude) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+
+    // Valide que initialParticipants est un tableau de strings
+    const participants = Array.isArray(initialParticipants)
+      ? initialParticipants.filter((p: any) => typeof p === "string" && p.trim())
+      : [];
 
     const event = await prisma.event.create({
       data: {
@@ -159,6 +191,7 @@ router.post("/", userGuard, async (req, res) => {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
         maxParticipants: maxParticipants || 10,
+        initialParticipants: participants,
         organizerId: authReq.user.id,
       },
       include: {
@@ -168,7 +201,10 @@ router.post("/", userGuard, async (req, res) => {
       },
     });
 
-    res.status(201).json(event);
+    res.status(201).json({
+      ...event,
+      currentCount: participants.length,
+    });
   } catch (error) {
     console.error("Error creating event:", error);
     res.status(500).json({ error: "Failed to create event" });
@@ -231,6 +267,207 @@ router.put("/:id", userGuard, async (req, res) => {
   } catch (error) {
     console.error("Error updating event:", error);
     res.status(500).json({ error: "Failed to update event" });
+  }
+});
+
+// Add initial participant (protected, only organizer)
+router.post("/:id/participants", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const eventId = req.params.id;
+    const { name } = req.body;
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+
+    const existingEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        _count: {
+          select: { requests: { where: { status: "ACCEPTED" } } },
+        },
+      },
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (existingEvent.organizerId !== authReq.user.id) {
+      return res.status(403).json({ error: "Not authorized to modify this event" });
+    }
+
+    const participants = existingEvent.initialParticipants || [];
+    const currentTotal = participants.length + existingEvent._count.requests;
+
+    // Check if we can add more participants
+    if (currentTotal >= existingEvent.maxParticipants) {
+      return res.status(400).json({ error: "Maximum participants reached" });
+    }
+
+    const updatedParticipants = [...participants, name.trim()];
+
+    const event = await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        initialParticipants: updatedParticipants,
+      },
+      include: {
+        organizer: {
+          select: { id: true, name: true, email: true },
+        },
+        requests: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        },
+      },
+    });
+
+    const acceptedCount = event.requests.filter(
+      (r) => r.status === "ACCEPTED"
+    ).length;
+    const currentCount = updatedParticipants.length + acceptedCount;
+
+    res.json({
+      ...event,
+      currentCount,
+    });
+  } catch (error) {
+    console.error("Error adding participant:", error);
+    res.status(500).json({ error: "Failed to add participant" });
+  }
+});
+
+// Update initial participant (protected, only organizer)
+router.put("/:id/participants/:index", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const eventId = req.params.id;
+    const participantIndex = parseInt(req.params.index);
+    const { name } = req.body;
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+
+    const existingEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (existingEvent.organizerId !== authReq.user.id) {
+      return res.status(403).json({ error: "Not authorized to modify this event" });
+    }
+
+    const participants = existingEvent.initialParticipants || [];
+    if (participantIndex < 0 || participantIndex >= participants.length) {
+      return res.status(400).json({ error: "Invalid participant index" });
+    }
+
+    // Update the participant name
+    const updatedParticipants = [...participants];
+    updatedParticipants[participantIndex] = name.trim();
+
+    const event = await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        initialParticipants: updatedParticipants,
+      },
+      include: {
+        organizer: {
+          select: { id: true, name: true, email: true },
+        },
+        requests: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        },
+      },
+    });
+
+    const acceptedCount = event.requests.filter(
+      (r) => r.status === "ACCEPTED"
+    ).length;
+    const currentCount = updatedParticipants.length + acceptedCount;
+
+    res.json({
+      ...event,
+      currentCount,
+    });
+  } catch (error) {
+    console.error("Error updating participant:", error);
+    res.status(500).json({ error: "Failed to update participant" });
+  }
+});
+
+// Remove initial participant (protected, only organizer)
+router.delete("/:id/participants/:index", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const eventId = req.params.id;
+    const participantIndex = parseInt(req.params.index);
+
+    const existingEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (existingEvent.organizerId !== authReq.user.id) {
+      return res.status(403).json({ error: "Not authorized to modify this event" });
+    }
+
+    const participants = existingEvent.initialParticipants || [];
+    if (participantIndex < 0 || participantIndex >= participants.length) {
+      return res.status(400).json({ error: "Invalid participant index" });
+    }
+
+    // Remove the participant at the given index
+    const updatedParticipants = participants.filter((_, i) => i !== participantIndex);
+
+    const event = await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        initialParticipants: updatedParticipants,
+      },
+      include: {
+        organizer: {
+          select: { id: true, name: true, email: true },
+        },
+        requests: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Calculate currentCount
+    const acceptedCount = event.requests.filter(
+      (r) => r.status === "ACCEPTED"
+    ).length;
+    const currentCount = updatedParticipants.length + acceptedCount;
+
+    res.json({
+      ...event,
+      currentCount,
+    });
+  } catch (error) {
+    console.error("Error removing participant:", error);
+    res.status(500).json({ error: "Failed to remove participant" });
   }
 });
 

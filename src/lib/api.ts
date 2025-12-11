@@ -31,6 +31,7 @@ export interface Event {
   longitude: number;
   maxParticipants: number;
   currentCount: number;
+  initialParticipants: string[] | null;
   organizerId: string;
   organizer: User;
   createdAt: string;
@@ -63,6 +64,7 @@ export interface CreateEventData {
   latitude: number;
   longitude: number;
   maxParticipants?: number;
+  initialParticipants?: string[];
 }
 
 // Use authClient's $fetch which handles cookies/auth automatically
@@ -127,6 +129,45 @@ export const eventsApi = {
     });
   },
 
+  removeInitialParticipant: async (
+    id: string,
+    participantIndex: number
+  ): Promise<Event & { requests: EventRequest[] }> => {
+    return apiFetch<Event & { requests: EventRequest[] }>(
+      `/api/events/${id}/participants/${participantIndex}`,
+      {
+        method: "DELETE",
+      }
+    );
+  },
+
+  addInitialParticipant: async (
+    id: string,
+    name: string
+  ): Promise<Event & { requests: EventRequest[] }> => {
+    return apiFetch<Event & { requests: EventRequest[] }>(
+      `/api/events/${id}/participants`,
+      {
+        method: "POST",
+        body: JSON.stringify({ name }),
+      }
+    );
+  },
+
+  updateInitialParticipant: async (
+    id: string,
+    participantIndex: number,
+    name: string
+  ): Promise<Event & { requests: EventRequest[] }> => {
+    return apiFetch<Event & { requests: EventRequest[] }>(
+      `/api/events/${id}/participants/${participantIndex}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ name }),
+      }
+    );
+  },
+
   delete: async (id: string): Promise<void> => {
     await apiFetch<{ success: boolean }>(`/api/events/${id}`, {
       method: "DELETE",
@@ -180,7 +221,7 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
 };
 
 export const EVENT_TYPE_ICONS: Record<EventType, string> = {
-  SHEVA_BERAKHOT: "💒",
+  SHEVA_BERAKHOT: "🏠",
   BRIT_MILA: "👶",
   MINCHA: "🌅",
   ARVIT: "🌙",

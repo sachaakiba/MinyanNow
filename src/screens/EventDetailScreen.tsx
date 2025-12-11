@@ -5,14 +5,17 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
-  Dimensions,
+  Linking,
+  Platform,
+  TextInput,
+  Modal,
+  Image,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
-import { Button } from "../components/Button";
+
 import {
   eventsApi,
   requestsApi,
@@ -22,8 +25,12 @@ import {
   EVENT_TYPE_ICONS,
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { AlertModal, useAlert } from "../components";
 
-const { width } = Dimensions.get("window");
+// Images
+const rabinIcon = require("../../assets/rabin.png");
+const wazeLogo = require("../../assets/waze-logo.png");
+const googleMapsLogo = require("../../assets/google-maps-logo.png");
 
 type EventDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -50,6 +57,19 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   const [actionLoading, setActionLoading] = useState(false);
   const [myRequest, setMyRequest] = useState<EventRequest | null>(null);
 
+  // Pour ajouter/modifier un participant
+  const [showParticipantModal, setShowParticipantModal] = useState(false);
+  const [participantName, setParticipantName] = useState("");
+  const [editingParticipantIndex, setEditingParticipantIndex] = useState<
+    number | null
+  >(null);
+
+  // Alert modal state
+  const { alertState, showAlert, hideAlert } = useAlert();
+
+  // Navigation modal state
+  const [showNavigationModal, setShowNavigationModal] = useState(false);
+
   useEffect(() => {
     loadEvent();
   }, [eventId]);
@@ -63,8 +83,12 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       const userRequest = data.requests.find((r) => r.userId === user?.id);
       setMyRequest(userRequest || null);
     } catch (error) {
-      Alert.alert("Erreur", "Impossible de charger l'événement");
-      navigation.goBack();
+      showAlert(
+        "Erreur",
+        "Impossible de charger l'événement",
+        [{ text: "OK", onPress: () => navigation.goBack() }],
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -76,10 +100,10 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     setActionLoading(true);
     try {
       await requestsApi.create(event.id);
-      Alert.alert("Succès", "Votre demande a été envoyée!");
+      showAlert("Succès", "Votre demande a été envoyée!", undefined, "success");
       loadEvent();
     } catch (error: any) {
-      Alert.alert("Erreur", error.message);
+      showAlert("Erreur", error.message, undefined, "error");
     } finally {
       setActionLoading(false);
     }
@@ -88,25 +112,30 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   const handleCancelRequest = async () => {
     if (!myRequest) return;
 
-    Alert.alert("Annuler", "Voulez-vous annuler votre demande?", [
-      { text: "Non", style: "cancel" },
-      {
-        text: "Oui",
-        style: "destructive",
-        onPress: async () => {
-          setActionLoading(true);
-          try {
-            await requestsApi.cancel(myRequest.id);
-            Alert.alert("Succès", "Demande annulée");
-            loadEvent();
-          } catch (error: any) {
-            Alert.alert("Erreur", error.message);
-          } finally {
-            setActionLoading(false);
-          }
+    showAlert(
+      "Annuler",
+      "Voulez-vous annuler votre demande?",
+      [
+        { text: "Non", style: "cancel" },
+        {
+          text: "Oui",
+          style: "destructive",
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              await requestsApi.cancel(myRequest.id);
+              showAlert("Succès", "Demande annulée", undefined, "success");
+              loadEvent();
+            } catch (error: any) {
+              showAlert("Erreur", error.message, undefined, "error");
+            } finally {
+              setActionLoading(false);
+            }
+          },
         },
-      },
-    ]);
+      ],
+      "confirm"
+    );
   };
 
   const handleAcceptRequest = async (requestId: string) => {
@@ -115,7 +144,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       await requestsApi.accept(requestId);
       loadEvent();
     } catch (error: any) {
-      Alert.alert("Erreur", error.message);
+      showAlert("Erreur", error.message, undefined, "error");
     } finally {
       setActionLoading(false);
     }
@@ -127,31 +156,190 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       await requestsApi.reject(requestId);
       loadEvent();
     } catch (error: any) {
-      Alert.alert("Erreur", error.message);
+      showAlert("Erreur", error.message, undefined, "error");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleRemoveAcceptedParticipant = async (
+    requestId: string,
+    name: string
+  ) => {
+    showAlert(
+      "Retirer le participant",
+      `Voulez-vous retirer ${name} de la liste ?`,
+      [
+        { text: "Non", style: "cancel" },
+        {
+          text: "Oui",
+          style: "destructive",
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              await requestsApi.reject(requestId);
+              loadEvent();
+            } catch (error: any) {
+              showAlert(
+                "Erreur",
+                error.message || "Impossible de retirer le participant",
+                undefined,
+                "error"
+              );
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ],
+      "confirm"
+    );
+  };
+
+  const handleRemoveInitialParticipant = async (
+    index: number,
+    name: string
+  ) => {
+    if (!event) return;
+
+    showAlert(
+      "Retirer le participant",
+      `Voulez-vous retirer ${name} de la liste ?`,
+      [
+        { text: "Non", style: "cancel" },
+        {
+          text: "Oui",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const updatedEvent = await eventsApi.removeInitialParticipant(
+                event.id,
+                index
+              );
+              setEvent(updatedEvent);
+            } catch (error: any) {
+              showAlert(
+                "Erreur",
+                error.message || "Impossible de retirer le participant",
+                undefined,
+                "error"
+              );
+            }
+          },
+        },
+      ],
+      "confirm"
+    );
+  };
+
+  const openAddParticipantModal = () => {
+    setParticipantName("");
+    setEditingParticipantIndex(null);
+    setShowParticipantModal(true);
+  };
+
+  const openEditParticipantModal = (index: number, name: string) => {
+    setParticipantName(name);
+    setEditingParticipantIndex(index);
+    setShowParticipantModal(true);
+  };
+
+  const handleSaveParticipant = async () => {
+    if (!event || !participantName.trim()) return;
+
+    try {
+      let updatedEvent;
+      if (editingParticipantIndex !== null) {
+        // Modifier un participant existant
+        updatedEvent = await eventsApi.updateInitialParticipant(
+          event.id,
+          editingParticipantIndex,
+          participantName.trim()
+        );
+      } else {
+        // Ajouter un nouveau participant
+        updatedEvent = await eventsApi.addInitialParticipant(
+          event.id,
+          participantName.trim()
+        );
+      }
+      setEvent(updatedEvent);
+      setShowParticipantModal(false);
+      setParticipantName("");
+      setEditingParticipantIndex(null);
+    } catch (error: any) {
+      showAlert(
+        "Erreur",
+        error.message || "Impossible de sauvegarder le participant",
+        undefined,
+        "error"
+      );
     }
   };
 
   const handleDeleteEvent = async () => {
     if (!event) return;
 
-    Alert.alert("Supprimer", "Voulez-vous vraiment supprimer cet événement?", [
-      { text: "Non", style: "cancel" },
-      {
-        text: "Oui",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await eventsApi.delete(event.id);
-            Alert.alert("Succès", "Événement supprimé");
-            navigation.goBack();
-          } catch (error: any) {
-            Alert.alert("Erreur", error.message);
-          }
+    showAlert(
+      "Supprimer",
+      "Voulez-vous vraiment supprimer cet événement?",
+      [
+        { text: "Non", style: "cancel" },
+        {
+          text: "Oui",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await eventsApi.delete(event.id);
+              showAlert(
+                "Succès",
+                "Événement supprimé",
+                [{ text: "OK", onPress: () => navigation.goBack() }],
+                "success"
+              );
+            } catch (error: any) {
+              showAlert("Erreur", error.message, undefined, "error");
+            }
+          },
         },
-      },
-    ]);
+      ],
+      "confirm"
+    );
+  };
+
+  const openInWaze = () => {
+    if (!event) return;
+    setShowNavigationModal(false);
+    const url = `https://waze.com/ul?ll=${event.latitude},${event.longitude}&navigate=yes`;
+    Linking.openURL(url).catch(() => {
+      showAlert("Erreur", "Impossible d'ouvrir Waze", undefined, "error");
+    });
+  };
+
+  const openInGoogleMaps = () => {
+    if (!event) return;
+    setShowNavigationModal(false);
+    const url = Platform.select({
+      ios: `comgooglemaps://?daddr=${event.latitude},${event.longitude}&directionsmode=driving`,
+      android: `google.navigation:q=${event.latitude},${event.longitude}`,
+    });
+
+    if (url) {
+      Linking.canOpenURL(url).then((supported) => {
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          // Fallback vers la version web
+          Linking.openURL(
+            `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`
+          );
+        }
+      });
+    }
+  };
+
+  const openNavigationOptions = () => {
+    setShowNavigationModal(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -299,9 +487,28 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Lieu</Text>
-              <Text style={styles.detailValue}>{event.address}</Text>
-              <Text style={styles.detailSubvalue}>{event.city}</Text>
+              {isOrganizer || myRequest?.status === "ACCEPTED" ? (
+                <>
+                  <Text style={styles.detailValue}>{event.address}</Text>
+                  <Text style={styles.detailSubvalue}>{event.city}</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.detailValue}>{event.city}</Text>
+                  <Text style={styles.addressHidden}>
+                    🔒 Adresse visible après acceptation
+                  </Text>
+                </>
+              )}
             </View>
+            {(isOrganizer || myRequest?.status === "ACCEPTED") && (
+              <TouchableOpacity
+                style={styles.navigationButton}
+                onPress={openNavigationOptions}
+              >
+                <Text style={styles.navigationButtonText}>🚗</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -331,6 +538,112 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
             </View>
           </View>
         </View>
+
+        {/* Participants List - visible only for organizer or accepted users */}
+        {(isOrganizer || myRequest?.status === "ACCEPTED") && (
+          <View style={styles.card}>
+            <View style={styles.cardTitleRow}>
+              <Text style={styles.cardTitle}>Participants</Text>
+              {isOrganizer && (
+                <TouchableOpacity
+                  style={styles.addParticipantBtn}
+                  onPress={openAddParticipantModal}
+                >
+                  <Text style={styles.addParticipantBtnText}>+ Ajouter</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Participants initiaux */}
+            {event.initialParticipants?.map((name: string, index: number) => (
+              <View key={`initial-${index}`} style={styles.participantRow}>
+                <View style={styles.participantAvatar}>
+                  <Text style={styles.participantAvatarText}>
+                    {name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.participantName}>{name}</Text>
+                {isOrganizer ? (
+                  <View style={styles.participantActions}>
+                    <TouchableOpacity
+                      style={styles.editParticipantBtn}
+                      onPress={() => openEditParticipantModal(index, name)}
+                    >
+                      <Text style={styles.editParticipantBtnText}>✎</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.removeParticipantBtn}
+                      onPress={() =>
+                        handleRemoveInitialParticipant(index, name)
+                      }
+                    >
+                      <Text style={styles.removeParticipantBtnText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.participantBadge}>
+                    <Text style={styles.participantBadgeText}>Confirmé</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+
+            {/* Participants acceptés via l'app */}
+            {acceptedRequests.map((request) => (
+              <View key={request.id} style={styles.participantRow}>
+                <View style={styles.participantAvatar}>
+                  <Text style={styles.participantAvatarText}>
+                    {(request.user.name || request.user.email)
+                      .charAt(0)
+                      .toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.participantName}>
+                  {request.user.name || request.user.email}
+                </Text>
+                {isOrganizer ? (
+                  <View style={styles.participantActions}>
+                    <TouchableOpacity
+                      style={styles.removeParticipantBtn}
+                      onPress={() =>
+                        handleRemoveAcceptedParticipant(
+                          request.id,
+                          request.user.name || request.user.email
+                        )
+                      }
+                    >
+                      <Text style={styles.removeParticipantBtnText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.participantBadge}>
+                    <Text style={styles.participantBadgeText}>Confirmé</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+
+            {/* Message si aucun participant */}
+            {(!event.initialParticipants ||
+              event.initialParticipants.length === 0) &&
+              acceptedRequests.length === 0 && (
+                <Text style={styles.noParticipantsText}>
+                  Aucun participant pour le moment
+                </Text>
+              )}
+          </View>
+        )}
+
+        {/* Participants hidden message for non-accepted users */}
+        {!isOrganizer && myRequest?.status !== "ACCEPTED" && (
+          <View style={styles.participantsHiddenCard}>
+            <Text style={styles.participantsHiddenIcon}>👥</Text>
+            <Text style={styles.participantsHiddenText}>
+              La liste des participants sera visible après acceptation de votre
+              demande
+            </Text>
+          </View>
+        )}
 
         {/* Action Section for non-organizers */}
         {!isOrganizer && (
@@ -464,6 +777,113 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
         <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* Modal pour ajouter/modifier un participant */}
+      <Modal
+        visible={showParticipantModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowParticipantModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {editingParticipantIndex !== null
+                ? "Modifier le participant"
+                : "Ajouter un participant"}
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Nom du participant"
+              value={participantName}
+              onChangeText={setParticipantName}
+              autoCapitalize="words"
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => {
+                  setShowParticipantModal(false);
+                  setParticipantName("");
+                  setEditingParticipantIndex(null);
+                }}
+              >
+                <Text style={styles.modalCancelBtnText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalSaveBtn,
+                  !participantName.trim() && styles.modalSaveBtnDisabled,
+                ]}
+                onPress={handleSaveParticipant}
+                disabled={!participantName.trim()}
+              >
+                <Text style={styles.modalSaveBtnText}>
+                  {editingParticipantIndex !== null ? "Modifier" : "Ajouter"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de navigation */}
+      <Modal
+        visible={showNavigationModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowNavigationModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowNavigationModal(false)}
+        >
+          <View style={styles.navigationModalContent}>
+            <Image source={rabinIcon} style={styles.navigationModalIcon} />
+            <Text style={styles.navigationModalTitle}>Itinéraire</Text>
+            <Text style={styles.navigationModalSubtitle}>
+              Choisissez votre application de navigation
+            </Text>
+            <View style={styles.navigationModalButtons}>
+              <TouchableOpacity
+                style={styles.navigationOption}
+                onPress={openInWaze}
+              >
+                <Image source={wazeLogo} style={styles.navigationOptionLogo} />
+                <Text style={styles.navigationOptionText}>Waze</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.navigationOption}
+                onPress={openInGoogleMaps}
+              >
+                <Image
+                  source={googleMapsLogo}
+                  style={styles.navigationOptionLogo}
+                />
+                <Text style={styles.navigationOptionText}>Google Maps</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.navigationCancelBtn}
+              onPress={() => setShowNavigationModal(false)}
+            >
+              <Text style={styles.navigationCancelBtnText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Alert Modal */}
+      <AlertModal
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        buttons={alertState.buttons}
+        onClose={hideAlert}
+      />
     </View>
   );
 };
@@ -570,6 +990,47 @@ const styles = StyleSheet.create({
     color: "#1E293B",
     marginBottom: 16,
   },
+  cardTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  addParticipantBtn: {
+    backgroundColor: "#EEF2FF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  addParticipantBtnText: {
+    fontSize: 13,
+    color: "#4F46E5",
+    fontWeight: "600",
+  },
+  participantActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  editParticipantBtn: {
+    width: 32,
+    height: 32,
+    backgroundColor: "#EEF2FF",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  editParticipantBtnText: {
+    fontSize: 14,
+    color: "#4F46E5",
+  },
+  noParticipantsText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    fontStyle: "italic",
+    paddingVertical: 16,
+  },
   progressHeader: {
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
@@ -649,6 +1110,24 @@ const styles = StyleSheet.create({
     color: "#64748B",
     marginTop: 2,
   },
+  addressHidden: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 4,
+    fontStyle: "italic",
+  },
+  navigationButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: "#EEF2FF",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: "auto",
+  },
+  navigationButtonText: {
+    fontSize: 22,
+  },
   divider: {
     height: 1,
     backgroundColor: "#F1F5F9",
@@ -690,6 +1169,80 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1E293B",
     fontWeight: "600" as const,
+  },
+  participantRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  participantAvatar: {
+    width: 40,
+    height: 40,
+    backgroundColor: "#E0E7FF",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  participantAvatarText: {
+    color: "#4F46E5",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  participantName: {
+    flex: 1,
+    fontSize: 15,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  participantBadge: {
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  participantBadgeText: {
+    fontSize: 11,
+    color: "#166534",
+    fontWeight: "600",
+  },
+  participantBadgeApp: {
+    backgroundColor: "#EEF2FF",
+  },
+  participantBadgeTextApp: {
+    color: "#4F46E5",
+  },
+  removeParticipantBtn: {
+    width: 32,
+    height: 32,
+    backgroundColor: "#FEE2E2",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeParticipantBtnText: {
+    fontSize: 14,
+    color: "#EF4444",
+    fontWeight: "600",
+  },
+  participantsHiddenCard: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  participantsHiddenIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  participantsHiddenText: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 20,
   },
   actionSection: {
     marginBottom: 16,
@@ -823,26 +1376,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
-  participantAvatar: {
-    width: 36,
-    height: 36,
-    backgroundColor: "#DCFCE7",
-    borderRadius: 18,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    marginRight: 12,
-  },
-  participantAvatarText: {
-    color: "#10B981",
-    fontSize: 14,
-    fontWeight: "600" as const,
-  },
-  participantName: {
-    flex: 1,
-    fontSize: 15,
-    color: "#1E293B",
-    fontWeight: "500" as const,
-  },
   checkMark: {
     color: "#10B981",
     fontSize: 16,
@@ -850,5 +1383,130 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 40,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    maxWidth: 340,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalInput: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: "#1E293B",
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  modalCancelBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  modalSaveBtn: {
+    flex: 1,
+    backgroundColor: "#4F46E5",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  modalSaveBtnDisabled: {
+    backgroundColor: "#C7D2FE",
+  },
+  modalSaveBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  // Navigation Modal styles
+  navigationModalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    width: "100%",
+    maxWidth: 340,
+    alignItems: "center",
+  },
+  navigationModalIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    marginBottom: 16,
+  },
+  navigationModalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 4,
+  },
+  navigationModalSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginBottom: 24,
+  },
+  navigationModalButtons: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+    marginBottom: 16,
+  },
+  navigationOption: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  navigationOptionLogo: {
+    width: 40,
+    height: 40,
+    marginBottom: 8,
+    resizeMode: "contain",
+  },
+  navigationOptionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  navigationCancelBtn: {
+    width: "100%",
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  navigationCancelBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#6B7280",
   },
 });

@@ -190,7 +190,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </Text>
           </View>
           <Text style={styles.userName}>{user?.name || "Utilisateur"}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
         </View>
 
         {/* Tabs */}

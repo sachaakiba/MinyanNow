@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Modal,
@@ -16,8 +15,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { RootStackParamList } from "../types/navigation";
-import { Input } from "../components/Input";
-import { Button } from "../components/Button";
+import { Input, Button, AlertModal, useAlert } from "../components";
 import {
   eventsApi,
   EventType,
@@ -65,12 +63,42 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   const [maxParticipants, setMaxParticipants] = useState("10");
   const [loading, setLoading] = useState(false);
 
+  // Participants initiaux (déjà présents)
+  const [initialParticipants, setInitialParticipants] = useState<string[]>([]);
+  const [newParticipantName, setNewParticipantName] = useState("");
+
   // Picker visibility states
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
 
   const googlePlacesRef = useRef<any>(null);
+
+  // Alert modal
+  const { alertState, showAlert, hideAlert } = useAlert();
+
+  // Nombre de places restantes à pourvoir
+  const remainingSpots = parseInt(maxParticipants) - initialParticipants.length;
+
+  const addParticipant = () => {
+    const name = newParticipantName.trim();
+    if (!name) return;
+    if (initialParticipants.length >= parseInt(maxParticipants) - 1) {
+      showAlert(
+        "Maximum atteint",
+        "Vous devez laisser au moins une place pour les demandes",
+        undefined,
+        "warning"
+      );
+      return;
+    }
+    setInitialParticipants([...initialParticipants, name]);
+    setNewParticipantName("");
+  };
+
+  const removeParticipant = (index: number) => {
+    setInitialParticipants(initialParticipants.filter((_, i) => i !== index));
+  };
 
   const formatDate = (date: Date) => {
     const days = [
@@ -134,7 +162,12 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
       latitude === null ||
       longitude === null
     ) {
-      Alert.alert("Erreur", "Veuillez remplir tous les champs obligatoires");
+      showAlert(
+        "Erreur",
+        "Veuillez remplir tous les champs obligatoires",
+        undefined,
+        "error"
+      );
       return;
     }
 
@@ -156,13 +189,22 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         latitude,
         longitude,
         maxParticipants: parseInt(maxParticipants) || 10,
+        initialParticipants,
       });
 
-      Alert.alert("Succès", "Événement créé avec succès!", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      showAlert(
+        "Succès",
+        "Événement créé avec succès!",
+        [{ text: "OK", onPress: () => navigation.goBack() }],
+        "success"
+      );
     } catch (error: any) {
-      Alert.alert("Erreur", error.message || "Impossible de créer l'événement");
+      showAlert(
+        "Erreur",
+        error.message || "Impossible de créer l'événement",
+        undefined,
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -483,28 +525,88 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           <Text style={styles.addressArrow}>›</Text>
         </TouchableOpacity>
 
-        {/* Participants Picker */}
-        <Text style={styles.sectionTitle}>Combien de personnes ?</Text>
+        {/* Participants déjà présents */}
+        <Text style={styles.sectionTitle}>Personnes déjà présentes</Text>
+        <Text style={styles.sectionSubtitle}>
+          Ajoutez les noms des personnes qui seront déjà sur place
+        </Text>
+
+        <View style={styles.addParticipantRow}>
+          <View style={styles.addParticipantInput}>
+            <Input
+              label=""
+              placeholder="Nom du participant"
+              value={newParticipantName}
+              onChangeText={setNewParticipantName}
+              autoCapitalize="words"
+            />
+          </View>
+          <TouchableOpacity
+            style={[
+              styles.addParticipantBtn,
+              !newParticipantName.trim() && styles.addParticipantBtnDisabled,
+            ]}
+            onPress={addParticipant}
+            disabled={!newParticipantName.trim()}
+          >
+            <Text style={styles.addParticipantBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+
+        {initialParticipants.length > 0 && (
+          <View style={styles.participantsList}>
+            {initialParticipants.map((name, index) => (
+              <View key={index} style={styles.participantItem}>
+                <Text style={styles.participantName}>{name}</Text>
+                <TouchableOpacity
+                  style={styles.removeParticipantBtn}
+                  onPress={() => removeParticipant(index)}
+                >
+                  <Text style={styles.removeParticipantBtnText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {initialParticipants.length > 0 && (
+          <View style={styles.currentCountInfo}>
+            <Text style={styles.currentCountText}>
+              👥 {initialParticipants.length} personne
+              {initialParticipants.length > 1 ? "s" : ""} déjà présente
+              {initialParticipants.length > 1 ? "s" : ""}
+            </Text>
+          </View>
+        )}
+
+        {/* Nombre de personnes recherchées */}
+        <Text style={styles.sectionTitle}>
+          Combien de personnes recherchez-vous ?
+        </Text>
+        <Text style={styles.sectionSubtitle}>
+          Indiquez le nombre de personnes supplémentaires dont vous avez besoin
+        </Text>
+
         <View style={styles.participantsPicker}>
           <TouchableOpacity
             style={[
               styles.participantsBtn,
-              parseInt(maxParticipants) <= 1
-                ? styles.participantsBtnDisabled
-                : null,
+              remainingSpots <= 1 ? styles.participantsBtnDisabled : null,
             ]}
             onPress={() => {
-              const current = parseInt(maxParticipants) || 10;
-              if (current > 1) setMaxParticipants(String(current - 1));
+              if (remainingSpots > 1)
+                setMaxParticipants(String(parseInt(maxParticipants) - 1));
             }}
-            disabled={parseInt(maxParticipants) <= 1}
+            disabled={remainingSpots <= 1}
           >
             <Text style={styles.participantsBtnText}>−</Text>
           </TouchableOpacity>
 
           <View style={styles.participantsValueContainer}>
-            <Text style={styles.participantsValue}>{maxParticipants}</Text>
-            <Text style={styles.participantsLabel}>personnes</Text>
+            <Text style={styles.participantsValue}>{remainingSpots}</Text>
+            <Text style={styles.participantsLabel}>
+              personne{remainingSpots > 1 ? "s" : ""}
+            </Text>
           </View>
 
           <TouchableOpacity
@@ -524,10 +626,23 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           </TouchableOpacity>
         </View>
 
-        <View style={styles.participantsInfo}>
-          <Text style={styles.participantsInfoText}>
-            💡 Maximum 10 personnes pour un minyan
-          </Text>
+        <View style={styles.participantsSummary}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Déjà présents</Text>
+            <Text style={styles.summaryValue}>
+              {initialParticipants.length}
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Recherchés</Text>
+            <Text style={[styles.summaryValue, styles.summaryHighlight]}>
+              {remainingSpots}
+            </Text>
+          </View>
+          <View style={[styles.summaryRow, styles.summaryRowTotal]}>
+            <Text style={styles.summaryLabelTotal}>Total pour le minyan</Text>
+            <Text style={styles.summaryValueTotal}>{maxParticipants}</Text>
+          </View>
         </View>
 
         <Button
@@ -541,6 +656,16 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
       {renderDatePicker()}
       {renderTimePicker()}
       {renderAddressModal()}
+
+      {/* Alert Modal */}
+      <AlertModal
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        buttons={alertState.buttons}
+        onClose={hideAlert}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -856,6 +981,125 @@ const styles = StyleSheet.create({
   participantsInfoText: {
     fontSize: 14,
     color: "#92400E",
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginBottom: 16,
+    marginTop: -8,
+  },
+  addParticipantRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+  },
+  addParticipantInput: {
+    flex: 1,
+  },
+  addParticipantBtn: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 48,
+    height: 48,
+    backgroundColor: "#4F46E5",
+    borderRadius: 12,
+  },
+  addParticipantBtnDisabled: {
+    backgroundColor: "#E5E7EB",
+  },
+  addParticipantBtnText: {
+    fontSize: 24,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  participantsList: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  participantItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  participantName: {
+    fontSize: 15,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  removeParticipantBtn: {
+    width: 28,
+    height: 28,
+    backgroundColor: "#FEE2E2",
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeParticipantBtnText: {
+    fontSize: 14,
+    color: "#EF4444",
+    fontWeight: "600",
+  },
+  participantsSummary: {
+    backgroundColor: "#EEF2FF",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  summaryValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  summaryHighlight: {
+    color: "#4F46E5",
+    fontSize: 16,
+  },
+  summaryRowTotal: {
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#C7D2FE",
+    marginBottom: 0,
+  },
+  summaryLabelTotal: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  summaryValueTotal: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#4F46E5",
+  },
+  currentCountInfo: {
+    backgroundColor: "#DCFCE7",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 24,
+  },
+  currentCountText: {
+    fontSize: 14,
+    color: "#166534",
+    fontWeight: "500",
   },
   createButton: {
     marginTop: 8,

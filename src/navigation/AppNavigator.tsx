@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { SignInScreen } from "../screens/SignInScreen";
-import { SignUpScreen } from "../screens/SignUpScreen";
+import { PhoneAuthScreen } from "../screens/PhoneAuthScreen";
+import { OTPVerificationScreen } from "../screens/OTPVerificationScreen";
+import { CompleteProfileScreen } from "../screens/CompleteProfileScreen";
 import { MapScreen } from "../screens/MapScreen";
 import { CreateEventScreen } from "../screens/CreateEventScreen";
 import { EventDetailScreen } from "../screens/EventDetailScreen";
@@ -16,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isProfileComplete } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
   // Show splash screen on first load
@@ -40,7 +41,25 @@ export const AppNavigator: React.FC = () => {
           animation: "slide_from_right",
         }}
       >
-        {isAuthenticated ? (
+        {!isAuthenticated ? (
+          // Non connecté: écrans d'authentification
+          <>
+            <Stack.Screen name="PhoneAuth" component={PhoneAuthScreen} />
+            <Stack.Screen
+              name="OTPVerification"
+              component={OTPVerificationScreen}
+            />
+          </>
+        ) : !isProfileComplete ? (
+          // Connecté mais profil incomplet
+          <>
+            <Stack.Screen
+              name="CompleteProfile"
+              component={CompleteProfileScreen}
+            />
+          </>
+        ) : (
+          // Connecté et profil complet: app principale
           <>
             <Stack.Screen name="Home" component={MapScreen} />
             <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
@@ -50,11 +69,6 @@ export const AppNavigator: React.FC = () => {
               name="MyParticipations"
               component={MyParticipationsScreen}
             />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="SignIn" component={SignInScreen} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} />
           </>
         )}
       </Stack.Navigator>
