@@ -169,6 +169,8 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   };
 
   const renderDatePicker = () => {
+    if (!showDatePicker) return null;
+
     if (Platform.OS === "ios") {
       return (
         <Modal
@@ -177,30 +179,45 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           animationType="slide"
           onRequestClose={() => setShowDatePicker(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowDatePicker(false)}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+              style={styles.modalContent}
+            >
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Sélectionner une date</Text>
                 <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.modalDone}>Terminé</Text>
+                  <Text style={styles.modalCancel}>Annuler</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Date</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.modalDone}>OK</Text>
                 </TouchableOpacity>
               </View>
               <DateTimePicker
                 value={selectedDate}
                 mode="date"
-                display="spinner"
-                onChange={onDateChange}
+                display="inline"
+                onChange={(event, date) => {
+                  if (date) setSelectedDate(date);
+                }}
                 minimumDate={new Date()}
                 locale="fr-FR"
-                style={styles.iosPicker}
+                style={styles.iosDatePicker}
+                themeVariant="light"
               />
-            </View>
-          </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
         </Modal>
       );
     }
 
-    return showDatePicker ? (
+    // Android
+    return (
       <DateTimePicker
         value={selectedDate}
         mode="date"
@@ -208,10 +225,12 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         onChange={onDateChange}
         minimumDate={new Date()}
       />
-    ) : null;
+    );
   };
 
   const renderTimePicker = () => {
+    if (!showTimePicker) return null;
+
     if (Platform.OS === "ios") {
       return (
         <Modal
@@ -220,29 +239,44 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           animationType="slide"
           onRequestClose={() => setShowTimePicker(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowTimePicker(false)}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+              style={styles.modalContent}
+            >
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Sélectionner une heure</Text>
                 <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                  <Text style={styles.modalDone}>Terminé</Text>
+                  <Text style={styles.modalCancel}>Annuler</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Heure</Text>
+                <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+                  <Text style={styles.modalDone}>OK</Text>
                 </TouchableOpacity>
               </View>
               <DateTimePicker
                 value={selectedTime}
                 mode="time"
                 display="spinner"
-                onChange={onTimeChange}
+                onChange={(event, date) => {
+                  if (date) setSelectedTime(date);
+                }}
                 locale="fr-FR"
-                style={styles.iosPicker}
+                style={styles.iosTimePicker}
+                themeVariant="light"
               />
-            </View>
-          </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
         </Modal>
       );
     }
 
-    return showTimePicker ? (
+    // Android
+    return (
       <DateTimePicker
         value={selectedTime}
         mode="time"
@@ -250,7 +284,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         onChange={onTimeChange}
         is24Hour={true}
       />
-    ) : null;
+    );
   };
 
   const renderAddressModal = () => (
@@ -630,7 +664,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   modalHeader: {
     flexDirection: "row" as const,
@@ -641,16 +675,25 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E5E7EB",
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "600" as const,
     color: "#111827",
+  },
+  modalCancel: {
+    fontSize: 16,
+    fontWeight: "400" as const,
+    color: "#6B7280",
   },
   modalDone: {
     fontSize: 16,
     fontWeight: "600" as const,
     color: "#4F46E5",
   },
-  iosPicker: {
+  iosDatePicker: {
+    height: 350,
+    marginHorizontal: 8,
+  },
+  iosTimePicker: {
     height: 200,
   },
   // Address Styles
