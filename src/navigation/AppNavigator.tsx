@@ -8,6 +8,7 @@ import { MapScreen } from "../screens/MapScreen";
 import { CreateEventScreen } from "../screens/CreateEventScreen";
 import { EventDetailScreen } from "../screens/EventDetailScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
+import { MyParticipationsScreen } from "../screens/MyParticipationsScreen";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 
@@ -38,6 +39,10 @@ export const AppNavigator: React.FC = () => {
             <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
             <Stack.Screen name="EventDetail" component={EventDetailScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen
+              name="MyParticipations"
+              component={MyParticipationsScreen}
+            />
           </>
         ) : (
           <>

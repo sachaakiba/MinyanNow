@@ -5,4 +5,5 @@ export { MapScreen } from "./MapScreen";
 export { CreateEventScreen } from "./CreateEventScreen";
 export { EventDetailScreen } from "./EventDetailScreen";
 export { ProfileScreen } from "./ProfileScreen";
+export { MyParticipationsScreen } from "./MyParticipationsScreen";
 

@@ -12,7 +12,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
-import { eventsApi, Event, EVENT_TYPE_ICONS } from "../lib/api";
+import { eventsApi, requestsApi, Event, EVENT_TYPE_ICONS } from "../lib/api";
 import { EventCard } from "../components/EventCard";
 import { useAuth } from "../context/AuthContext";
 
@@ -141,9 +141,26 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleRequestJoin = () => {
-    if (selectedEvent) {
+  const [requestLoading, setRequestLoading] = useState(false);
+
+  const handleRequestJoin = async () => {
+    if (!selectedEvent) return;
+
+    setRequestLoading(true);
+    try {
+      await requestsApi.create(selectedEvent.id);
+      // Show success and close card
+      setSelectedEvent(null);
+      // Reload events to update the UI
+      loadLocationAndEvents();
+      // Navigate to participations to see the request
+      navigation.navigate("MyParticipations");
+    } catch (error: any) {
+      console.error("Error joining event:", error);
+      // If there's an error, navigate to detail page to see more info
       navigation.navigate("EventDetail", { eventId: selectedEvent.id });
+    } finally {
+      setRequestLoading(false);
     }
   };
 
@@ -240,6 +257,12 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={styles.headerButton}
+            onPress={() => navigation.navigate("MyParticipations")}
+          >
+            <Text style={styles.headerButtonText}>📋</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
             onPress={() => navigation.navigate("CreateEvent")}
           >
             <Text style={styles.headerButtonText}>＋</Text>
@@ -280,6 +303,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
                 ? handleRequestJoin
                 : undefined
             }
+            isLoading={requestLoading}
           />
         </Animated.View>
       )}
