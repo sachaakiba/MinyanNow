@@ -33,6 +33,11 @@ model User {
   community         String? // Communauté (Ashkénaze, Séfarade, etc.)
   profileCompleted  Boolean   @default(false) // Profil complété
 
+  // Vérification d'identité
+  idDocumentUrl String? // URL Cloudinary de la pièce d'identité
+  idDocumentId  String? // ID public Cloudinary pour suppression
+  idUploadedAt  DateTime? // Date d'upload de la pièce d'identité
+
   sessions      Session[]
   accounts      Account[]
   events        Event[]

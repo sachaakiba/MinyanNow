@@ -23,8 +23,9 @@ app.use(
 // Better Auth handler - must be before express.json() for multipart support
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
-// JSON parser for other routes
-app.use(express.json());
+// JSON parser for other routes - increased limit for base64 image uploads
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // API Routes
 app.use("/api/events", eventsRouter);

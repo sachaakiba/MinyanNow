@@ -1,4 +1,11 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   sendOTP,
   verifyOTP,
@@ -6,6 +13,7 @@ import {
   useSession,
   updateProfile,
 } from "../lib/auth-client";
+import { usersApi } from "../lib/api";
 
 interface User {
   id: string;
@@ -17,10 +25,10 @@ interface User {
   lastName?: string | null;
   hebrewName?: string | null;
   dateOfBirth?: string | null;
-  barMitzvahParasha?: string | null;
   synagogue?: string | null;
-  community?: string | null;
   profileCompleted?: boolean;
+  idDocumentUrl?: string | null;
+  idUploadedAt?: string | null;
 }
 
 interface ProfileData {
@@ -28,9 +36,7 @@ interface ProfileData {
   lastName: string;
   hebrewName?: string;
   dateOfBirth: string;
-  barMitzvahParasha: string;
   synagogue?: string;
-  community: string;
 }
 
 interface AuthContextType {
@@ -38,6 +44,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isProfileComplete: boolean;
+  hasIdDocument: boolean;
   sendOTP: (
     phoneNumber: string
   ) => Promise<{ success: boolean; error?: string }>;
@@ -58,9 +65,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { data: session, isPending, refetch } = useSession();
+  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  const user = session?.user as User | null;
+  const sessionUser = session?.user as User | null;
+
+  // Fetch full user profile when session is available
+  const fetchUserProfile = useCallback(async () => {
+    if (!sessionUser?.id) {
+      setUserProfile(null);
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const profile = await usersApi.getMe();
+      setUserProfile({
+        ...sessionUser,
+        ...profile,
+      });
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      setUserProfile(sessionUser);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [sessionUser?.id]);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
+
+  const user = userProfile || sessionUser;
   const isProfileComplete = !!user?.profileCompleted;
+  const hasIdDocument = !!user?.idDocumentUrl;
 
   const handleSendOTP = async (phoneNumber: string) => {
     try {
@@ -95,8 +133,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (result.error) {
         return { success: false, error: result.error.message };
       }
-      // Refresh session to get updated user data
+      // Refresh session and user profile to get updated user data
       refetch();
+      await fetchUserProfile();
       return { success: true };
     } catch (error: any) {
       return {
@@ -112,15 +151,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const refreshSession = () => {
     refetch();
+    fetchUserProfile();
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading: isPending,
-        isAuthenticated: !!user,
+        isLoading: isPending || profileLoading,
+        isAuthenticated: !!sessionUser,
         isProfileComplete,
+        hasIdDocument,
         sendOTP: handleSendOTP,
         verifyOTP: handleVerifyOTP,
         completeProfile: handleCompleteProfile,

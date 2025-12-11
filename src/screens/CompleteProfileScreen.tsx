@@ -7,8 +7,11 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Modal,
+  Image,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   Input,
@@ -19,6 +22,7 @@ import {
 } from "../components";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
+import { usersApi } from "../lib/api";
 
 type CompleteProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -29,73 +33,6 @@ interface CompleteProfileScreenProps {
   navigation: CompleteProfileScreenNavigationProp;
 }
 
-// Liste des parachiot de la Torah
-const PARACHIOT = [
-  "Berechit",
-  "Noa'h",
-  "Lekh Lekha",
-  "Vayera",
-  "Hayé Sarah",
-  "Toledot",
-  "Vayetsé",
-  "Vayichla'h",
-  "Vayéchev",
-  "Mikets",
-  "Vayigach",
-  "Vaye'hi",
-  "Chemot",
-  "Vaéra",
-  "Bo",
-  "Bechala'h",
-  "Yitro",
-  "Michpatim",
-  "Terouma",
-  "Tetsavé",
-  "Ki Tissa",
-  "Vayakhel",
-  "Pekoudé",
-  "Vayikra",
-  "Tsav",
-  "Chemini",
-  "Tazria",
-  "Metsora",
-  "A'haré Mot",
-  "Kedochim",
-  "Emor",
-  "Behar",
-  "Be'houkotaï",
-  "Bamidbar",
-  "Nasso",
-  "Behaalotekha",
-  "Chela'h Lekha",
-  "Kora'h",
-  "Houkat",
-  "Balak",
-  "Pin'has",
-  "Matot",
-  "Massé",
-  "Devarim",
-  "Vaet'hanan",
-  "Ekev",
-  "Reé",
-  "Choftim",
-  "Ki Tetsé",
-  "Ki Tavo",
-  "Nitsavim",
-  "Vayelekh",
-  "Haazinou",
-  "Vezot Haberakha",
-];
-
-const COMMUNITIES = [
-  { id: "ashkenaze", label: "Ashkénaze" },
-  { id: "sefarade", label: "Séfarade" },
-  { id: "mizrahi", label: "Mizrahi" },
-  { id: "teimani", label: "Téimani (Yéménite)" },
-  { id: "loubavitch", label: "Loubavitch" },
-  { id: "other", label: "Autre" },
-];
-
 export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
   navigation,
 }) => {
@@ -105,15 +42,15 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
   const [lastName, setLastName] = useState("");
   const [hebrewName, setHebrewName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-  const [barMitzvahParasha, setBarMitzvahParasha] = useState("");
   const [synagogue, setSynagogue] = useState("");
-  const [community, setCommunity] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showParashaModal, setShowParashaModal] = useState(false);
-  const [showCommunityModal, setShowCommunityModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // ID Document
+  const [idDocumentImage, setIdDocumentImage] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState(false);
 
   // Alert modal
   const { alertState, showAlert, hideAlert } = useAlert();
@@ -140,16 +77,92 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
       }
     }
 
-    if (!barMitzvahParasha) {
-      newErrors.barMitzvahParasha = "La paracha de Bar Mitzvah est requise";
-    }
-
-    if (!community) {
-      newErrors.community = "La communauté est requise";
+    if (!idDocumentImage) {
+      newErrors.idDocument = "La pièce d'identité est requise";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const pickIdDocument = async () => {
+    setErrors((prev) => ({ ...prev, idDocument: "" }));
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      showAlert(
+        "Permission refusée",
+        "Nous avons besoin de l'accès à votre galerie pour sélectionner votre pièce d'identité",
+        undefined,
+        "error"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]?.base64) {
+      setIdDocumentImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const takeIdPhoto = async () => {
+    setErrors((prev) => ({ ...prev, idDocument: "" }));
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      showAlert(
+        "Permission refusée",
+        "Nous avons besoin de l'accès à votre caméra pour photographier votre pièce d'identité",
+        undefined,
+        "error"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]?.base64) {
+      setIdDocumentImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const pickIdFromFiles = async () => {
+    setErrors((prev) => ({ ...prev, idDocument: "" }));
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+          encoding: "base64",
+        });
+        const mimeType = asset.mimeType || "image/jpeg";
+        setIdDocumentImage(`data:${mimeType};base64,${base64}`);
+      }
+    } catch (err: any) {
+      showAlert(
+        "Erreur",
+        "Erreur lors de la sélection du fichier",
+        undefined,
+        "error"
+      );
+    }
   };
 
   const handleDateChange = (selectedDate: Date) => {
@@ -171,14 +184,32 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     setLoading(true);
     try {
+      // First upload the ID document
+      if (idDocumentImage) {
+        setUploadingId(true);
+        try {
+          await usersApi.uploadIdDocument(idDocumentImage);
+        } catch (error: any) {
+          showAlert(
+            "Erreur",
+            error.message || "Impossible d'envoyer la pièce d'identité",
+            undefined,
+            "error"
+          );
+          setLoading(false);
+          setUploadingId(false);
+          return;
+        }
+        setUploadingId(false);
+      }
+
+      // Then complete the profile
       const result = await completeProfile({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         hebrewName: hebrewName.trim() || undefined,
         dateOfBirth: dateOfBirth!.toISOString(),
-        barMitzvahParasha,
         synagogue: synagogue.trim() || undefined,
-        community,
       });
 
       if (result.success) {
@@ -280,58 +311,6 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
             )}
           </View>
 
-          {/* Paracha Bar Mitzvah */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Paracha de votre Bar Mitzvah *</Text>
-            <TouchableOpacity
-              style={[
-                styles.selectButton,
-                errors.barMitzvahParasha && styles.selectButtonError,
-              ]}
-              onPress={() => setShowParashaModal(true)}
-            >
-              <Text
-                style={[
-                  styles.selectButtonText,
-                  !barMitzvahParasha && styles.selectButtonPlaceholder,
-                ]}
-              >
-                {barMitzvahParasha || "Sélectionner une paracha"}
-              </Text>
-              <Text style={styles.selectButtonIcon}>📖</Text>
-            </TouchableOpacity>
-            {errors.barMitzvahParasha && (
-              <Text style={styles.errorText}>{errors.barMitzvahParasha}</Text>
-            )}
-          </View>
-
-          {/* Communauté */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Communauté *</Text>
-            <TouchableOpacity
-              style={[
-                styles.selectButton,
-                errors.community && styles.selectButtonError,
-              ]}
-              onPress={() => setShowCommunityModal(true)}
-            >
-              <Text
-                style={[
-                  styles.selectButtonText,
-                  !community && styles.selectButtonPlaceholder,
-                ]}
-              >
-                {community
-                  ? COMMUNITIES.find((c) => c.id === community)?.label
-                  : "Sélectionner votre communauté"}
-              </Text>
-              <Text style={styles.selectButtonIcon}>🕍</Text>
-            </TouchableOpacity>
-            {errors.community && (
-              <Text style={styles.errorText}>{errors.community}</Text>
-            )}
-          </View>
-
           {/* Synagogue */}
           <Input
             label="Synagogue fréquentée (optionnel)"
@@ -341,8 +320,82 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
             autoCapitalize="words"
           />
 
+          {/* Pièce d'identité */}
+          <View style={styles.idSection}>
+            <Text style={styles.idSectionTitle}>🪪 Pièce d'identité *</Text>
+            <View style={styles.idSecurityInfo}>
+              <Text style={styles.idSecurityIcon}>🔒</Text>
+              <Text style={styles.idSecurityText}>
+                Pour la sécurité de notre communauté, nous vérifions l'identité
+                de chaque membre. Votre document est stocké de manière sécurisée
+                et n'est visible que par les organisateurs d'événements.
+              </Text>
+            </View>
+
+            {idDocumentImage ? (
+              <View style={styles.idPreviewContainer}>
+                <Image
+                  source={{ uri: idDocumentImage }}
+                  style={styles.idPreviewImage}
+                  resizeMode="contain"
+                />
+                <TouchableOpacity
+                  style={styles.idChangeBtn}
+                  onPress={() => setIdDocumentImage(null)}
+                >
+                  <Text style={styles.idChangeBtnText}>Changer de photo</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.idUploadButtonsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.idUploadBtn,
+                    errors.idDocument && styles.idUploadBtnError,
+                  ]}
+                  onPress={takeIdPhoto}
+                >
+                  <Text style={styles.idUploadBtnText}>Prendre une photo</Text>
+                </TouchableOpacity>
+                <View style={styles.idUploadButtonsRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.idUploadBtnSecondary,
+                      errors.idDocument && styles.idUploadBtnError,
+                    ]}
+                    onPress={pickIdDocument}
+                  >
+                    <Text style={styles.idUploadBtnTextSecondary}>Galerie</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.idUploadBtnSecondary,
+                      errors.idDocument && styles.idUploadBtnError,
+                    ]}
+                    onPress={pickIdFromFiles}
+                  >
+                    <Text style={styles.idUploadBtnTextSecondary}>
+                      Fichiers
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            {errors.idDocument && (
+              <Text style={styles.errorText}>{errors.idDocument}</Text>
+            )}
+            <Text style={styles.idInfoText}>
+              Documents acceptés : Carte d'identité, Passeport, Permis de
+              conduire
+            </Text>
+          </View>
+
           <Button
-            title="Valider mon profil"
+            title={
+              uploadingId
+                ? "Envoi de la pièce d'identité..."
+                : "Valider mon profil"
+            }
             onPress={handleSubmit}
             loading={loading}
             style={styles.submitButton}
@@ -366,96 +419,6 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         maximumDate={new Date()}
         minimumDate={new Date(1930, 0, 1)}
       />
-
-      {/* Paracha Selection Modal */}
-      <Modal visible={showParashaModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.listModal}>
-            <View style={styles.listModalHeader}>
-              <Text style={styles.listModalTitle}>
-                Sélectionnez votre paracha
-              </Text>
-              <TouchableOpacity onPress={() => setShowParashaModal(false)}>
-                <Text style={styles.listModalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.listModalScroll}>
-              {PARACHIOT.map((parasha) => (
-                <TouchableOpacity
-                  key={parasha}
-                  style={[
-                    styles.listModalItem,
-                    barMitzvahParasha === parasha &&
-                      styles.listModalItemSelected,
-                  ]}
-                  onPress={() => {
-                    setBarMitzvahParasha(parasha);
-                    setErrors((prev) => ({ ...prev, barMitzvahParasha: "" }));
-                    setShowParashaModal(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.listModalItemText,
-                      barMitzvahParasha === parasha &&
-                        styles.listModalItemTextSelected,
-                    ]}
-                  >
-                    {parasha}
-                  </Text>
-                  {barMitzvahParasha === parasha && (
-                    <Text style={styles.listModalItemCheck}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Community Selection Modal */}
-      <Modal visible={showCommunityModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.listModal}>
-            <View style={styles.listModalHeader}>
-              <Text style={styles.listModalTitle}>
-                Sélectionnez votre communauté
-              </Text>
-              <TouchableOpacity onPress={() => setShowCommunityModal(false)}>
-                <Text style={styles.listModalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.listModalScroll}>
-              {COMMUNITIES.map((com) => (
-                <TouchableOpacity
-                  key={com.id}
-                  style={[
-                    styles.listModalItem,
-                    community === com.id && styles.listModalItemSelected,
-                  ]}
-                  onPress={() => {
-                    setCommunity(com.id);
-                    setErrors((prev) => ({ ...prev, community: "" }));
-                    setShowCommunityModal(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.listModalItemText,
-                      community === com.id && styles.listModalItemTextSelected,
-                    ]}
-                  >
-                    {com.label}
-                  </Text>
-                  {community === com.id && (
-                    <Text style={styles.listModalItemCheck}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
 
       {/* Alert Modal */}
       <AlertModal
@@ -554,66 +517,98 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
   },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
+  // ID Document styles
+  idSection: {
+    marginTop: 24,
+    marginBottom: 8,
   },
-  listModal: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "70%",
-  },
-  listModalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  listModalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  listModalClose: {
-    fontSize: 20,
-    color: "#6B7280",
-    padding: 4,
-  },
-  listModalScroll: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  listModalItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  listModalItemSelected: {
-    backgroundColor: "#EEF2FF",
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
-    borderBottomColor: "#EEF2FF",
-  },
-  listModalItemText: {
+  idSectionTitle: {
     fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 12,
+  },
+  idSecurityInfo: {
+    flexDirection: "row",
+    backgroundColor: "#F0FDF4",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    gap: 12,
+  },
+  idSecurityIcon: {
+    fontSize: 20,
+    marginTop: 2,
+  },
+  idSecurityText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#166534",
+    lineHeight: 19,
+  },
+  idPreviewContainer: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  idPreviewImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    marginBottom: 8,
+  },
+  idChangeBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  idChangeBtnText: {
+    fontSize: 14,
+    color: "#4F46E5",
+    fontWeight: "600",
+  },
+  idUploadButtonsContainer: {
+    gap: 12,
+    marginBottom: 8,
+  },
+  idUploadButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  idUploadBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4F46E5",
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  idUploadBtnSecondary: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  idUploadBtnError: {
+    borderColor: "#EF4444",
+    borderWidth: 1,
+  },
+  idUploadBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  idUploadBtnTextSecondary: {
+    fontSize: 14,
+    fontWeight: "600",
     color: "#374151",
   },
-  listModalItemTextSelected: {
-    color: "#4F46E5",
-    fontWeight: "600",
-  },
-  listModalItemCheck: {
-    fontSize: 18,
-    color: "#4F46E5",
-    fontWeight: "600",
+  idInfoText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    textAlign: "center",
+    marginTop: 8,
   },
 });

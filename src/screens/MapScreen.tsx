@@ -337,7 +337,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
           <View style={styles.bottomBarCreateButton}>
             <Text style={styles.bottomBarCreateIcon}>＋</Text>
           </View>
-          <Text style={styles.bottomBarLabel}>Créer</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

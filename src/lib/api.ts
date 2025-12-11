@@ -16,6 +16,8 @@ export interface User {
   id: string;
   name: string | null;
   email: string;
+  idDocumentUrl?: string | null;
+  idUploadedAt?: string | null;
 }
 
 export interface Event {
@@ -208,6 +210,44 @@ export const requestsApi = {
     await apiFetch<{ success: boolean }>(`/api/requests/${requestId}`, {
       method: "DELETE",
     });
+  },
+};
+
+// Users API
+export const usersApi = {
+  uploadIdDocument: async (
+    base64Image: string
+  ): Promise<{ success: boolean; idUploadedAt: string }> => {
+    return apiFetch<{ success: boolean; idUploadedAt: string }>(
+      "/api/users/id-document",
+      {
+        method: "POST",
+        body: JSON.stringify({ image: base64Image }),
+      }
+    );
+  },
+
+  getIdDocument: async (userId: string): Promise<{ url: string }> => {
+    return apiFetch<{ url: string }>(`/api/users/${userId}/id-document`);
+  },
+
+  getMe: async (): Promise<{
+    id: string;
+    name: string | null;
+    email: string;
+    phoneNumber: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    hebrewName: string | null;
+    dateOfBirth: string | null;
+    barMitzvahParasha: string | null;
+    synagogue: string | null;
+    community: string | null;
+    profileCompleted: boolean;
+    idDocumentUrl: string | null;
+    idUploadedAt: string | null;
+  }> => {
+    return apiFetch("/api/users/me");
   },
 };
 

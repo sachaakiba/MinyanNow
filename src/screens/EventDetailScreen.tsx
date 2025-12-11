@@ -25,7 +25,7 @@ import {
   EVENT_TYPE_ICONS,
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
-import { AlertModal, useAlert } from "../components";
+import { AlertModal, useAlert, IDViewerModal } from "../components";
 
 // Images
 const rabinIcon = require("../../assets/rabin.png");
@@ -69,6 +69,73 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   // Navigation modal state
   const [showNavigationModal, setShowNavigationModal] = useState(false);
+
+  // ID Viewer modal state
+  const [showIdViewer, setShowIdViewer] = useState(false);
+  const [viewingIdUser, setViewingIdUser] = useState<{
+    id: string;
+    name: string;
+    requestId: string;
+  } | null>(null);
+
+  const openIdViewer = (
+    userId: string,
+    userName: string,
+    requestId: string
+  ) => {
+    setViewingIdUser({ id: userId, name: userName, requestId });
+    setShowIdViewer(true);
+  };
+
+  const handleAcceptFromModal = async (requestId: string) => {
+    setActionLoading(true);
+    try {
+      await requestsApi.accept(requestId);
+      setShowIdViewer(false);
+      setViewingIdUser(null);
+      loadEvent();
+      showAlert(
+        "Participant accepté",
+        "Le participant a été ajouté à votre événement",
+        undefined,
+        "success"
+      );
+    } catch (error: any) {
+      showAlert(
+        "Erreur",
+        error.message || "Impossible d'accepter la demande",
+        undefined,
+        "error"
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectFromModal = async (requestId: string) => {
+    setActionLoading(true);
+    try {
+      await requestsApi.reject(requestId);
+      setShowIdViewer(false);
+      setViewingIdUser(null);
+      loadEvent();
+      showAlert(
+        "Demande refusée",
+        "La demande a été refusée",
+        undefined,
+        "info"
+      );
+    } catch (error: any) {
+      showAlert(
+        "Erreur",
+        error.message || "Impossible de refuser la demande",
+        undefined,
+        "error"
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadEvent();
@@ -716,8 +783,21 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
             <Text style={styles.cardTitle}>
               Demandes ({pendingRequests.length})
             </Text>
+            <Text style={styles.cardSubtitle}>
+              Vérifiez l'identité avant d'accepter
+            </Text>
             {pendingRequests.map((request) => (
-              <View key={request.id} style={styles.requestItem}>
+              <TouchableOpacity
+                key={request.id}
+                style={styles.requestItemClickable}
+                onPress={() =>
+                  openIdViewer(
+                    request.userId,
+                    request.user.name || request.user.email,
+                    request.id
+                  )
+                }
+              >
                 <View style={styles.requestAvatar}>
                   <Text style={styles.requestAvatarText}>
                     {(request.user.name || request.user.email)
@@ -729,24 +809,15 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   <Text style={styles.requestName}>
                     {request.user.name || request.user.email}
                   </Text>
+                  <View style={styles.viewIdHint}>
+                    <Text style={styles.viewIdHintIcon}>🪪</Text>
+                    <Text style={styles.viewIdHintText}>
+                      Appuyez pour vérifier l'identité
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.requestActions}>
-                  <TouchableOpacity
-                    style={styles.acceptBtn}
-                    onPress={() => handleAcceptRequest(request.id)}
-                    disabled={actionLoading}
-                  >
-                    <Text style={styles.acceptBtnText}>✓</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.rejectBtn}
-                    onPress={() => handleRejectRequest(request.id)}
-                    disabled={actionLoading}
-                  >
-                    <Text style={styles.rejectBtnText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                <Text style={styles.requestArrow}>→</Text>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -884,6 +955,23 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         buttons={alertState.buttons}
         onClose={hideAlert}
       />
+
+      {/* ID Viewer Modal */}
+      {viewingIdUser && (
+        <IDViewerModal
+          visible={showIdViewer}
+          userId={viewingIdUser.id}
+          userName={viewingIdUser.name}
+          requestId={viewingIdUser.requestId}
+          onClose={() => {
+            setShowIdViewer(false);
+            setViewingIdUser(null);
+          }}
+          onAccept={handleAcceptFromModal}
+          onReject={handleRejectFromModal}
+          actionLoading={actionLoading}
+        />
+      )}
     </View>
   );
 };
@@ -1338,6 +1426,37 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600" as const,
     color: "#1E293B",
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 12,
+  },
+  requestItemClickable: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    padding: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  viewIdHint: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    marginTop: 4,
+    gap: 4,
+  },
+  viewIdHintIcon: {
+    fontSize: 12,
+  },
+  viewIdHintText: {
+    fontSize: 12,
+    color: "#4F46E5",
+  },
+  requestArrow: {
+    fontSize: 18,
+    color: "#9CA3AF",
+    marginLeft: 8,
   },
   requestActions: {
     flexDirection: "row" as const,

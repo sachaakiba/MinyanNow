@@ -29,13 +29,13 @@ interface ProfileData {
   lastName: string;
   hebrewName?: string;
   dateOfBirth: string;
-  barMitzvahParasha: string;
   synagogue?: string;
-  community: string;
 }
 
 export const updateProfile = async (data: ProfileData) => {
   try {
+    console.log("📤 updateProfile called with:", data);
+    
     const response = await authClient.$fetch(`${API_URL}/api/users/profile`, {
       method: "PUT",
       body: data, // $fetch gère automatiquement la sérialisation JSON
@@ -43,7 +43,7 @@ export const updateProfile = async (data: ProfileData) => {
 
     return { data: response.data };
   } catch (error: any) {
-    console.error("updateProfile error:", error);
+    console.error("❌ updateProfile error:", error);
     return {
       error: {
         message: error.message || "Erreur lors de la sauvegarde",

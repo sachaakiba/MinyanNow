@@ -11,7 +11,7 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
-import { Button } from "../components/Button";
+import { Button, IDViewerModal, AlertModal, useAlert } from "../components";
 import { useAuth } from "../context/AuthContext";
 import {
   eventsApi,
@@ -43,6 +43,27 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("events");
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // ID Viewer modal state
+  const [showIdViewer, setShowIdViewer] = useState(false);
+  const [viewingIdUser, setViewingIdUser] = useState<{
+    id: string;
+    name: string;
+    requestId: string;
+  } | null>(null);
+
+  // Alert modal
+  const { alertState, showAlert, hideAlert } = useAlert();
+
+  const openIdViewer = (
+    userId: string,
+    userName: string,
+    requestId: string
+  ) => {
+    setViewingIdUser({ id: userId, name: userName, requestId });
+    setShowIdViewer(true);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -91,21 +112,53 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     loadData(true);
   };
 
-  const handleAcceptRequest = async (requestId: string) => {
+  const handleAcceptFromModal = async (requestId: string) => {
+    setActionLoading(true);
     try {
       await requestsApi.accept(requestId);
+      setShowIdViewer(false);
+      setViewingIdUser(null);
       loadData(true);
-    } catch (error) {
-      console.error("Error accepting request:", error);
+      showAlert(
+        "Participant accepté",
+        "Le participant a été ajouté à votre événement",
+        undefined,
+        "success"
+      );
+    } catch (error: any) {
+      showAlert(
+        "Erreur",
+        error.message || "Impossible d'accepter la demande",
+        undefined,
+        "error"
+      );
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleRejectRequest = async (requestId: string) => {
+  const handleRejectFromModal = async (requestId: string) => {
+    setActionLoading(true);
     try {
       await requestsApi.reject(requestId);
+      setShowIdViewer(false);
+      setViewingIdUser(null);
       loadData(true);
-    } catch (error) {
-      console.error("Error rejecting request:", error);
+      showAlert(
+        "Demande refusée",
+        "La demande a été refusée",
+        undefined,
+        "info"
+      );
+    } catch (error: any) {
+      showAlert(
+        "Erreur",
+        error.message || "Impossible de refuser la demande",
+        undefined,
+        "error"
+      );
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -413,7 +466,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                       </TouchableOpacity>
 
                       {requests.map((request) => (
-                        <View key={request.id} style={styles.requestCard}>
+                        <TouchableOpacity
+                          key={request.id}
+                          style={styles.requestCard}
+                          onPress={() =>
+                            openIdViewer(
+                              request.userId,
+                              request.user.name || request.user.email,
+                              request.id
+                            )
+                          }
+                        >
                           <View style={styles.requestAvatar}>
                             <Text style={styles.requestAvatarText}>
                               {(request.user.name || request.user.email)
@@ -425,28 +488,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                             <Text style={styles.requestName}>
                               {request.user.name || request.user.email}
                             </Text>
-                            <Text style={styles.requestDate}>
-                              Demande reçue le{" "}
-                              {new Date(request.createdAt).toLocaleDateString(
-                                "fr-FR"
-                              )}
-                            </Text>
+                            <View style={styles.viewIdHint}>
+                              <Text style={styles.viewIdHintIcon}>🪪</Text>
+                              <Text style={styles.viewIdHintText}>
+                                Appuyez pour vérifier l'identité
+                              </Text>
+                            </View>
                           </View>
-                          <View style={styles.requestActions}>
-                            <TouchableOpacity
-                              style={styles.acceptBtn}
-                              onPress={() => handleAcceptRequest(request.id)}
-                            >
-                              <Text style={styles.acceptBtnText}>✓</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={styles.rejectBtn}
-                              onPress={() => handleRejectRequest(request.id)}
-                            >
-                              <Text style={styles.rejectBtnText}>✕</Text>
-                            </TouchableOpacity>
-                          </View>
-                        </View>
+                          <Text style={styles.requestArrow}>→</Text>
+                        </TouchableOpacity>
                       ))}
                     </View>
                   ))
@@ -580,6 +630,33 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+
+      {/* ID Viewer Modal */}
+      {viewingIdUser && (
+        <IDViewerModal
+          visible={showIdViewer}
+          userId={viewingIdUser.id}
+          userName={viewingIdUser.name}
+          requestId={viewingIdUser.requestId}
+          onClose={() => {
+            setShowIdViewer(false);
+            setViewingIdUser(null);
+          }}
+          onAccept={handleAcceptFromModal}
+          onReject={handleRejectFromModal}
+          actionLoading={actionLoading}
+        />
+      )}
+
+      {/* Alert Modal */}
+      <AlertModal
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        buttons={alertState.buttons}
+        onClose={hideAlert}
+      />
     </View>
   );
 };
@@ -889,35 +966,23 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     marginTop: 2,
   },
-  requestActions: {
+  viewIdHint: {
     flexDirection: "row" as const,
-    gap: 8,
-  },
-  acceptBtn: {
-    width: 36,
-    height: 36,
-    backgroundColor: "#10B981",
-    borderRadius: 18,
-    justifyContent: "center" as const,
     alignItems: "center" as const,
+    marginTop: 4,
+    gap: 4,
   },
-  acceptBtnText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700" as const,
+  viewIdHintIcon: {
+    fontSize: 12,
   },
-  rejectBtn: {
-    width: 36,
-    height: 36,
-    backgroundColor: "#EF4444",
-    borderRadius: 18,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
+  viewIdHintText: {
+    fontSize: 12,
+    color: "#4F46E5",
   },
-  rejectBtnText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700" as const,
+  requestArrow: {
+    fontSize: 18,
+    color: "#9CA3AF",
+    marginLeft: 8,
   },
   participationGroup: {
     marginBottom: 20,
