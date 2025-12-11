@@ -290,54 +290,65 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         })}
       </MapView>
 
-      {/* Header */}
+      {/* Header - Logo only */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>MinyanNow</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => navigation.navigate("MyParticipations")}
-          >
-            <Text style={styles.headerButtonText}>📋</Text>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={loadLocationAndEvents}
+        >
+          <Text style={styles.refreshButtonText}>🔄</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Bottom Tab Bar */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={styles.bottomBarItem}
+          onPress={() => navigation.navigate("MyParticipations")}
+        >
+          <View style={styles.bottomBarIconContainer}>
+            <Text style={styles.bottomBarIcon}>📋</Text>
             {myPendingParticipationsCount > 0 && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>
+              <View style={styles.bottomBarBadge}>
+                <Text style={styles.bottomBarBadgeText}>
                   {myPendingParticipationsCount > 9
                     ? "9+"
                     : myPendingParticipationsCount}
                 </Text>
               </View>
             )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => navigation.navigate("CreateEvent")}
-          >
-            <Text style={styles.headerButtonText}>＋</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => navigation.navigate("Profile")}
-          >
-            <Text style={styles.headerButtonText}>👤</Text>
+          </View>
+          <Text style={styles.bottomBarLabel}>Participations</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.bottomBarItem}
+          onPress={() => navigation.navigate("CreateEvent")}
+        >
+          <View style={styles.bottomBarCreateButton}>
+            <Text style={styles.bottomBarCreateIcon}>＋</Text>
+          </View>
+          <Text style={styles.bottomBarLabel}>Créer</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.bottomBarItem}
+          onPress={() => navigation.navigate("Profile")}
+        >
+          <View style={styles.bottomBarIconContainer}>
+            <Text style={styles.bottomBarIcon}>👤</Text>
             {pendingRequestsCount > 0 && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>
+              <View style={styles.bottomBarBadge}>
+                <Text style={styles.bottomBarBadgeText}>
                   {pendingRequestsCount > 9 ? "9+" : pendingRequestsCount}
                 </Text>
               </View>
             )}
-          </TouchableOpacity>
-        </View>
+          </View>
+          <Text style={styles.bottomBarLabel}>Profil</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Refresh button */}
-      <TouchableOpacity
-        style={styles.refreshButton}
-        onPress={loadLocationAndEvents}
-      >
-        <Text style={styles.refreshButtonText}>🔄</Text>
-      </TouchableOpacity>
 
       {/* Event Card */}
       {selectedEvent && (
@@ -414,20 +425,20 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "800",
     color: "#4F46E5",
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.95)",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  headerButtons: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  headerButton: {
-    position: "relative",
+  refreshButton: {
     width: 44,
     height: 44,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.95)",
     borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
@@ -437,69 +448,90 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  headerButtonText: {
+  refreshButtonText: {
     fontSize: 20,
   },
-  notificationBadge: {
+  // Bottom Tab Bar
+  bottomBar: {
     position: "absolute",
-    top: -4,
-    right: -4,
-    minWidth: 20,
-    height: 20,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    backgroundColor: "rgba(255,255,255,0.98)",
+    paddingTop: 12,
+    paddingBottom: 28,
+    paddingHorizontal: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  bottomBarItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bottomBarIconContainer: {
+    position: "relative",
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bottomBarIcon: {
+    fontSize: 24,
+  },
+  bottomBarLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#6B7280",
+    marginTop: 4,
+  },
+  bottomBarCreateButton: {
+    width: 52,
+    height: 52,
+    backgroundColor: "#4F46E5",
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    marginBottom: -4,
+  },
+  bottomBarCreateIcon: {
+    fontSize: 28,
+    color: "#FFFFFF",
+    fontWeight: "300",
+  },
+  bottomBarBadge: {
+    position: "absolute",
+    top: 0,
+    right: -2,
+    minWidth: 18,
+    height: 18,
     backgroundColor: "#EF4444",
-    borderRadius: 10,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 4,
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
-  notificationBadgeText: {
+  bottomBarBadgeText: {
     color: "#FFFFFF",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
-  },
-  centerButton: {
-    position: "absolute",
-    right: 16,
-    bottom: 400,
-    width: 48,
-    height: 48,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  centerButtonText: {
-    fontSize: 20,
-  },
-  refreshButton: {
-    position: "absolute",
-    right: 16,
-    bottom: 340,
-    width: 48,
-    height: 48,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  refreshButtonText: {
-    fontSize: 20,
   },
   cardContainer: {
     position: "absolute",
-    bottom: 100,
+    bottom: 110,
     left: 16,
     right: 16,
   },

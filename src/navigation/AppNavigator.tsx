@@ -1,5 +1,5 @@
-import React from "react";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SignInScreen } from "../screens/SignInScreen";
@@ -9,6 +9,7 @@ import { CreateEventScreen } from "../screens/CreateEventScreen";
 import { EventDetailScreen } from "../screens/EventDetailScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import { MyParticipationsScreen } from "../screens/MyParticipationsScreen";
+import { SplashScreen } from "../components/SplashScreen";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 
@@ -16,11 +17,17 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Show splash screen on first load
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <SplashScreen onFinish={() => {}} />
       </View>
     );
   }
