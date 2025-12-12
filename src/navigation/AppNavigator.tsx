@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Map, CalendarDays } from "lucide-react-native";
 import { PhoneAuthScreen } from "../screens/PhoneAuthScreen";
 import { OTPVerificationScreen } from "../screens/OTPVerificationScreen";
 import { CompleteProfileScreen } from "../screens/CompleteProfileScreen";
@@ -9,14 +12,112 @@ import { MapScreen } from "../screens/MapScreen";
 import { CreateEventScreen } from "../screens/CreateEventScreen";
 import { EventDetailScreen } from "../screens/EventDetailScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
-import { MyParticipationsScreen } from "../screens/MyParticipationsScreen";
+import { MyEventsScreen } from "../screens/MyEventsScreen";
+import { SettingsScreen } from "../screens/SettingsScreen";
 import { NotificationSettingsScreen } from "../screens/NotificationSettingsScreen";
+import { EditProfileScreen } from "../screens/EditProfileScreen";
+import { UpdateIdDocumentScreen } from "../screens/UpdateIdDocumentScreen";
 import { SplashScreen } from "../components/SplashScreen";
 import { IDUploadModal } from "../components";
-import { RootStackParamList } from "../types/navigation";
+import { RootStackParamList, TabParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
+
+// Profile Avatar Tab Component
+const ProfileTabIcon = ({
+  focused,
+  userName,
+}: {
+  focused: boolean;
+  userName: string | null | undefined;
+}) => {
+  const initial = userName?.charAt(0)?.toUpperCase() || "?";
+  return (
+    <View style={styles.tabItem}>
+      <View
+        style={[styles.profileAvatar, focused && styles.profileAvatarFocused]}
+      >
+        <Text
+          style={[
+            styles.profileAvatarText,
+            focused && styles.profileAvatarTextFocused,
+          ]}
+        >
+          {initial}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const MainTabs = () => {
+  const { user } = useAuth();
+  const insets = useSafeAreaInsets();
+  const bottomPadding = insets.bottom;
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          ...styles.tabBar,
+          // height: 60 + bottomPadding,
+        },
+        tabBarShowLabel: false,
+        tabBarItemStyle: {
+          height: 60,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={MapScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.tabItem}>
+              <Map
+                size={26}
+                color={focused ? "#111827" : "#9CA3AF"}
+                strokeWidth={focused ? 2.5 : 2}
+              />
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="MyEvents"
+        component={MyEventsScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.tabItem}>
+              <CalendarDays
+                size={26}
+                color={focused ? "#111827" : "#9CA3AF"}
+                strokeWidth={focused ? 2.5 : 2}
+              />
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <ProfileTabIcon
+              focused={focused}
+              userName={user?.firstName || user?.name}
+            />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
 
 export const AppNavigator: React.FC = () => {
   const {
@@ -72,19 +173,20 @@ export const AppNavigator: React.FC = () => {
               />
             </>
           ) : (
-            // Connecté et profil complet: app principale
+            // Connecté et profil complet: app principale avec tabs
             <>
-              <Stack.Screen name="Home" component={MapScreen} />
+              <Stack.Screen name="MainTabs" component={MainTabs} />
               <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
               <Stack.Screen name="EventDetail" component={EventDetailScreen} />
-              <Stack.Screen name="Profile" component={ProfileScreen} />
-              <Stack.Screen
-                name="MyParticipations"
-                component={MyParticipationsScreen}
-              />
+              <Stack.Screen name="Settings" component={SettingsScreen} />
               <Stack.Screen
                 name="NotificationSettings"
                 component={NotificationSettingsScreen}
+              />
+              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen
+                name="UpdateIdDocument"
+                component={UpdateIdDocumentScreen}
               />
             </>
           )}
@@ -110,5 +212,37 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
+  },
+  tabBar: {
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 0.5,
+    borderTopColor: "#E5E7EB",
+    elevation: 0,
+    shadowOpacity: 0,
+    paddingTop: 10,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#E5E7EB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profileAvatarFocused: {
+    backgroundColor: "#111827",
+  },
+  profileAvatarText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  profileAvatarTextFocused: {
+    color: "#FFFFFF",
   },
 });

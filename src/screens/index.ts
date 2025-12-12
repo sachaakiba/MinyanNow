@@ -8,3 +8,7 @@ export { EventDetailScreen } from "./EventDetailScreen";
 export { ProfileScreen } from "./ProfileScreen";
 export { MyParticipationsScreen } from "./MyParticipationsScreen";
 export { NotificationSettingsScreen } from "./NotificationSettingsScreen";
+export { MyEventsScreen } from "./MyEventsScreen";
+export { SettingsScreen } from "./SettingsScreen";
+export { EditProfileScreen } from "./EditProfileScreen";
+export { UpdateIdDocumentScreen } from "./UpdateIdDocumentScreen";

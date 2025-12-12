@@ -283,6 +283,19 @@ export const usersApi = {
       body: JSON.stringify({ latitude, longitude }),
     });
   },
+
+  updateProfile: async (data: {
+    firstName: string;
+    lastName: string;
+    hebrewName?: string;
+    dateOfBirth: string;
+    synagogue?: string;
+  }): Promise<void> => {
+    await apiFetch("/api/users/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 // Event type labels

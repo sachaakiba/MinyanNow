@@ -23,18 +23,20 @@ import MapView, {
 import * as Location from "expo-location";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
-import { RootStackParamList } from "../types/navigation";
+import { RootStackParamList, TabParamList } from "../types/navigation";
 import { eventsApi, requestsApi, Event, EventRequest } from "../lib/api";
 import { ClusterMarker } from "../components/ClusterMarker";
 import { EventCarousel } from "../components/EventCarousel";
 import { clusterEvents, getGridSizeForZoom, Cluster } from "../lib/clustering";
 import { useAuth } from "../context/AuthContext";
+import { CompositeNavigationProp } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 const { width, height } = Dimensions.get("window");
 
-type MapScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Home"
+type MapScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, "Home">,
+  NativeStackNavigationProp<RootStackParamList>
 >;
 
 interface MapScreenProps {
@@ -51,9 +53,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   );
   const [events, setEvents] = useState<Event[]>([]);
   const [myRequests, setMyRequests] = useState<EventRequest[]>([]);
-  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
-  const [myPendingParticipationsCount, setMyPendingParticipationsCount] =
-    useState(0);
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,33 +127,19 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      // Fetch events, user's requests, and my events (for pending count) in parallel
-      const [fetchedEvents, fetchedRequests, myEvents] = await Promise.all([
+      // Fetch events and user's requests in parallel
+      const [fetchedEvents, fetchedRequests] = await Promise.all([
         eventsApi.getAll({
           lat: currentLocation.coords.latitude,
           lng: currentLocation.coords.longitude,
           radius: 50, // 50km radius
         }),
         requestsApi.getMyRequests(),
-        eventsApi.getMyEvents(),
       ]);
 
       console.log("Fetched events:", fetchedEvents.length);
       setEvents(fetchedEvents);
       setMyRequests(fetchedRequests);
-
-      // Calculate total pending requests for my events (to validate)
-      const totalPending = myEvents.reduce(
-        (acc, event) => acc + (event._count?.requests || 0),
-        0
-      );
-      setPendingRequestsCount(totalPending);
-
-      // Calculate my pending participations (waiting for approval)
-      const myPendingCount = fetchedRequests.filter(
-        (req) => req.status === "PENDING"
-      ).length;
-      setMyPendingParticipationsCount(myPendingCount);
     } catch (err) {
       console.error("Error loading data:", err);
       setError("Erreur lors du chargement");
@@ -190,8 +175,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
       // Ferme le carousel et recharge les données
       setSelectedCluster(null);
       loadLocationAndEvents();
-      // Navigate to participations to see the request
-      navigation.navigate("MyParticipations");
     } catch (error: any) {
       console.error("Error joining event:", error);
       // If there's an error, navigate to detail page to see more info
@@ -309,53 +292,13 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Bottom Tab Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.bottomBarItem}
-          onPress={() => navigation.navigate("MyParticipations")}
-        >
-          <View style={styles.bottomBarIconContainer}>
-            <Text style={styles.bottomBarIcon}>📋</Text>
-            {myPendingParticipationsCount > 0 && (
-              <View style={styles.bottomBarBadge}>
-                <Text style={styles.bottomBarBadgeText}>
-                  {myPendingParticipationsCount > 9
-                    ? "9+"
-                    : myPendingParticipationsCount}
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.bottomBarLabel}>Participations</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.bottomBarItem}
-          onPress={() => navigation.navigate("CreateEvent")}
-        >
-          <View style={styles.bottomBarCreateButton}>
-            <Text style={styles.bottomBarCreateIcon}>＋</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.bottomBarItem}
-          onPress={() => navigation.navigate("Profile")}
-        >
-          <View style={styles.bottomBarIconContainer}>
-            <Text style={styles.bottomBarIcon}>👤</Text>
-            {pendingRequestsCount > 0 && (
-              <View style={styles.bottomBarBadge}>
-                <Text style={styles.bottomBarBadgeText}>
-                  {pendingRequestsCount > 9 ? "9+" : pendingRequestsCount}
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.bottomBarLabel}>Profil</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Floating Create Button */}
+      <TouchableOpacity
+        style={styles.floatingCreateButton}
+        onPress={() => navigation.navigate("CreateEvent")}
+      >
+        <Text style={styles.floatingCreateButtonText}>＋</Text>
+      </TouchableOpacity>
 
       {/* Event Carousel */}
       {selectedCluster && (
@@ -471,68 +414,31 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
   },
-  bottomBarItem: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bottomBarIconContainer: {
-    position: "relative",
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  bottomBarIcon: {
-    fontSize: 24,
-  },
-  bottomBarLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
-    marginTop: 4,
-  },
-  bottomBarCreateButton: {
-    width: 52,
-    height: 52,
+  floatingCreateButton: {
+    position: "absolute",
+    bottom: 100,
+    right: 20,
+    width: 60,
+    height: 60,
     backgroundColor: "#4F46E5",
-    borderRadius: 26,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#4F46E5",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 6,
-    marginBottom: -4,
+    elevation: 8,
   },
-  bottomBarCreateIcon: {
-    fontSize: 28,
+  floatingCreateButtonText: {
+    fontSize: 32,
     color: "#FFFFFF",
     fontWeight: "300",
-  },
-  bottomBarBadge: {
-    position: "absolute",
-    top: 0,
-    right: -2,
-    minWidth: 18,
-    height: 18,
-    backgroundColor: "#EF4444",
-    borderRadius: 9,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-  },
-  bottomBarBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "700",
+    marginTop: -2,
   },
   carouselContainer: {
     position: "absolute",
-    bottom: 0,
+    bottom: 90,
     left: 0,
     right: 0,
   },

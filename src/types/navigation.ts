@@ -2,13 +2,20 @@ export type RootStackParamList = {
   PhoneAuth: undefined;
   OTPVerification: { phoneNumber: string };
   CompleteProfile: undefined;
-  Home: undefined;
+  MainTabs: undefined;
   CreateEvent: undefined;
   EditEvent: { eventId: string };
   EventDetail: { eventId: string };
-  Profile: undefined;
-  MyParticipations: undefined;
+  Settings: undefined;
   NotificationSettings: undefined;
+  EditProfile: undefined;
+  UpdateIdDocument: undefined;
+};
+
+export type TabParamList = {
+  Home: undefined;
+  MyEvents: undefined;
+  Profile: undefined;
 };
 
 declare global {
