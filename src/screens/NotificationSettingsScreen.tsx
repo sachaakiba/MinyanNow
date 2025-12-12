@@ -481,8 +481,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   settingInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-start",
     flex: 1,
     marginRight: 12,
   },

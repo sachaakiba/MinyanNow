@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Input, Button, AlertModal, useAlert } from "../components";
@@ -156,9 +157,19 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
         <View style={styles.info}>
           <Text style={styles.infoText}>
             En continuant, vous acceptez nos{" "}
-            <Text style={styles.infoLink}>Conditions d'utilisation</Text> et
-            notre{" "}
-            <Text style={styles.infoLink}>Politique de confidentialité</Text>
+            <Text
+              style={styles.infoLink}
+              onPress={() => navigation.navigate("TermsOfService")}
+            >
+              Conditions d'utilisation
+            </Text>{" "}
+            et notre{" "}
+            <Text
+              style={styles.infoLink}
+              onPress={() => navigation.navigate("PrivacyPolicy")}
+            >
+              Politique de confidentialité
+            </Text>
           </Text>
         </View>
       </ScrollView>

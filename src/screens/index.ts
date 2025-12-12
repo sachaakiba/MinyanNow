@@ -12,3 +12,7 @@ export { MyEventsScreen } from "./MyEventsScreen";
 export { SettingsScreen } from "./SettingsScreen";
 export { EditProfileScreen } from "./EditProfileScreen";
 export { UpdateIdDocumentScreen } from "./UpdateIdDocumentScreen";
+export { TermsOfServiceScreen } from "./TermsOfServiceScreen";
+export { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
+export { HelpCenterScreen } from "./HelpCenterScreen";
+export { ContactUsScreen } from "./ContactUsScreen";

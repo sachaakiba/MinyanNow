@@ -17,6 +17,10 @@ import { SettingsScreen } from "../screens/SettingsScreen";
 import { NotificationSettingsScreen } from "../screens/NotificationSettingsScreen";
 import { EditProfileScreen } from "../screens/EditProfileScreen";
 import { UpdateIdDocumentScreen } from "../screens/UpdateIdDocumentScreen";
+import { TermsOfServiceScreen } from "../screens/TermsOfServiceScreen";
+import { PrivacyPolicyScreen } from "../screens/PrivacyPolicyScreen";
+import { HelpCenterScreen } from "../screens/HelpCenterScreen";
+import { ContactUsScreen } from "../screens/ContactUsScreen";
 import { SplashScreen } from "../components/SplashScreen";
 import { IDUploadModal } from "../components";
 import { RootStackParamList, TabParamList } from "../types/navigation";
@@ -63,7 +67,6 @@ const MainTabs = () => {
         headerShown: false,
         tabBarStyle: {
           ...styles.tabBar,
-          // height: 60 + bottomPadding,
         },
         tabBarShowLabel: false,
         tabBarItemStyle: {
@@ -163,6 +166,14 @@ export const AppNavigator: React.FC = () => {
                 name="OTPVerification"
                 component={OTPVerificationScreen}
               />
+              <Stack.Screen
+                name="TermsOfService"
+                component={TermsOfServiceScreen}
+              />
+              <Stack.Screen
+                name="PrivacyPolicy"
+                component={PrivacyPolicyScreen}
+              />
             </>
           ) : !isProfileComplete ? (
             // Connecté mais profil incomplet
@@ -188,6 +199,16 @@ export const AppNavigator: React.FC = () => {
                 name="UpdateIdDocument"
                 component={UpdateIdDocumentScreen}
               />
+              <Stack.Screen
+                name="TermsOfService"
+                component={TermsOfServiceScreen}
+              />
+              <Stack.Screen
+                name="PrivacyPolicy"
+                component={PrivacyPolicyScreen}
+              />
+              <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
+              <Stack.Screen name="ContactUs" component={ContactUsScreen} />
             </>
           )}
         </Stack.Navigator>

@@ -130,13 +130,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               icon="❓"
               title="Centre d'aide"
               subtitle="FAQ et support"
-              onPress={() => {}}
+              onPress={() => navigation.navigate("HelpCenter")}
             />
             <SettingItem
               icon="📧"
               title="Nous contacter"
               subtitle="Signaler un problème"
-              onPress={() => {}}
+              onPress={() => navigation.navigate("ContactUs")}
             />
           </View>
         </View>
@@ -148,12 +148,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <SettingItem
               icon="📄"
               title="Conditions d'utilisation"
-              onPress={() => {}}
+              onPress={() => navigation.navigate("TermsOfService")}
             />
             <SettingItem
               icon="🔒"
               title="Politique de confidentialité"
-              onPress={() => {}}
+              onPress={() => navigation.navigate("PrivacyPolicy")}
             />
           </View>
         </View>

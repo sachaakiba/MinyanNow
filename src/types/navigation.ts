@@ -10,6 +10,10 @@ export type RootStackParamList = {
   NotificationSettings: undefined;
   EditProfile: undefined;
   UpdateIdDocument: undefined;
+  TermsOfService: undefined;
+  PrivacyPolicy: undefined;
+  HelpCenter: undefined;
+  ContactUs: undefined;
 };
 
 export type TabParamList = {
