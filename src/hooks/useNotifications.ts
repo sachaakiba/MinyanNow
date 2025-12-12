@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
-import { Platform } from "react-native";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Platform, AppState, AppStateStatus } from "react-native";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
 import { authClient } from "../lib/auth-client";
+import { usersApi } from "../lib/api";
+import { proximityService } from "../services/ProximityService";
 
 // Configure how notifications are handled when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -24,8 +26,55 @@ export function useNotifications() {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notification, setNotification] =
     useState<Notifications.Notification | null>(null);
+  const [proximityEnabled, setProximityEnabled] = useState(false);
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const appState = useRef(AppState.currentState);
+
+  // Load notification preferences and start proximity service
+  const initializeProximityService = useCallback(async () => {
+    if (!isAuthenticated) return;
+
+    try {
+      const prefs = await usersApi.getNotificationPreferences();
+      
+      if (prefs.notificationsEnabled && prefs.notifyProximity) {
+        const started = await proximityService.start({
+          enabled: true,
+          radius: prefs.proximityRadius,
+        });
+        setProximityEnabled(started);
+      } else {
+        proximityService.stop();
+        setProximityEnabled(false);
+      }
+    } catch (error) {
+      console.error("Error initializing proximity service:", error);
+    }
+  }, [isAuthenticated]);
+
+  // Handle app state changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextAppState: AppStateStatus) => {
+        if (
+          appState.current.match(/inactive|background/) &&
+          nextAppState === "active"
+        ) {
+          // App came to foreground - check for nearby events
+          if (proximityEnabled) {
+            proximityService.checkNow();
+          }
+        }
+        appState.current = nextAppState;
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [proximityEnabled]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -36,6 +85,9 @@ export function useNotifications() {
           saveTokenToServer(token);
         }
       });
+
+      // Initialize proximity service
+      initializeProximityService();
 
       // Listen for incoming notifications
       notificationListener.current =
@@ -59,9 +111,10 @@ export function useNotifications() {
         if (responseListener.current) {
           responseListener.current.remove();
         }
+        proximityService.stop();
       };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, initializeProximityService]);
 
   const saveTokenToServer = async (token: string) => {
     try {
@@ -85,9 +138,16 @@ export function useNotifications() {
     console.log("Handle notification response:", data);
   };
 
+  // Refresh proximity settings (call this after changing settings)
+  const refreshProximitySettings = useCallback(async () => {
+    await initializeProximityService();
+  }, [initializeProximityService]);
+
   return {
     expoPushToken,
     notification,
+    proximityEnabled,
+    refreshProximitySettings,
   };
 }
 

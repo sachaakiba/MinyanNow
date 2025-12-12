@@ -249,6 +249,40 @@ export const usersApi = {
   }> => {
     return apiFetch("/api/users/me");
   },
+
+  getNotificationPreferences: async (): Promise<{
+    notificationsEnabled: boolean;
+    notifyProximity: boolean;
+    notifyNewRequests: boolean;
+    notifyRequestStatus: boolean;
+    notifyEventUpdates: boolean;
+    notifyEventReminders: boolean;
+    proximityRadius: number;
+  }> => {
+    return apiFetch("/api/users/notification-preferences");
+  },
+
+  updateNotificationPreferences: async (preferences: {
+    notificationsEnabled: boolean;
+    notifyProximity: boolean;
+    notifyNewRequests: boolean;
+    notifyRequestStatus: boolean;
+    notifyEventUpdates: boolean;
+    notifyEventReminders: boolean;
+    proximityRadius: number;
+  }): Promise<void> => {
+    await apiFetch("/api/users/notification-preferences", {
+      method: "PUT",
+      body: JSON.stringify(preferences),
+    });
+  },
+
+  updateLocation: async (latitude: number, longitude: number): Promise<void> => {
+    await apiFetch("/api/users/location", {
+      method: "POST",
+      body: JSON.stringify({ latitude, longitude }),
+    });
+  },
 };
 
 // Event type labels

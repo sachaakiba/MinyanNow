@@ -173,6 +173,101 @@ router.post("/id-document", userGuard, async (req, res) => {
   }
 });
 
+// Get notification preferences
+router.get("/notification-preferences", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+
+    const user = await prisma.user.findUnique({
+      where: { id: authReq.user.id },
+      select: {
+        notificationsEnabled: true,
+        notifyProximity: true,
+        notifyNewRequests: true,
+        notifyRequestStatus: true,
+        notifyEventUpdates: true,
+        notifyEventReminders: true,
+        proximityRadius: true,
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching notification preferences:", error);
+    res.status(500).json({ error: "Failed to fetch notification preferences" });
+  }
+});
+
+// Update notification preferences
+router.put("/notification-preferences", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const {
+      notificationsEnabled,
+      notifyProximity,
+      notifyNewRequests,
+      notifyRequestStatus,
+      notifyEventUpdates,
+      notifyEventReminders,
+      proximityRadius,
+    } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: authReq.user.id },
+      data: {
+        notificationsEnabled,
+        notifyProximity,
+        notifyNewRequests,
+        notifyRequestStatus,
+        notifyEventUpdates,
+        notifyEventReminders,
+        proximityRadius: Math.min(Math.max(proximityRadius || 500, 100), 2000), // Clamp between 100-2000
+      },
+      select: {
+        notificationsEnabled: true,
+        notifyProximity: true,
+        notifyNewRequests: true,
+        notifyRequestStatus: true,
+        notifyEventUpdates: true,
+        notifyEventReminders: true,
+        proximityRadius: true,
+      },
+    });
+
+    console.log(`Notification preferences updated for user ${authReq.user.id}`);
+    res.json(user);
+  } catch (error) {
+    console.error("Error updating notification preferences:", error);
+    res.status(500).json({ error: "Failed to update notification preferences" });
+  }
+});
+
+// Update user location (for proximity notifications)
+router.post("/location", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { latitude, longitude } = req.body;
+
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
+      return res.status(400).json({ error: "Valid latitude and longitude are required" });
+    }
+
+    await prisma.user.update({
+      where: { id: authReq.user.id },
+      data: {
+        lastKnownLatitude: latitude,
+        lastKnownLongitude: longitude,
+        lastLocationUpdate: new Date(),
+      },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error updating location:", error);
+    res.status(500).json({ error: "Failed to update location" });
+  }
+});
+
 // Get ID document for a specific user (only accessible by event organizers for their event requests)
 router.get("/:userId/id-document", userGuard, async (req, res) => {
   try {

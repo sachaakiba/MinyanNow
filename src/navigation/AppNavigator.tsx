@@ -10,6 +10,7 @@ import { CreateEventScreen } from "../screens/CreateEventScreen";
 import { EventDetailScreen } from "../screens/EventDetailScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import { MyParticipationsScreen } from "../screens/MyParticipationsScreen";
+import { NotificationSettingsScreen } from "../screens/NotificationSettingsScreen";
 import { SplashScreen } from "../components/SplashScreen";
 import { IDUploadModal } from "../components";
 import { RootStackParamList } from "../types/navigation";
@@ -80,6 +81,10 @@ export const AppNavigator: React.FC = () => {
               <Stack.Screen
                 name="MyParticipations"
                 component={MyParticipationsScreen}
+              />
+              <Stack.Screen
+                name="NotificationSettings"
+                component={NotificationSettingsScreen}
               />
             </>
           )}

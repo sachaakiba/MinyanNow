@@ -8,6 +8,7 @@ export type RootStackParamList = {
   EventDetail: { eventId: string };
   Profile: undefined;
   MyParticipations: undefined;
+  NotificationSettings: undefined;
 };
 
 declare global {

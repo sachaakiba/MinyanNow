@@ -38,6 +38,18 @@ model User {
   idDocumentId  String? // ID public Cloudinary pour suppression
   idUploadedAt  DateTime? // Date d'upload de la pièce d'identité
 
+  // Préférences de notifications
+  notificationsEnabled Boolean   @default(true) // Master toggle
+  notifyProximity      Boolean   @default(true) // Notif quand proche d'un événement
+  notifyNewRequests    Boolean   @default(true) // Notif nouvelle demande (organisateur)
+  notifyRequestStatus  Boolean   @default(true) // Notif accepté/refusé (participant)
+  notifyEventUpdates   Boolean   @default(true) // Notif modification événement
+  notifyEventReminders Boolean   @default(true) // Rappels avant événement
+  proximityRadius      Int       @default(500) // Rayon de proximité en mètres (100-2000)
+  lastKnownLatitude    Float? // Dernière position connue
+  lastKnownLongitude   Float? // Dernière position connue
+  lastLocationUpdate   DateTime? // Date dernière mise à jour position
+
   sessions      Session[]
   accounts      Account[]
   events        Event[]

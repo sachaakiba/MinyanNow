@@ -127,4 +127,10 @@ export const NotificationTemplates = {
     title: "Événement complet 🎉",
     body: `"${eventTitle}" a atteint le nombre de participants requis !`,
   }),
+
+  // Proximité
+  nearbyEvent: (eventTitle: string, eventType: string, distance: string, time: string) => ({
+    title: `${eventType} à proximité 📍`,
+    body: `"${eventTitle}" à ${distance} de vous, aujourd'hui à ${time}`,
+  }),
 };

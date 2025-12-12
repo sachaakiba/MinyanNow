@@ -219,7 +219,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mon Profil</Text>
-        <View style={styles.headerPlaceholder} />
+        <TouchableOpacity
+          style={styles.notificationBtn}
+          onPress={() => navigation.navigate("NotificationSettings")}
+        >
+          <Text style={styles.notificationBtnText}>🔔</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -692,8 +697,16 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     color: "#111827",
   },
-  headerPlaceholder: {
+  notificationBtn: {
     width: 40,
+    height: 40,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 12,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  notificationBtnText: {
+    fontSize: 20,
   },
   content: {
     flex: 1,

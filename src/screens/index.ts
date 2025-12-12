@@ -7,3 +7,4 @@ export { CreateEventScreen } from "./CreateEventScreen";
 export { EventDetailScreen } from "./EventDetailScreen";
 export { ProfileScreen } from "./ProfileScreen";
 export { MyParticipationsScreen } from "./MyParticipationsScreen";
+export { NotificationSettingsScreen } from "./NotificationSettingsScreen";
