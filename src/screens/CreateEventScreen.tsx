@@ -22,6 +22,7 @@ import {
   EVENT_TYPE_LABELS,
   EVENT_TYPE_ICONS,
 } from "../lib/api";
+import { colors } from "../lib/colors";
 
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
@@ -688,7 +689,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "500" as const,
   },
   headerTitle: {
@@ -732,8 +733,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   typeButtonActive: {
-    backgroundColor: "#EEF2FF",
-    borderColor: "#4F46E5",
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
   },
   typeIcon: {
     fontSize: 16,
@@ -745,7 +746,7 @@ const styles = StyleSheet.create({
     fontWeight: "500" as const,
   },
   typeLabelActive: {
-    color: "#4F46E5",
+    color: colors.primary,
   },
   row: {
     flexDirection: "row" as const,
@@ -819,7 +820,7 @@ const styles = StyleSheet.create({
   modalDone: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   iosDatePicker: {
     height: 350,
@@ -891,7 +892,7 @@ const styles = StyleSheet.create({
   },
   addressModalCancel: {
     fontSize: 16,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   addressModalTitle: {
     fontSize: 18,
@@ -945,7 +946,7 @@ const styles = StyleSheet.create({
   participantsBtn: {
     width: 48,
     height: 48,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 24,
     justifyContent: "center" as const,
     alignItems: "center" as const,
@@ -1003,7 +1004,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 48,
     height: 48,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 12,
   },
   addParticipantBtnDisabled: {
@@ -1049,7 +1050,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   participantsSummary: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -1070,14 +1071,14 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
   summaryHighlight: {
-    color: "#4F46E5",
+    color: colors.primary,
     fontSize: 16,
   },
   summaryRowTotal: {
     marginTop: 8,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#C7D2FE",
+    borderTopColor: colors.primaryLight,
     marginBottom: 0,
   },
   summaryLabelTotal: {
@@ -1088,7 +1089,7 @@ const styles = StyleSheet.create({
   summaryValueTotal: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#4F46E5",
+    color: colors.primary,
   },
   currentCountInfo: {
     backgroundColor: "#DCFCE7",

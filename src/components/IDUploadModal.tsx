@@ -13,6 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { usersApi } from "../lib/api";
+import { colors } from "../lib/colors";
 
 interface IDUploadModalProps {
   visible: boolean;
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
   },
   changeImageBtnText: {
     fontSize: 14,
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "600",
   },
   uploadButtons: {
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
   uploadBtn: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingVertical: 16,
     borderRadius: 14,
   },

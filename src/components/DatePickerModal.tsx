@@ -10,6 +10,7 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { colors } from "../lib/colors";
 
 interface DatePickerModalProps {
   visible: boolean;
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
   },
   modalDone: {
     fontSize: 16,
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "600",
   },
   iosDatePicker: {

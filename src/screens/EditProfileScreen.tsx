@@ -15,6 +15,7 @@ import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { AlertModal, useAlert, DatePickerModal } from "../components";
 import { usersApi } from "../lib/api";
+import { colors } from "../lib/colors";
 
 type EditProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   saveBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 12,
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     flexDirection: "row",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     marginHorizontal: 20,
     marginBottom: 40,
     padding: 16,
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: "#4338CA",
+    color: colors.primary,
     lineHeight: 20,
   },
 });

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Event, EVENT_TYPE_ICONS } from "../lib/api";
+import { colors } from "../lib/colors";
 
 interface EventMarkerProps {
   event: Event;
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   bubbleNormal: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
   },
   bubbleUrgent: {
     backgroundColor: "#F59E0B",
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
   count: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#4F46E5",
+    color: colors.primary,
   },
   countFull: {
     color: "#10B981",
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 8,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderTopColor: "#4F46E5",
+    borderTopColor: colors.primary,
     marginTop: -1,
   },
 });

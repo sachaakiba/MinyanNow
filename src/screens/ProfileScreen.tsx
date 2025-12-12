@@ -10,6 +10,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
+import { colors } from "../lib/colors";
 
 export const ProfileScreen: React.FC = () => {
   const navigation =
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -326,7 +327,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     padding: 16,
     borderRadius: 12,
     marginTop: 16,
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
   verificationIconContainer: {
     width: 52,
     height: 52,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
   updateIdButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#4F46E5",
+    color: colors.primary,
   },
   actionsSection: {
     paddingHorizontal: 20,

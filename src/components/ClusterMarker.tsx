@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { colors } from "../lib/colors";
 
 interface ClusterMarkerProps {
   count: number;
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   badgeNormal: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
   },
   badgeUrgent: {
     backgroundColor: "#F59E0B",

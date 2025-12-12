@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Input, Button, AlertModal, useAlert } from "../components";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
+import { colors } from "../lib/colors";
 
 type PhoneAuthScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -190,7 +191,7 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background.primary,
   },
   scrollContent: {
     flexGrow: 1,
@@ -204,18 +205,18 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#4F46E5",
+    color: colors.primary,
     marginBottom: 24,
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text.primary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#6B7280",
+    color: colors.text.secondary,
     lineHeight: 24,
   },
   form: {
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
   countryCode: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.background.tertiary,
     paddingHorizontal: 12,
     paddingVertical: 16,
     borderRadius: 12,
@@ -260,12 +261,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.text.secondary,
     textAlign: "center",
     lineHeight: 20,
   },
   infoLink: {
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "500",
   },
 });

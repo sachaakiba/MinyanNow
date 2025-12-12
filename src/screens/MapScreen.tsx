@@ -31,6 +31,7 @@ import { clusterEvents, getGridSizeForZoom, Cluster } from "../lib/clustering";
 import { useAuth } from "../context/AuthContext";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { colors } from "../lib/colors";
 
 const { width, height } = Dimensions.get("window");
 
@@ -195,7 +196,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Chargement de la carte...</Text>
       </View>
     );
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#4F46E5",
+    color: colors.primary,
     backgroundColor: "rgba(255,255,255,0.95)",
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -420,11 +421,11 @@ const styles = StyleSheet.create({
     right: 10,
     width: 60,
     height: 60,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#4F46E5",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -432,7 +433,7 @@ const styles = StyleSheet.create({
   },
   floatingCreateButtonText: {
     fontSize: 32,
-    color: "#FFFFFF",
+    color: colors.text.inverse,
     fontWeight: "300",
     marginTop: -2,
   },

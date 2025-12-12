@@ -20,6 +20,7 @@ import {
   EVENT_TYPE_ICONS,
   EVENT_TYPE_LABELS,
 } from "../lib/api";
+import { colors } from "../lib/colors";
 
 type TabType = "events" | "pending" | "participations";
 
@@ -315,13 +316,13 @@ export const MyEventsScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#4F46E5"
+            tintColor={colors.primary}
           />
         }
       >
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#4F46E5" />
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : (
           <View style={styles.listSection}>
@@ -631,7 +632,7 @@ const styles = StyleSheet.create({
   addBtn: {
     width: 40,
     height: 40,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -662,7 +663,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tabActive: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
   },
   tabText: {
     fontSize: 12,
@@ -730,7 +731,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   createButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 12,
@@ -790,7 +791,7 @@ const styles = StyleSheet.create({
   participantsBadgeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#4F46E5",
+    color: colors.primary,
   },
   eventCardFooter: {
     flexDirection: "row",
@@ -866,7 +867,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   requestAvatarText: {
-    color: "#4F46E5",
+    color: colors.primary,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -889,7 +890,7 @@ const styles = StyleSheet.create({
   },
   viewIdHintText: {
     fontSize: 12,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   requestArrow: {
     fontSize: 18,

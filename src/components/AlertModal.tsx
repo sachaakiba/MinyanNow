@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from "react-native";
+import { colors } from "../lib/colors";
 
 export type AlertType = "success" | "error" | "warning" | "info" | "confirm";
 
@@ -38,7 +39,7 @@ const ICON_COLORS: Record<AlertType, { bg: string; text: string }> = {
   error: { bg: "#FEE2E2", text: "#DC2626" },
   warning: { bg: "#FEF3C7", text: "#D97706" },
   info: { bg: "#DBEAFE", text: "#2563EB" },
-  confirm: { bg: "#EEF2FF", text: "#4F46E5" },
+  confirm: { bg: colors.primaryLight, text: colors.primary },
 };
 
 export const AlertModal: React.FC<AlertModalProps> = ({
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonPrimary: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
   },
   buttonCancel: {
     backgroundColor: "#F3F4F6",

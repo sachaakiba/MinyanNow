@@ -16,6 +16,7 @@ import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { AlertModal, useAlert } from "../components";
 import { usersApi } from "../lib/api";
+import { colors } from "../lib/colors";
 
 type UpdateIdDocumentScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -187,7 +188,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
             <View style={styles.currentIdCard}>
               {loadingCurrent ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#4F46E5" />
+                  <ActivityIndicator size="small" color={colors.primary} />
                   <Text style={styles.loadingText}>Chargement...</Text>
                 </View>
               ) : currentIdUrl ? (
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     padding: 16,
     borderRadius: 12,
     gap: 10,
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     flexDirection: "row",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     padding: 16,
     borderRadius: 12,
     gap: 12,
@@ -462,16 +463,16 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#4338CA",
+    color: colors.primary,
     marginBottom: 4,
   },
   infoText: {
     fontSize: 13,
-    color: "#4338CA",
+    color: colors.primary,
     lineHeight: 18,
   },
   submitBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     padding: 18,
     borderRadius: 12,
     alignItems: "center",

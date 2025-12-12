@@ -23,6 +23,7 @@ import {
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { usersApi } from "../lib/api";
+import { colors } from "../lib/colors";
 
 type CompleteProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -563,7 +564,7 @@ const styles = StyleSheet.create({
   },
   idChangeBtnText: {
     fontSize: 14,
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "600",
   },
   idUploadButtonsContainer: {
@@ -577,7 +578,7 @@ const styles = StyleSheet.create({
   idUploadBtn: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
   },

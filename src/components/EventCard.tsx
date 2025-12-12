@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_ICONS } from "../lib/api";
+import { colors } from "../lib/colors";
 
 interface EventCardProps {
   event: Event;
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
   typeLabel: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   organizer: {
     fontSize: 12,
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
   progressCount: {
     fontSize: 14,
     fontWeight: "700" as const,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   progressBarContainer: {
     height: 6,
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: "100%",
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 3,
   },
   progressFull: {
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
     textAlign: "center" as const,
   },
   joinButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 14,
     flexDirection: "row" as const,

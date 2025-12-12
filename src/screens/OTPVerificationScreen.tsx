@@ -14,6 +14,7 @@ import { RouteProp } from "@react-navigation/native";
 import { Button, AlertModal, useAlert } from "../components";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
+import { colors } from "../lib/colors";
 
 type OTPVerificationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "500",
   },
   header: {
@@ -320,8 +321,8 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   otpInputFilled: {
-    borderColor: "#4F46E5",
-    backgroundColor: "#EEF2FF",
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
   },
   otpInputError: {
     borderColor: "#EF4444",
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
   },
   resendLink: {
     fontSize: 14,
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "600",
   },
 });

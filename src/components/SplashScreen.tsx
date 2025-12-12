@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import { colors } from "../lib/colors";
 
 const { width } = Dimensions.get("window");
 
@@ -150,7 +151,7 @@ const LoadingDot: React.FC<{ delay: number }> = ({ delay }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background.primary,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -171,13 +172,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#4F46E5",
+    color: colors.primary,
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#6B7280",
+    color: colors.text.secondary,
     textAlign: "center",
   },
   footer: {
@@ -191,6 +192,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
   },
 });

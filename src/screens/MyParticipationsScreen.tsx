@@ -17,6 +17,7 @@ import {
   EVENT_TYPE_ICONS,
   EVENT_TYPE_LABELS,
 } from "../lib/api";
+import { colors } from "../lib/colors";
 
 type MyParticipationsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -301,7 +302,7 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
       {/* Content */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4F46E5" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -314,7 +315,7 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#4F46E5"
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={() => renderEmptyState(activeTab)}
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
   },
   tabActive: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
   },
   tabContent: {
     flexDirection: "row" as const,
@@ -533,13 +534,13 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 3,
   },
   progressText: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   viewDetails: {
     fontSize: 13,
@@ -572,7 +573,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   exploreButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

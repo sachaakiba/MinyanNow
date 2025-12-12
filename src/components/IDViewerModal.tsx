@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from "react-native";
 import { usersApi } from "../lib/api";
+import { colors } from "../lib/colors";
 
 interface IDViewerModalProps {
   visible: boolean;
@@ -87,7 +88,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
           <View style={styles.content}>
             {loading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#4F46E5" />
+                <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={styles.loadingText}>Chargement...</Text>
               </View>
             ) : error ? (
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,

@@ -26,6 +26,7 @@ import {
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { AlertModal, useAlert, IDViewerModal } from "../components";
+import { colors } from "../lib/colors";
 
 // Images
 const rabinIcon = require("../../assets/rabin.png");
@@ -442,7 +443,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -988,7 +989,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   headerSection: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingTop: 60,
     paddingBottom: 32,
     paddingHorizontal: 20,
@@ -1085,14 +1086,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addParticipantBtn: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   addParticipantBtnText: {
     fontSize: 13,
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "600",
   },
   participantActions: {
@@ -1103,14 +1104,14 @@ const styles = StyleSheet.create({
   editParticipantBtn: {
     width: 32,
     height: 32,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
   },
   editParticipantBtnText: {
     fontSize: 14,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   noParticipantsText: {
     fontSize: 14,
@@ -1133,7 +1134,7 @@ const styles = StyleSheet.create({
   progressCount: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   progressBarContainer: {
     height: 8,
@@ -1143,7 +1144,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: "100%",
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 4,
   },
   progressFull: {
@@ -1207,7 +1208,7 @@ const styles = StyleSheet.create({
   navigationButton: {
     width: 44,
     height: 44,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
@@ -1233,7 +1234,7 @@ const styles = StyleSheet.create({
   organizerAvatar: {
     width: 48,
     height: 48,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     borderRadius: 24,
     justifyContent: "center" as const,
     alignItems: "center" as const,
@@ -1275,7 +1276,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   participantAvatarText: {
-    color: "#4F46E5",
+    color: colors.primary,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -1297,10 +1298,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   participantBadgeApp: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
   },
   participantBadgeTextApp: {
-    color: "#4F46E5",
+    color: colors.primary,
   },
   removeParticipantBtn: {
     width: 32,
@@ -1381,7 +1382,7 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
   joinButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
@@ -1415,7 +1416,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   requestAvatarText: {
-    color: "#4F46E5",
+    color: colors.primary,
     fontSize: 16,
     fontWeight: "600" as const,
   },
@@ -1451,7 +1452,7 @@ const styles = StyleSheet.create({
   },
   viewIdHintText: {
     fontSize: 12,
-    color: "#4F46E5",
+    color: colors.primary,
   },
   requestArrow: {
     fontSize: 18,
@@ -1553,7 +1554,7 @@ const styles = StyleSheet.create({
   },
   modalSaveBtn: {
     flex: 1,
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",

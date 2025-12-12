@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { AlertModal, useAlert } from "../components";
 import { usersApi } from "../lib/api";
+import { colors } from "../lib/colors";
 
 type NotificationSettingsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -117,7 +118,7 @@ export const NotificationSettingsScreen: React.FC<
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
@@ -173,9 +174,9 @@ export const NotificationSettingsScreen: React.FC<
               onValueChange={(value) =>
                 updatePreference("notificationsEnabled", value)
               }
-              trackColor={{ false: "#E5E7EB", true: "#818CF8" }}
+              trackColor={{ false: "#E5E7EB", true: colors.primaryLight }}
               thumbColor={
-                preferences.notificationsEnabled ? "#4F46E5" : "#F3F4F6"
+                preferences.notificationsEnabled ? colors.primary : "#F3F4F6"
               }
             />
           </View>
@@ -204,8 +205,10 @@ export const NotificationSettingsScreen: React.FC<
                 updatePreference("notifyProximity", value)
               }
               disabled={isDisabled}
-              trackColor={{ false: "#E5E7EB", true: "#818CF8" }}
-              thumbColor={preferences.notifyProximity ? "#4F46E5" : "#F3F4F6"}
+              trackColor={{ false: "#E5E7EB", true: colors.primaryLight }}
+              thumbColor={
+                preferences.notifyProximity ? colors.primary : "#F3F4F6"
+              }
             />
           </View>
 
@@ -226,9 +229,9 @@ export const NotificationSettingsScreen: React.FC<
                 onValueChange={(value) =>
                   updatePreference("proximityRadius", value)
                 }
-                minimumTrackTintColor="#4F46E5"
+                minimumTrackTintColor={colors.primary}
                 maximumTrackTintColor="#E5E7EB"
-                thumbTintColor="#4F46E5"
+                thumbTintColor={colors.primary}
               />
               <View style={styles.sliderLabels}>
                 <Text style={styles.sliderMinMax}>100m</Text>
@@ -261,8 +264,10 @@ export const NotificationSettingsScreen: React.FC<
                 updatePreference("notifyNewRequests", value)
               }
               disabled={isDisabled}
-              trackColor={{ false: "#E5E7EB", true: "#818CF8" }}
-              thumbColor={preferences.notifyNewRequests ? "#4F46E5" : "#F3F4F6"}
+              trackColor={{ false: "#E5E7EB", true: colors.primaryLight }}
+              thumbColor={
+                preferences.notifyNewRequests ? colors.primary : "#F3F4F6"
+              }
             />
           </View>
         </View>
@@ -290,9 +295,9 @@ export const NotificationSettingsScreen: React.FC<
                 updatePreference("notifyRequestStatus", value)
               }
               disabled={isDisabled}
-              trackColor={{ false: "#E5E7EB", true: "#818CF8" }}
+              trackColor={{ false: "#E5E7EB", true: colors.primaryLight }}
               thumbColor={
-                preferences.notifyRequestStatus ? "#4F46E5" : "#F3F4F6"
+                preferences.notifyRequestStatus ? colors.primary : "#F3F4F6"
               }
             />
           </View>
@@ -315,9 +320,9 @@ export const NotificationSettingsScreen: React.FC<
                 updatePreference("notifyEventUpdates", value)
               }
               disabled={isDisabled}
-              trackColor={{ false: "#E5E7EB", true: "#818CF8" }}
+              trackColor={{ false: "#E5E7EB", true: colors.primaryLight }}
               thumbColor={
-                preferences.notifyEventUpdates ? "#4F46E5" : "#F3F4F6"
+                preferences.notifyEventUpdates ? colors.primary : "#F3F4F6"
               }
             />
           </View>
@@ -338,9 +343,9 @@ export const NotificationSettingsScreen: React.FC<
                 updatePreference("notifyEventReminders", value)
               }
               disabled={isDisabled}
-              trackColor={{ false: "#E5E7EB", true: "#818CF8" }}
+              trackColor={{ false: "#E5E7EB", true: colors.primaryLight }}
               thumbColor={
-                preferences.notifyEventReminders ? "#4F46E5" : "#F3F4F6"
+                preferences.notifyEventReminders ? colors.primary : "#F3F4F6"
               }
             />
           </View>
@@ -415,7 +420,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   saveBtn: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
@@ -523,7 +528,7 @@ const styles = StyleSheet.create({
   sliderValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#4F46E5",
+    color: colors.primary,
   },
   slider: {
     width: "100%",
@@ -539,7 +544,7 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     flexDirection: "row",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 32,
@@ -553,7 +558,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: "#4338CA",
+    color: colors.primary,
     lineHeight: 20,
   },
 });

@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { authClient } from "../lib/auth-client";
 import { usersApi } from "../lib/api";
 import { proximityService } from "../services/ProximityService";
+import { colors } from "../lib/colors";
 
 // Configure how notifications are handled when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -199,7 +200,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#4F46E5",
+      lightColor: colors.primary,
     });
   }
 

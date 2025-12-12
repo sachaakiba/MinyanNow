@@ -8,6 +8,7 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
+import { colors } from "../lib/colors";
 
 interface ButtonProps {
   title: string;
@@ -56,7 +57,7 @@ export const Button: React.FC<ButtonProps> = ({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === "primary" ? "#FFFFFF" : "#4F46E5"}
+          color={variant === "primary" ? colors.text.inverse : colors.primary}
         />
       ) : (
         <Text style={[styles.buttonText, variantTextStyle, textStyle]}>
@@ -77,15 +78,15 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   primaryButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
   },
   secondaryButton: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
   },
   outlineButton: {
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: "#4F46E5",
+    borderColor: colors.primary,
   },
   disabledButton: {
     opacity: 0.6,
@@ -95,12 +96,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   primaryText: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
   },
   secondaryText: {
-    color: "#4F46E5",
+    color: colors.primary,
   },
   outlineText: {
-    color: "#4F46E5",
+    color: colors.primary,
   },
 });

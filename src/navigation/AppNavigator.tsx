@@ -25,6 +25,7 @@ import { SplashScreen } from "../components/SplashScreen";
 import { IDUploadModal } from "../components";
 import { RootStackParamList, TabParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
+import { colors } from "../lib/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -59,7 +60,6 @@ const ProfileTabIcon = ({
 const MainTabs = () => {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const bottomPadding = insets.bottom;
 
   return (
     <Tab.Navigator
@@ -84,7 +84,7 @@ const MainTabs = () => {
             <View style={styles.tabItem}>
               <Map
                 size={26}
-                color={focused ? "#111827" : "#9CA3AF"}
+                color={focused ? colors.primary : colors.text.tertiary}
                 strokeWidth={focused ? 2.5 : 2}
               />
             </View>
@@ -99,7 +99,7 @@ const MainTabs = () => {
             <View style={styles.tabItem}>
               <CalendarDays
                 size={26}
-                color={focused ? "#111827" : "#9CA3AF"}
+                color={focused ? colors.primary : colors.text.tertiary}
                 strokeWidth={focused ? 2.5 : 2}
               />
             </View>
@@ -232,12 +232,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background.primary,
   },
   tabBar: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background.primary,
     borderTopWidth: 0.5,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: colors.border.medium,
     elevation: 0,
     shadowOpacity: 0,
     paddingTop: 10,
@@ -251,19 +251,19 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.border.medium,
     justifyContent: "center",
     alignItems: "center",
   },
   profileAvatarFocused: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
   },
   profileAvatarText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.text.secondary,
   },
   profileAvatarTextFocused: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
   },
 });

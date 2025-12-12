@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { AlertModal, useAlert } from "../components";
 import { useAuth } from "../context/AuthContext";
+import { colors } from "../lib/colors";
 
 type ContactUsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -370,7 +371,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -416,8 +417,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   reasonCardActive: {
-    borderColor: "#4F46E5",
-    backgroundColor: "#EEF2FF",
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
   },
   reasonIcon: {
     fontSize: 28,
@@ -430,7 +431,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   reasonLabelActive: {
-    color: "#4F46E5",
+    color: colors.primary,
     fontWeight: "600",
   },
   messageInput: {
@@ -450,14 +451,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   sendButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     marginHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
   },
   sendButtonDisabled: {
-    backgroundColor: "#C7D2FE",
+    backgroundColor: colors.primaryLight,
   },
   sendButtonText: {
     fontSize: 16,

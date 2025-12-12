@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
+import { colors } from "../lib/colors";
 
 // Activer LayoutAnimation sur Android
 if (Platform.OS === "android") {
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   categoryChipActive: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
   },
   categoryChipText: {
     fontSize: 14,
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   categoryBadge: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
   categoryBadgeText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#4F46E5",
+    color: colors.primary,
     textTransform: "uppercase",
   },
   faqQuestion: {
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   contactButton: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Event } from "../lib/api";
 import { EventCard } from "./EventCard";
+import { colors } from "../lib/colors";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width - 64;
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.5)",
   },
   paginationDotActive: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: colors.primary,
     width: 24,
   },
 });
