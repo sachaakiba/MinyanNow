@@ -1,6 +1,7 @@
 export { PhoneAuthScreen } from "./PhoneAuthScreen";
 export { OTPVerificationScreen } from "./OTPVerificationScreen";
 export { CompleteProfileScreen } from "./CompleteProfileScreen";
+export { UploadIdScreen } from "./UploadIdScreen";
 export { HomeScreen } from "./HomeScreen";
 export { MapScreen } from "./MapScreen";
 export { CreateEventScreen } from "./CreateEventScreen";

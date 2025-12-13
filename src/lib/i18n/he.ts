@@ -37,7 +37,7 @@ export default {
   // Auth
   auth: {
     phoneAuth: {
-      title: "ברוכים הבאים ל",
+      title: "ברוכים הבאים",
       appName: "MinyanNow",
       subtitle: "מצאו והצטרפו למניינים בקרבתכם",
       phoneLabel: "מספר טלפון",

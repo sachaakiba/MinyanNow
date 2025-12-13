@@ -8,6 +8,7 @@ import { Map, CalendarDays } from "lucide-react-native";
 import { PhoneAuthScreen } from "../screens/PhoneAuthScreen";
 import { OTPVerificationScreen } from "../screens/OTPVerificationScreen";
 import { CompleteProfileScreen } from "../screens/CompleteProfileScreen";
+import { UploadIdScreen } from "../screens/UploadIdScreen";
 import { MapScreen } from "../screens/MapScreen";
 import { CreateEventScreen } from "../screens/CreateEventScreen";
 import { EventDetailScreen } from "../screens/EventDetailScreen";
@@ -22,7 +23,6 @@ import { PrivacyPolicyScreen } from "../screens/PrivacyPolicyScreen";
 import { HelpCenterScreen } from "../screens/HelpCenterScreen";
 import { ContactUsScreen } from "../screens/ContactUsScreen";
 import { SplashScreen } from "../components/SplashScreen";
-import { IDUploadModal } from "../components";
 import { RootStackParamList, TabParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors";
@@ -123,18 +123,9 @@ const MainTabs = () => {
 };
 
 export const AppNavigator: React.FC = () => {
-  const {
-    isAuthenticated,
-    isLoading,
-    isProfileComplete,
-    hasIdDocument,
-    refreshSession,
-  } = useAuth();
+  const { isAuthenticated, isLoading, isProfileComplete, hasIdDocument } =
+    useAuth();
   const [showSplash, setShowSplash] = useState(true);
-
-  // Show ID upload modal for users with complete profile but no ID document
-  const showIdUploadModal =
-    isAuthenticated && isProfileComplete && !hasIdDocument;
 
   // Show splash screen on first load
   if (showSplash) {
@@ -150,80 +141,73 @@ export const AppNavigator: React.FC = () => {
   }
 
   return (
-    <>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            animation: "slide_from_right",
-          }}
-        >
-          {!isAuthenticated ? (
-            // Non connecté: écrans d'authentification
-            <>
-              <Stack.Screen name="PhoneAuth" component={PhoneAuthScreen} />
-              <Stack.Screen
-                name="OTPVerification"
-                component={OTPVerificationScreen}
-              />
-              <Stack.Screen
-                name="TermsOfService"
-                component={TermsOfServiceScreen}
-              />
-              <Stack.Screen
-                name="PrivacyPolicy"
-                component={PrivacyPolicyScreen}
-              />
-            </>
-          ) : !isProfileComplete ? (
-            // Connecté mais profil incomplet
-            <>
-              <Stack.Screen
-                name="CompleteProfile"
-                component={CompleteProfileScreen}
-              />
-            </>
-          ) : (
-            // Connecté et profil complet: app principale avec tabs
-            <>
-              <Stack.Screen name="MainTabs" component={MainTabs} />
-              <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
-              <Stack.Screen name="EventDetail" component={EventDetailScreen} />
-              <Stack.Screen name="Settings" component={SettingsScreen} />
-              <Stack.Screen
-                name="NotificationSettings"
-                component={NotificationSettingsScreen}
-              />
-              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-              <Stack.Screen
-                name="UpdateIdDocument"
-                component={UpdateIdDocumentScreen}
-              />
-              <Stack.Screen
-                name="TermsOfService"
-                component={TermsOfServiceScreen}
-              />
-              <Stack.Screen
-                name="PrivacyPolicy"
-                component={PrivacyPolicyScreen}
-              />
-              <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
-              <Stack.Screen name="ContactUs" component={ContactUsScreen} />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-
-      {/* Modal obligatoire pour les utilisateurs existants sans pièce d'identité */}
-      <IDUploadModal
-        visible={showIdUploadModal}
-        isRequired={true}
-        onClose={() => {}}
-        onSuccess={() => {
-          refreshSession();
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: "slide_from_right",
         }}
-      />
-    </>
+      >
+        {!isAuthenticated ? (
+          // Non connecté: écrans d'authentification
+          <>
+            <Stack.Screen name="PhoneAuth" component={PhoneAuthScreen} />
+            <Stack.Screen
+              name="OTPVerification"
+              component={OTPVerificationScreen}
+            />
+            <Stack.Screen
+              name="TermsOfService"
+              component={TermsOfServiceScreen}
+            />
+            <Stack.Screen
+              name="PrivacyPolicy"
+              component={PrivacyPolicyScreen}
+            />
+          </>
+        ) : !isProfileComplete ? (
+          // Connecté mais profil incomplet
+          <>
+            <Stack.Screen
+              name="CompleteProfile"
+              component={CompleteProfileScreen}
+            />
+          </>
+        ) : !hasIdDocument ? (
+          // Connecté, profil complet mais pas de pièce d'identité
+          <>
+            <Stack.Screen name="UploadId" component={UploadIdScreen} />
+          </>
+        ) : (
+          // Connecté, profil complet et pièce d'identité: app principale avec tabs
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
+            <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen
+              name="NotificationSettings"
+              component={NotificationSettingsScreen}
+            />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen
+              name="UpdateIdDocument"
+              component={UpdateIdDocumentScreen}
+            />
+            <Stack.Screen
+              name="TermsOfService"
+              component={TermsOfServiceScreen}
+            />
+            <Stack.Screen
+              name="PrivacyPolicy"
+              component={PrivacyPolicyScreen}
+            />
+            <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
+            <Stack.Screen name="ContactUs" component={ContactUsScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 

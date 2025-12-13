@@ -2,6 +2,7 @@ export type RootStackParamList = {
   PhoneAuth: undefined;
   OTPVerification: { phoneNumber: string };
   CompleteProfile: undefined;
+  UploadId: undefined;
   MainTabs: undefined;
   CreateEvent: undefined;
   EditEvent: { eventId: string };
