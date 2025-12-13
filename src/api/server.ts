@@ -38,11 +38,12 @@ app.get("/health", (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 Auth endpoints available at http://localhost:${PORT}/api/auth/*`);
-  console.log(`📅 Events API: http://localhost:${PORT}/api/events`);
-  console.log(`🙋 Requests API: http://localhost:${PORT}/api/requests`);
-  console.log(`\n📱 For mobile testing, use your local IP address`);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL || `http://localhost:${PORT}`;
+  console.log(`🚀 Server running on ${apiUrl}`);
+  console.log(`📝 Auth endpoints available at ${apiUrl}/api/auth/*`);
+  console.log(`📅 Events API: ${apiUrl}/api/events`);
+  console.log(`🙋 Requests API: ${apiUrl}/api/requests`);
+  console.log(`\n📱 For mobile testing, use your local IP address or EXPO_PUBLIC_API_URL from .env`);
 });
 
 export default app;

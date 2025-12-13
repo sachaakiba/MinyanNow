@@ -80,6 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setProfileLoading(true);
     try {
       const profile = await usersApi.getMe();
+      console.log("📱 Profile loaded:", profile);
       setUserProfile({
         ...sessionUser,
         ...profile,
@@ -92,13 +93,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [sessionUser?.id]);
 
+  // Charger le profil quand la session change
   useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
+    if (sessionUser?.id) {
+      fetchUserProfile();
+    } else {
+      setUserProfile(null);
+    }
+  }, [sessionUser?.id]);
 
   const user = userProfile || sessionUser;
-  const isProfileComplete = !!user?.profileCompleted;
-  const hasIdDocument = !!user?.idDocumentUrl;
+
+  // Attendre que le profil soit chargé avant de déterminer l'état
+  // Si on a un sessionUser mais pas encore de userProfile, on est en chargement
+  const isStillLoadingProfile = !!sessionUser?.id && !userProfile;
+
+  const isProfileComplete = !!userProfile?.profileCompleted;
+  const hasIdDocument = !!userProfile?.idDocumentUrl;
+
+  console.log("🔐 Auth state:", {
+    isAuthenticated: !!sessionUser,
+    isPending,
+    profileLoading,
+    isStillLoadingProfile,
+    isProfileComplete,
+    hasIdDocument,
+    userProfile: userProfile
+      ? {
+          id: userProfile.id,
+          profileCompleted: userProfile.profileCompleted,
+          idDocumentUrl: !!userProfile.idDocumentUrl,
+        }
+      : null,
+  });
 
   const handleSendOTP = async (phoneNumber: string) => {
     try {
@@ -158,7 +185,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     <AuthContext.Provider
       value={{
         user,
-        isLoading: isPending || profileLoading,
+        isLoading: isPending || profileLoading || isStillLoadingProfile,
         isAuthenticated: !!sessionUser,
         isProfileComplete,
         hasIdDocument,
