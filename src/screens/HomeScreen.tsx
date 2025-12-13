@@ -1,9 +1,11 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Button } from "../components/Button";
 import { useAuth } from "../context/AuthContext";
 
 export const HomeScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -12,12 +14,18 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to MinyanNow!</Text>
+      <Text style={styles.title}>{t("home.title")}</Text>
       <Text style={styles.subtitle}>
-        {user?.name ? `Hello, ${user.name}!` : "You are logged in"}
+        {user?.name
+          ? t("home.greeting", { name: user.name })
+          : t("home.loggedIn")}
       </Text>
       <Text style={styles.email}>{user?.email}</Text>
-      <Button title="Sign Out" onPress={handleSignOut} variant="outline" />
+      <Button
+        title={t("home.signOut")}
+        onPress={handleSignOut}
+        variant="outline"
+      />
     </View>
   );
 };

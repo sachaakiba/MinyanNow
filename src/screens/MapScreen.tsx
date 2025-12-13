@@ -23,6 +23,7 @@ import MapView, {
 import * as Location from "expo-location";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList, TabParamList } from "../types/navigation";
 import { eventsApi, requestsApi, Event, EventRequest } from "../lib/api";
 import { ClusterMarker } from "../components/ClusterMarker";
@@ -45,6 +46,7 @@ interface MapScreenProps {
 }
 
 export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
   const slideAnim = useRef(new Animated.Value(400)).current;
@@ -120,7 +122,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
 
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setError("Permission de localisation refusée");
+        setError(t("map.locationDenied"));
         setLoading(false);
         return;
       }
@@ -143,7 +145,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
       setMyRequests(fetchedRequests);
     } catch (err) {
       console.error("Error loading data:", err);
-      setError("Erreur lors du chargement");
+      setError(t("map.loadError"));
     } finally {
       setLoading(false);
     }
@@ -197,7 +199,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Chargement de la carte...</Text>
+        <Text style={styles.loadingText}>{t("map.loading")}</Text>
       </View>
     );
   }
@@ -210,7 +212,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
           style={styles.retryButton}
           onPress={loadLocationAndEvents}
         >
-          <Text style={styles.retryButtonText}>Réessayer</Text>
+          <Text style={styles.retryButtonText}>{t("map.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -284,7 +286,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
 
       {/* Header - Logo only */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>MinyanNow</Text>
+        <Text style={styles.headerTitle}>{t("map.title")}</Text>
         <TouchableOpacity
           style={styles.refreshButton}
           onPress={loadLocationAndEvents}

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { IDViewerModal, AlertModal, useAlert } from "../components";
 import {
@@ -25,6 +26,7 @@ import { colors } from "../lib/colors";
 type TabType = "events" | "pending" | "participations";
 
 export const MyEventsScreen: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [myEvents, setMyEvents] = useState<Event[]>([]);
@@ -112,15 +114,15 @@ export const MyEventsScreen: React.FC = () => {
       setViewingIdUser(null);
       loadData(true);
       showAlert(
-        "Participant accepté",
-        "Le participant a été ajouté à votre événement",
+        t("common.success"),
+        t("events.detail.participantAccepted"),
         undefined,
         "success"
       );
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible d'accepter la demande",
+        t("common.error"),
+        error.message || t("events.detail.acceptError"),
         undefined,
         "error"
       );
@@ -137,15 +139,15 @@ export const MyEventsScreen: React.FC = () => {
       setViewingIdUser(null);
       loadData(true);
       showAlert(
-        "Demande refusée",
-        "La demande a été refusée",
+        t("common.success"),
+        t("events.detail.requestRejected"),
         undefined,
         "info"
       );
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible de refuser la demande",
+        t("common.error"),
+        error.message || t("events.detail.rejectError"),
         undefined,
         "error"
       );
@@ -156,29 +158,28 @@ export const MyEventsScreen: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-    const months = [
-      "jan",
-      "fév",
-      "mar",
-      "avr",
-      "mai",
-      "juin",
-      "juil",
-      "août",
-      "sep",
-      "oct",
-      "nov",
-      "déc",
-    ];
-    return `${days[date.getDay()]} ${date.getDate()} ${
-      months[date.getMonth()]
-    }`;
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleDateString(locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString("fr-FR", {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -200,7 +201,7 @@ export const MyEventsScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mes Événements</Text>
+        <Text style={styles.headerTitle}>{t("events.myEvents.title")}</Text>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => navigation.navigate("CreateEvent")}
@@ -221,7 +222,7 @@ export const MyEventsScreen: React.FC = () => {
               activeTab === "events" && styles.tabTextActive,
             ]}
           >
-            Mes événements
+            {t("events.myEvents.tabs.events")}
           </Text>
           {myEvents.length > 0 && (
             <View
@@ -252,7 +253,7 @@ export const MyEventsScreen: React.FC = () => {
               activeTab === "pending" && styles.tabTextActive,
             ]}
           >
-            À valider
+            {t("events.myEvents.tabs.pending")}
           </Text>
           {totalPendingCount > 0 && (
             <View
@@ -287,7 +288,7 @@ export const MyEventsScreen: React.FC = () => {
               activeTab === "participations" && styles.tabTextActive,
             ]}
           >
-            Participations
+            {t("events.myEvents.tabs.participations")}
           </Text>
           {confirmedParticipations.length > 0 && (
             <View
@@ -332,17 +333,18 @@ export const MyEventsScreen: React.FC = () => {
                 {myEvents.length === 0 ? (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyIcon}>📅</Text>
-                    <Text style={styles.emptyTitle}>Aucun événement créé</Text>
+                    <Text style={styles.emptyTitle}>
+                      {t("events.myEvents.noEvents")}
+                    </Text>
                     <Text style={styles.emptySubtitle}>
-                      Créez votre premier événement pour rassembler la
-                      communauté
+                      {t("events.myEvents.noEventsSubtitle")}
                     </Text>
                     <TouchableOpacity
                       style={styles.createButton}
                       onPress={() => navigation.navigate("CreateEvent")}
                     >
                       <Text style={styles.createButtonText}>
-                        Créer un événement
+                        {t("events.myEvents.createEvent")}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -384,7 +386,8 @@ export const MyEventsScreen: React.FC = () => {
                         {(event._count?.requests || 0) > 0 && (
                           <View style={styles.pendingBadge}>
                             <Text style={styles.pendingBadgeText}>
-                              {event._count?.requests} en attente
+                              {event._count?.requests}{" "}
+                              {t("events.myEvents.pending")}
                             </Text>
                           </View>
                         )}
@@ -402,10 +405,10 @@ export const MyEventsScreen: React.FC = () => {
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyIcon}>✅</Text>
                     <Text style={styles.emptyTitle}>
-                      Aucune demande en attente
+                      {t("events.myEvents.noPending")}
                     </Text>
                     <Text style={styles.emptySubtitle}>
-                      Les nouvelles demandes de participation apparaîtront ici
+                      {t("events.myEvents.noPendingSubtitle")}
                     </Text>
                   </View>
                 ) : (
@@ -457,7 +460,7 @@ export const MyEventsScreen: React.FC = () => {
                             <View style={styles.viewIdHint}>
                               <Text style={styles.viewIdHintIcon}>🪪</Text>
                               <Text style={styles.viewIdHintText}>
-                                Appuyez pour vérifier l'identité
+                                {t("idViewer.tapToVerify")}
                               </Text>
                             </View>
                           </View>
@@ -476,16 +479,20 @@ export const MyEventsScreen: React.FC = () => {
                 {myRequests.length === 0 ? (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyIcon}>🔍</Text>
-                    <Text style={styles.emptyTitle}>Aucune participation</Text>
+                    <Text style={styles.emptyTitle}>
+                      {t("events.myEvents.noParticipations")}
+                    </Text>
                     <Text style={styles.emptySubtitle}>
-                      Explorez la carte pour rejoindre des événements
+                      {t("events.myEvents.noParticipationsSubtitle")}
                     </Text>
                   </View>
                 ) : (
                   <>
                     {confirmedParticipations.length > 0 && (
                       <View style={styles.participationGroup}>
-                        <Text style={styles.groupTitle}>Confirmées</Text>
+                        <Text style={styles.groupTitle}>
+                          {t("events.myEvents.confirmed")}
+                        </Text>
                         {confirmedParticipations.map((request) => (
                           <TouchableOpacity
                             key={request.id}
@@ -526,7 +533,9 @@ export const MyEventsScreen: React.FC = () => {
 
                     {pendingParticipations.length > 0 && (
                       <View style={styles.participationGroup}>
-                        <Text style={styles.groupTitle}>En attente</Text>
+                        <Text style={styles.groupTitle}>
+                          {t("events.myEvents.waiting")}
+                        </Text>
                         {pendingParticipations.map((request) => (
                           <TouchableOpacity
                             key={request.id}
@@ -564,7 +573,7 @@ export const MyEventsScreen: React.FC = () => {
                                   ? `${formatDate(
                                       request.event.date
                                     )} à ${formatTime(request.event.date)}`
-                                  : "Date inconnue"}
+                                  : t("events.myEvents.unknownDate")}
                               </Text>
                             </View>
                             <Text style={styles.participationArrow}>›</Text>

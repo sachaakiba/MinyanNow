@@ -10,6 +10,7 @@ import {
   UIManager,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { colors } from "../lib/colors";
 

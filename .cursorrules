@@ -1,0 +1,132 @@
+# MinyanNow - Règles de développement Cursor
+
+## Description du projet
+MinyanNow est une application mobile React Native / Expo permettant aux utilisateurs juifs de trouver et rejoindre des événements religieux (minyanim) à proximité.
+
+---
+
+## COULEURS - TRÈS IMPORTANT
+
+**TOUJOURS utiliser `src/lib/colors.ts` pour les couleurs. Ne JAMAIS utiliser de couleurs codées en dur.**
+
+```typescript
+import { colors } from "../lib/colors";
+
+// Exemples
+colors.primary          // #3A8EDB - Couleur principale
+colors.primaryLight     // #E8F4FD
+colors.text.primary     // #111827
+colors.text.secondary   // #6B7280
+colors.background.primary   // #FFFFFF
+colors.border.medium    // #E5E7EB
+colors.success / colors.error / colors.warning
+```
+
+---
+
+## INTERNATIONALISATION (i18n) - TRÈS IMPORTANT
+
+**TOUJOURS utiliser les traductions. Ne JAMAIS mettre de texte en dur.**
+
+Langues: Français (fr), Anglais (en), Hébreu (he)
+
+```typescript
+import { useTranslation } from "react-i18next";
+
+const { t } = useTranslation();
+
+// Utilisation
+<Text>{t("common.loading")}</Text>
+<Button title={t("auth.phoneAuth.continueButton")} />
+
+// Avec variables
+t("events.detail.participantsCount", { current: 5, max: 10 })
+```
+
+Fichiers de traduction: `src/lib/i18n/fr.ts`, `en.ts`, `he.ts`
+
+---
+
+## Architecture
+
+```
+src/
+├── api/          # Backend Express.js
+├── components/   # Composants réutilisables
+├── context/      # AuthContext
+├── hooks/        # useNotifications
+├── lib/
+│   ├── colors.ts # Couleurs
+│   ├── i18n/     # Traductions
+│   ├── api.ts    # Client API
+│   └── prisma.ts
+├── navigation/   # AppNavigator
+├── screens/      # Écrans
+└── types/        # navigation.ts
+```
+
+---
+
+## Stack technique
+
+- React Native 0.81+ / Expo SDK 54
+- TypeScript strict
+- React Navigation v7
+- i18next / react-i18next
+- Prisma + PostgreSQL
+- better-auth (OTP)
+- Cloudinary
+
+---
+
+## Conventions
+
+### Structure d'un écran
+```typescript
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
+import { colors } from "../lib/colors";
+
+export const MonScreen: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.container}>
+      <Text>{t("ma.cle")}</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { backgroundColor: colors.background.primary },
+});
+```
+
+### Alertes
+```typescript
+import { AlertModal, useAlert } from "../components";
+const { showAlert } = useAlert();
+showAlert(t("common.error"), t("errors.generic"), undefined, "error");
+```
+
+---
+
+## Checklist nouveau fichier
+
+- [ ] Import `colors` depuis `../lib/colors`
+- [ ] Import `useTranslation` si texte affiché
+- [ ] Utiliser `colors.primary` pour éléments actifs
+- [ ] Utiliser `t("cle")` pour tout texte
+- [ ] Exporter dans `components/index.ts` ou `screens/index.ts`
+
+## Checklist nouveau texte
+
+- [ ] Ajouter dans `src/lib/i18n/fr.ts`
+- [ ] Ajouter dans `src/lib/i18n/en.ts`
+- [ ] Ajouter dans `src/lib/i18n/he.ts`
+
+---
+
+## Contacts
+- Support: minyannow.app+contact@gmail.com
+- DPO: minyannow.app+dpo@gmail.com

@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { colors } from "../lib/colors";
 
 const { width } = Dimensions.get("window");
@@ -17,6 +18,7 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
+  const { t } = useTranslation();
   const bounceAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -94,7 +96,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
           <Text style={styles.title}>MinyanNow</Text>
-          <Text style={styles.subtitle}>Trouvez votre minyan</Text>
+          <Text style={styles.subtitle}>{t("splash.subtitle")}</Text>
         </Animated.View>
       </View>
 

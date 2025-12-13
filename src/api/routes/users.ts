@@ -52,6 +52,7 @@ router.get("/me", userGuard, async (req, res) => {
         barMitzvahParasha: true,
         synagogue: true,
         community: true,
+        language: true,
         profileCompleted: true,
         idDocumentUrl: true,
         idUploadedAt: true,
@@ -120,6 +121,33 @@ router.put("/profile", userGuard, async (req, res) => {
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+// Update user language preference
+router.put("/language", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { language } = req.body;
+
+    // Validate language code
+    const validLanguages = ["fr", "en", "he"];
+    if (!language || !validLanguages.includes(language)) {
+      return res.status(400).json({
+        error: "Invalid language. Must be one of: fr, en, he",
+      });
+    }
+
+    await prisma.user.update({
+      where: { id: authReq.user.id },
+      data: { language },
+    });
+
+    console.log(`Language updated to ${language} for user ${authReq.user.id}`);
+    res.json({ success: true, language });
+  } catch (error) {
+    console.error("Error updating language:", error);
+    res.status(500).json({ error: "Failed to update language" });
   }
 });
 

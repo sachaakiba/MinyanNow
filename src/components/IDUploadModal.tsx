@@ -12,6 +12,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import { useTranslation } from "react-i18next";
 import { usersApi } from "../lib/api";
 import { colors } from "../lib/colors";
 
@@ -28,6 +29,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
   onSuccess,
   isRequired = false,
 }) => {
+  const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
     // Request permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      setError("Permission d'accès à la galerie refusée");
+      setError(t("idUpload.galleryPermissionDenied"));
       return;
     }
 
@@ -64,7 +66,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
     // Request permission
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      setError("Permission d'accès à la caméra refusée");
+      setError(t("idUpload.cameraPermissionDenied"));
       return;
     }
 
@@ -102,7 +104,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
         setSelectedImage(`data:${mimeType};base64,${base64}`);
       }
     } catch (err: any) {
-      setError("Erreur lors de la sélection du fichier");
+      setError(t("idUpload.fileSelectionError"));
     }
   };
 
@@ -117,7 +119,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
       onSuccess();
       setSelectedImage(null);
     } catch (err: any) {
-      setError(err.message || "Erreur lors de l'envoi");
+      setError(err.message || t("idUpload.uploadError"));
     } finally {
       setUploading(false);
     }
@@ -158,35 +160,31 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
             </View>
 
             {/* Title */}
-            <Text style={styles.title}>Vérification d'identité</Text>
+            <Text style={styles.title}>{t("idUpload.title")}</Text>
 
             {/* Description */}
             <View style={styles.descriptionContainer}>
               <Text style={styles.description}>
-                Pour garantir la sécurité de notre communauté, nous avons besoin
-                de vérifier votre identité.
+                {t("idUpload.description")}
               </Text>
 
               <View style={styles.securityPoints}>
                 <View style={styles.securityPoint}>
                   <Text style={styles.securityIcon}>🔒</Text>
                   <Text style={styles.securityText}>
-                    Votre pièce d'identité est stockée de manière sécurisée et
-                    chiffrée
+                    {t("idUpload.securityPoints.encrypted")}
                   </Text>
                 </View>
                 <View style={styles.securityPoint}>
                   <Text style={styles.securityIcon}>👁️</Text>
                   <Text style={styles.securityText}>
-                    Seuls les organisateurs d'événements peuvent la consulter
-                    pour valider votre participation
+                    {t("idUpload.securityPoints.organizers")}
                   </Text>
                 </View>
                 <View style={styles.securityPoint}>
                   <Text style={styles.securityIcon}>🛡️</Text>
                   <Text style={styles.securityText}>
-                    Cette vérification protège la communauté contre les profils
-                    frauduleux
+                    {t("idUpload.securityPoints.protection")}
                   </Text>
                 </View>
               </View>
@@ -205,14 +203,16 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
                   onPress={() => setSelectedImage(null)}
                 >
                   <Text style={styles.changeImageBtnText}>
-                    Changer de photo
+                    {t("idUpload.changePhoto")}
                   </Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.uploadButtons}>
                 <TouchableOpacity style={styles.uploadBtn} onPress={takePhoto}>
-                  <Text style={styles.uploadBtnText}>Prendre une photo</Text>
+                  <Text style={styles.uploadBtnText}>
+                    {t("idUpload.takePhoto")}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -220,7 +220,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
                   onPress={pickImage}
                 >
                   <Text style={styles.uploadBtnTextSecondary}>
-                    Choisir depuis la galerie
+                    {t("idUpload.gallery")}
                   </Text>
                 </TouchableOpacity>
 
@@ -229,7 +229,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
                   onPress={pickFromFiles}
                 >
                   <Text style={styles.uploadBtnTextSecondary}>
-                    Choisir depuis les fichiers
+                    {t("idUpload.files")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -256,7 +256,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text style={styles.submitBtnText}>
-                    Envoyer ma pièce d'identité
+                    {t("idUpload.submit")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -264,8 +264,7 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
 
             {/* Info */}
             <Text style={styles.infoText}>
-              📄 Documents acceptés : Carte d'identité, Passeport, Permis de
-              conduire
+              📄 {t("idUpload.acceptedDocuments")}
             </Text>
           </ScrollView>
         </View>

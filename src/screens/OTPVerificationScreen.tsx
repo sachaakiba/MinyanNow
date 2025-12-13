@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { Button, AlertModal, useAlert } from "../components";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
@@ -37,6 +38,7 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
   navigation,
   route,
 }) => {
+  const { t } = useTranslation();
   const { phoneNumber } = route.params;
   const { verifyOTP, sendOTP } = useAuth();
 
@@ -112,7 +114,7 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
     const code = otp.join("");
 
     if (code.length !== OTP_LENGTH) {
-      setError("Veuillez entrer le code complet");
+      setError(t("auth.otp.invalidCode"));
       return;
     }
 
@@ -123,13 +125,13 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
       if (result.success) {
         // La navigation vers Home sera automatique via AuthContext
       } else {
-        setError(result.error || "Code invalide");
+        setError(result.error || t("auth.otp.invalidCode"));
         // Réinitialise le code
         setOtp(Array(OTP_LENGTH).fill(""));
         inputRefs.current[0]?.focus();
       }
     } catch (error) {
-      setError("Une erreur est survenue");
+      setError(t("errors.generic"));
     } finally {
       setLoading(false);
     }
@@ -145,21 +147,21 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
       if (result.success) {
         setResendCountdown(60);
         showAlert(
-          "Code envoyé",
-          "Un nouveau code a été envoyé à votre numéro",
+          t("common.success"),
+          t("auth.otp.resendLink"),
           undefined,
           "success"
         );
       } else {
         showAlert(
-          "Erreur",
-          result.error || "Impossible de renvoyer le code",
+          t("common.error"),
+          result.error || t("errors.generic"),
           undefined,
           "error"
         );
       }
     } catch (error) {
-      showAlert("Erreur", "Une erreur est survenue", undefined, "error");
+      showAlert(t("common.error"), t("errors.generic"), undefined, "error");
     } finally {
       setResendLoading(false);
     }
@@ -190,13 +192,14 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>← Retour</Text>
+          <Text style={styles.backButtonText}>{t("auth.otp.back")}</Text>
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Vérification</Text>
+          <Text style={styles.title}>{t("auth.otp.title")}</Text>
           <Text style={styles.subtitle}>
-            Entrez le code à 6 chiffres envoyé au{"\n"}
+            {t("auth.otp.subtitle")}
+            {"\n"}
             <Text style={styles.phoneNumber}>
               {formatPhoneDisplay(phoneNumber)}
             </Text>
@@ -228,17 +231,17 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         <Button
-          title="Vérifier"
+          title={loading ? t("auth.otp.verifying") : t("common.confirm")}
           onPress={handleVerify}
           loading={loading}
           style={styles.button}
         />
 
         <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>Vous n'avez pas reçu le code ? </Text>
+          <Text style={styles.resendText}>{t("auth.otp.resendText")} </Text>
           {resendCountdown > 0 ? (
             <Text style={styles.resendCountdown}>
-              Renvoyer dans {resendCountdown}s
+              {t("auth.otp.resendCountdown", { seconds: resendCountdown })}
             </Text>
           ) : (
             <TouchableOpacity
@@ -246,7 +249,7 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
               disabled={resendLoading}
             >
               <Text style={styles.resendLink}>
-                {resendLoading ? "Envoi..." : "Renvoyer"}
+                {resendLoading ? t("common.loading") : t("auth.otp.resendLink")}
               </Text>
             </TouchableOpacity>
           )}

@@ -14,6 +14,7 @@ export type RootStackParamList = {
   PrivacyPolicy: undefined;
   HelpCenter: undefined;
   ContactUs: undefined;
+  MyParticipations: undefined;
 };
 
 export type TabParamList = {

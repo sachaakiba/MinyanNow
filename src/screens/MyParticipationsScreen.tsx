@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import {
   requestsApi,
@@ -33,6 +34,7 @@ type TabType = "confirmed" | "pending";
 export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
   navigation,
 }) => {
+  const { t, i18n } = useTranslation();
   const [requests, setRequests] = useState<EventRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -68,29 +70,28 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-    const months = [
-      "jan",
-      "fév",
-      "mar",
-      "avr",
-      "mai",
-      "juin",
-      "juil",
-      "août",
-      "sep",
-      "oct",
-      "nov",
-      "déc",
-    ];
-    return `${days[date.getDay()]} ${date.getDate()} ${
-      months[date.getMonth()]
-    }`;
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleDateString(locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString("fr-FR", {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -175,7 +176,9 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
               {event.currentCount}/{event.maxParticipants}
             </Text>
           </View>
-          <Text style={styles.viewDetails}>Voir détails →</Text>
+          <Text style={styles.viewDetails}>
+            {t("events.participations.viewDetails")}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -186,20 +189,22 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
       <Text style={styles.emptyIcon}>{type === "confirmed" ? "📭" : "🔍"}</Text>
       <Text style={styles.emptyTitle}>
         {type === "confirmed"
-          ? "Aucune participation confirmée"
-          : "Aucune demande en attente"}
+          ? t("events.participations.noConfirmed")
+          : t("events.participations.noPending")}
       </Text>
       <Text style={styles.emptySubtitle}>
         {type === "confirmed"
-          ? "Explorez la carte pour trouver des événements à rejoindre"
-          : "Vos demandes en attente de validation apparaîtront ici"}
+          ? t("events.participations.noConfirmedSubtitle")
+          : t("events.participations.noPendingSubtitle")}
       </Text>
       {type === "confirmed" && (
         <TouchableOpacity
           style={styles.exploreButton}
-          onPress={() => navigation.navigate("Home")}
+          onPress={() => navigation.navigate("MainTabs")}
         >
-          <Text style={styles.exploreButtonText}>Explorer la carte</Text>
+          <Text style={styles.exploreButtonText}>
+            {t("events.participations.exploreMap")}
+          </Text>
         </TouchableOpacity>
       )}
     </View>
@@ -218,7 +223,9 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
         >
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mes participations</Text>
+        <Text style={styles.headerTitle}>
+          {t("events.participations.title")}
+        </Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
@@ -238,7 +245,7 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
                 activeTab === "confirmed" ? styles.tabTextActive : null,
               ]}
             >
-              Confirmées
+              {t("events.participations.confirmed")}
             </Text>
             {confirmedRequests.length > 0 && (
               <View
@@ -276,7 +283,7 @@ export const MyParticipationsScreen: React.FC<MyParticipationsScreenProps> = ({
                 activeTab === "pending" ? styles.tabTextActive : null,
               ]}
             >
-              En attente
+              {t("events.participations.pending")}
             </Text>
             {pendingRequests.length > 0 && (
               <View

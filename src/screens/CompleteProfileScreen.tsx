@@ -13,6 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import {
   Input,
   Button,
@@ -37,6 +38,7 @@ interface CompleteProfileScreenProps {
 export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
   navigation,
 }) => {
+  const { t, i18n } = useTranslation();
   const { completeProfile, user } = useAuth();
 
   const [firstName, setFirstName] = useState("");
@@ -60,26 +62,26 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!firstName.trim()) {
-      newErrors.firstName = "Le prénom est requis";
+      newErrors.firstName = t("auth.completeProfile.firstNameRequired");
     }
 
     if (!lastName.trim()) {
-      newErrors.lastName = "Le nom est requis";
+      newErrors.lastName = t("auth.completeProfile.lastNameRequired");
     }
 
     if (!dateOfBirth) {
-      newErrors.dateOfBirth = "La date de naissance est requise";
+      newErrors.dateOfBirth = t("auth.completeProfile.dateOfBirthRequired");
     } else {
       // Vérifier que l'utilisateur a au moins 13 ans (Bar Mitzvah)
       const today = new Date();
       const age = today.getFullYear() - dateOfBirth.getFullYear();
       if (age < 13) {
-        newErrors.dateOfBirth = "Vous devez avoir au moins 13 ans";
+        newErrors.dateOfBirth = t("auth.completeProfile.minAge");
       }
     }
 
     if (!idDocumentImage) {
-      newErrors.idDocument = "La pièce d'identité est requise";
+      newErrors.idDocument = t("auth.completeProfile.idRequired");
     }
 
     setErrors(newErrors);
@@ -92,8 +94,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       showAlert(
-        "Permission refusée",
-        "Nous avons besoin de l'accès à votre galerie pour sélectionner votre pièce d'identité",
+        t("auth.completeProfile.permissionDenied"),
+        t("auth.completeProfile.galleryPermission"),
         undefined,
         "error"
       );
@@ -119,8 +121,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       showAlert(
-        "Permission refusée",
-        "Nous avons besoin de l'accès à votre caméra pour photographier votre pièce d'identité",
+        t("auth.completeProfile.permissionDenied"),
+        t("auth.completeProfile.cameraPermission"),
         undefined,
         "error"
       );
@@ -158,8 +160,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
       }
     } catch (err: any) {
       showAlert(
-        "Erreur",
-        "Erreur lors de la sélection du fichier",
+        t("common.error"),
+        t("auth.completeProfile.fileError"),
         undefined,
         "error"
       );
@@ -173,7 +175,13 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
   const formatDate = (date: Date | null) => {
     if (!date) return "";
-    return date.toLocaleDateString("fr-FR", {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleDateString(locale, {
       day: "2-digit",
       month: "long",
       year: "numeric",
@@ -192,8 +200,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
           await usersApi.uploadIdDocument(idDocumentImage);
         } catch (error: any) {
           showAlert(
-            "Erreur",
-            error.message || "Impossible d'envoyer la pièce d'identité",
+            t("common.error"),
+            error.message || t("auth.completeProfile.uploadError"),
             undefined,
             "error"
           );
@@ -217,14 +225,14 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         // La navigation sera automatique via AuthContext
       } else {
         showAlert(
-          "Erreur",
-          result.error || "Impossible de sauvegarder le profil",
+          t("common.error"),
+          result.error || t("auth.completeProfile.saveError"),
           undefined,
           "error"
         );
       }
     } catch (error) {
-      showAlert("Erreur", "Une erreur est survenue", undefined, "error");
+      showAlert(t("common.error"), t("errors.generic"), undefined, "error");
     } finally {
       setLoading(false);
     }
@@ -242,18 +250,17 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
       >
         <View style={styles.header}>
           <Text style={styles.emoji}>✡️</Text>
-          <Text style={styles.title}>Complétez votre profil</Text>
+          <Text style={styles.title}>{t("auth.completeProfile.title")}</Text>
           <Text style={styles.subtitle}>
-            Ces informations nous permettent de vérifier votre appartenance à la
-            communauté juive et de personnaliser votre expérience.
+            {t("auth.completeProfile.subtitle")}
           </Text>
         </View>
 
         <View style={styles.form}>
           {/* Prénom */}
           <Input
-            label="Prénom *"
-            placeholder="Ex: David"
+            label={t("auth.completeProfile.firstName")}
+            placeholder={t("auth.completeProfile.firstNamePlaceholder")}
             value={firstName}
             onChangeText={(text) => {
               setFirstName(text);
@@ -265,8 +272,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
           {/* Nom */}
           <Input
-            label="Nom de famille *"
-            placeholder="Ex: Cohen"
+            label={t("auth.completeProfile.lastName")}
+            placeholder={t("auth.completeProfile.lastNamePlaceholder")}
             value={lastName}
             onChangeText={(text) => {
               setLastName(text);
@@ -278,8 +285,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
           {/* Nom hébraïque */}
           <Input
-            label="Nom hébraïque (optionnel)"
-            placeholder="Ex: David ben Avraham"
+            label={t("auth.completeProfile.hebrewName")}
+            placeholder={t("auth.completeProfile.hebrewNamePlaceholder")}
             value={hebrewName}
             onChangeText={setHebrewName}
             autoCapitalize="words"
@@ -287,7 +294,9 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
           {/* Date de naissance */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date de naissance *</Text>
+            <Text style={styles.label}>
+              {t("auth.completeProfile.dateOfBirth")}
+            </Text>
             <TouchableOpacity
               style={[
                 styles.selectButton,
@@ -303,7 +312,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
               >
                 {dateOfBirth
                   ? formatDate(dateOfBirth)
-                  : "Sélectionner une date"}
+                  : t("auth.completeProfile.selectDate")}
               </Text>
               <Text style={styles.selectButtonIcon}>📅</Text>
             </TouchableOpacity>
@@ -314,8 +323,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
           {/* Synagogue */}
           <Input
-            label="Synagogue fréquentée (optionnel)"
-            placeholder="Ex: Synagogue de la Victoire"
+            label={t("auth.completeProfile.synagogue")}
+            placeholder={t("auth.completeProfile.synagoguePlaceholder")}
             value={synagogue}
             onChangeText={setSynagogue}
             autoCapitalize="words"
@@ -323,13 +332,13 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
           {/* Pièce d'identité */}
           <View style={styles.idSection}>
-            <Text style={styles.idSectionTitle}>🪪 Pièce d'identité *</Text>
+            <Text style={styles.idSectionTitle}>
+              🪪 {t("auth.completeProfile.idDocument")}
+            </Text>
             <View style={styles.idSecurityInfo}>
               <Text style={styles.idSecurityIcon}>🔒</Text>
               <Text style={styles.idSecurityText}>
-                Pour la sécurité de notre communauté, nous vérifions l'identité
-                de chaque membre. Votre document est stocké de manière sécurisée
-                et n'est visible que par les organisateurs d'événements.
+                {t("auth.completeProfile.idSecurityText")}
               </Text>
             </View>
 
@@ -344,7 +353,9 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
                   style={styles.idChangeBtn}
                   onPress={() => setIdDocumentImage(null)}
                 >
-                  <Text style={styles.idChangeBtnText}>Changer de photo</Text>
+                  <Text style={styles.idChangeBtnText}>
+                    {t("auth.completeProfile.changePhoto")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -356,7 +367,9 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
                   ]}
                   onPress={takeIdPhoto}
                 >
-                  <Text style={styles.idUploadBtnText}>Prendre une photo</Text>
+                  <Text style={styles.idUploadBtnText}>
+                    {t("auth.completeProfile.takePhoto")}
+                  </Text>
                 </TouchableOpacity>
                 <View style={styles.idUploadButtonsRow}>
                   <TouchableOpacity
@@ -366,7 +379,9 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
                     ]}
                     onPress={pickIdDocument}
                   >
-                    <Text style={styles.idUploadBtnTextSecondary}>Galerie</Text>
+                    <Text style={styles.idUploadBtnTextSecondary}>
+                      {t("auth.completeProfile.gallery")}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
@@ -376,7 +391,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
                     onPress={pickIdFromFiles}
                   >
                     <Text style={styles.idUploadBtnTextSecondary}>
-                      Fichiers
+                      {t("auth.completeProfile.files")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -386,16 +401,15 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
               <Text style={styles.errorText}>{errors.idDocument}</Text>
             )}
             <Text style={styles.idInfoText}>
-              Documents acceptés : Carte d'identité, Passeport, Permis de
-              conduire
+              {t("auth.completeProfile.acceptedDocuments")}
             </Text>
           </View>
 
           <Button
             title={
               uploadingId
-                ? "Envoi de la pièce d'identité..."
-                : "Valider mon profil"
+                ? t("auth.completeProfile.uploadingId")
+                : t("auth.completeProfile.submit")
             }
             onPress={handleSubmit}
             loading={loading}
@@ -404,8 +418,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         </View>
 
         <Text style={styles.privacyNote}>
-          🔒 Vos informations sont confidentielles et ne seront jamais partagées
-          sans votre consentement.
+          {t("auth.completeProfile.privacyNote")}
         </Text>
       </ScrollView>
 
@@ -415,7 +428,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         value={dateOfBirth || new Date()}
         onChange={handleDateChange}
         onClose={() => setShowDatePicker(false)}
-        title="Date de naissance"
+        title={t("auth.completeProfile.dateOfBirth")}
         mode="date"
         maximumDate={new Date()}
         minimumDate={new Date(1930, 0, 1)}

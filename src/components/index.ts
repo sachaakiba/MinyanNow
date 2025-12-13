@@ -9,3 +9,4 @@ export { AlertModal, useAlert } from "./AlertModal";
 export type { AlertModalProps, AlertButton, AlertType, AlertState } from "./AlertModal";
 export { IDUploadModal } from "./IDUploadModal";
 export { IDViewerModal } from "./IDViewerModal";
+export { LanguageSelector } from "./LanguageSelector";

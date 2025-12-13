@@ -6,10 +6,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Input, Button, AlertModal, useAlert } from "../components";
+import { useTranslation } from "react-i18next";
+import {
+  Input,
+  Button,
+  AlertModal,
+  useAlert,
+  LanguageSelector,
+} from "../components";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors";
@@ -26,6 +32,7 @@ interface PhoneAuthScreenProps {
 export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
   navigation,
 }) => {
+  const { t } = useTranslation();
   const { sendOTP } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,13 +64,13 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
     const digits = phoneNumber.replace(/\D/g, "");
 
     if (!digits) {
-      setError("Numéro de téléphone requis");
+      setError(t("auth.phoneAuth.invalidPhone"));
       return false;
     }
 
     // Vérifie le format français (10 chiffres commençant par 0)
     if (digits.length !== 10 || !digits.startsWith("0")) {
-      setError("Numéro de téléphone invalide");
+      setError(t("auth.phoneAuth.invalidPhone"));
       return false;
     }
 
@@ -91,19 +98,14 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
         });
       } else {
         showAlert(
-          "Erreur",
-          result.error || "Impossible d'envoyer le code",
+          t("common.error"),
+          result.error || t("errors.generic"),
           undefined,
           "error"
         );
       }
     } catch (error) {
-      showAlert(
-        "Erreur",
-        "Une erreur est survenue. Réessayez.",
-        undefined,
-        "error"
-      );
+      showAlert(t("common.error"), t("errors.generic"), undefined, "error");
     } finally {
       setLoading(false);
     }
@@ -119,13 +121,15 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Language Selector */}
+        <View style={styles.languageContainer}>
+          <LanguageSelector compact />
+        </View>
+
         <View style={styles.header}>
-          <Text style={styles.appName}>MinyanNow</Text>
-          <Text style={styles.title}>Connexion</Text>
-          <Text style={styles.subtitle}>
-            Entrez votre numéro de téléphone pour recevoir un code de
-            vérification
-          </Text>
+          <Text style={styles.appName}>{t("auth.phoneAuth.appName")}</Text>
+          <Text style={styles.title}>{t("auth.phoneAuth.title")}</Text>
+          <Text style={styles.subtitle}>{t("auth.phoneAuth.subtitle")}</Text>
         </View>
 
         <View style={styles.form}>
@@ -137,7 +141,7 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
             <View style={styles.phoneInput}>
               <Input
                 label=""
-                placeholder="06 12 34 56 78"
+                placeholder={t("auth.phoneAuth.phonePlaceholder")}
                 value={formatPhoneDisplay(phoneNumber)}
                 onChangeText={handlePhoneChange}
                 keyboardType="phone-pad"
@@ -148,7 +152,11 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
           </View>
 
           <Button
-            title="Recevoir le code"
+            title={
+              loading
+                ? t("auth.phoneAuth.sendingCode")
+                : t("auth.phoneAuth.continueButton")
+            }
             onPress={handleSendOTP}
             loading={loading}
             style={styles.button}
@@ -157,19 +165,19 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
 
         <View style={styles.info}>
           <Text style={styles.infoText}>
-            En continuant, vous acceptez nos{" "}
+            {t("auth.phoneAuth.termsText")}{" "}
             <Text
               style={styles.infoLink}
               onPress={() => navigation.navigate("TermsOfService")}
             >
-              Conditions d'utilisation
+              {t("auth.phoneAuth.termsLink")}
             </Text>{" "}
-            et notre{" "}
+            {t("auth.phoneAuth.andText")}{" "}
             <Text
               style={styles.infoLink}
               onPress={() => navigation.navigate("PrivacyPolicy")}
             >
-              Politique de confidentialité
+              {t("auth.phoneAuth.privacyLink")}
             </Text>
           </Text>
         </View>
@@ -196,8 +204,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 60,
     paddingBottom: 40,
+  },
+  languageContainer: {
+    alignItems: "flex-end",
+    marginBottom: 20,
   },
   header: {
     marginBottom: 40,

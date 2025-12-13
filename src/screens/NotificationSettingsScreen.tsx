@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { AlertModal, useAlert } from "../components";
 import { usersApi } from "../lib/api";
@@ -47,6 +48,7 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
 export const NotificationSettingsScreen: React.FC<
   NotificationSettingsScreenProps
 > = ({ navigation }) => {
+  const { t } = useTranslation();
   const [preferences, setPreferences] =
     useState<NotificationPreferences>(DEFAULT_PREFERENCES);
   const [loading, setLoading] = useState(true);
@@ -66,8 +68,8 @@ export const NotificationSettingsScreen: React.FC<
     } catch (error) {
       console.error("Error loading preferences:", error);
       showAlert(
-        "Erreur",
-        "Impossible de charger vos préférences",
+        t("common.error"),
+        t("notifications.loadError"),
         undefined,
         "error"
       );
@@ -90,16 +92,16 @@ export const NotificationSettingsScreen: React.FC<
       await usersApi.updateNotificationPreferences(preferences);
       setHasChanges(false);
       showAlert(
-        "Préférences sauvegardées",
-        "Vos paramètres de notifications ont été mis à jour",
+        t("notifications.saved"),
+        t("notifications.savedMessage"),
         undefined,
         "success"
       );
     } catch (error) {
       console.error("Error saving preferences:", error);
       showAlert(
-        "Erreur",
-        "Impossible de sauvegarder vos préférences",
+        t("common.error"),
+        t("notifications.saveError"),
         undefined,
         "error"
       );
@@ -119,7 +121,7 @@ export const NotificationSettingsScreen: React.FC<
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Chargement...</Text>
+        <Text style={styles.loadingText}>{t("notifications.loading")}</Text>
       </View>
     );
   }
@@ -136,7 +138,7 @@ export const NotificationSettingsScreen: React.FC<
         >
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={styles.headerTitle}>{t("notifications.title")}</Text>
         <TouchableOpacity
           style={[styles.saveBtn, !hasChanges && styles.saveBtnDisabled]}
           onPress={savePreferences}
@@ -151,7 +153,7 @@ export const NotificationSettingsScreen: React.FC<
                 !hasChanges && styles.saveBtnTextDisabled,
               ]}
             >
-              Enregistrer
+              {t("notifications.save")}
             </Text>
           )}
         </TouchableOpacity>
@@ -162,11 +164,11 @@ export const NotificationSettingsScreen: React.FC<
         <View style={styles.section}>
           <View style={styles.masterToggle}>
             <View style={styles.settingInfo}>
-              <Text style={styles.masterTitle}>Notifications</Text>
+              <Text style={styles.masterTitle}>{t("notifications.title")}</Text>
               <Text style={styles.masterSubtitle}>
                 {preferences.notificationsEnabled
-                  ? "Les notifications sont activées"
-                  : "Les notifications sont désactivées"}
+                  ? t("notifications.enabled")
+                  : t("notifications.disabled")}
               </Text>
             </View>
             <Switch
@@ -184,18 +186,18 @@ export const NotificationSettingsScreen: React.FC<
 
         {/* Proximity Section */}
         <View style={[styles.section, isDisabled && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>Proximité</Text>
+          <Text style={styles.sectionTitle}>{t("notifications.proximity.title")}</Text>
           <Text style={styles.sectionSubtitle}>
-            Soyez alerté quand vous êtes proche d'un événement
+            {t("notifications.proximity.subtitle")}
           </Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>📍</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Alertes de proximité</Text>
+                <Text style={styles.settingTitle}>{t("notifications.proximity.toggle")}</Text>
                 <Text style={styles.settingDescription}>
-                  Notification quand vous passez près d'un événement
+                  {t("notifications.proximity.toggleDescription")}
                 </Text>
               </View>
             </View>
@@ -215,7 +217,7 @@ export const NotificationSettingsScreen: React.FC<
           {preferences.notifyProximity && !isDisabled && (
             <View style={styles.sliderContainer}>
               <View style={styles.sliderHeader}>
-                <Text style={styles.sliderLabel}>Rayon de détection</Text>
+                <Text style={styles.sliderLabel}>{t("notifications.proximity.radius")}</Text>
                 <Text style={styles.sliderValue}>
                   {getRadiusLabel(preferences.proximityRadius)}
                 </Text>
@@ -243,18 +245,18 @@ export const NotificationSettingsScreen: React.FC<
 
         {/* Organizer Section */}
         <View style={[styles.section, isDisabled && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>En tant qu'organisateur</Text>
+          <Text style={styles.sectionTitle}>{t("notifications.organizer.title")}</Text>
           <Text style={styles.sectionSubtitle}>
-            Notifications pour vos événements
+            {t("notifications.organizer.subtitle")}
           </Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🙋</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Nouvelles demandes</Text>
+                <Text style={styles.settingTitle}>{t("notifications.organizer.newRequests")}</Text>
                 <Text style={styles.settingDescription}>
-                  Quand quelqu'un veut rejoindre votre événement
+                  {t("notifications.organizer.newRequestsDescription")}
                 </Text>
               </View>
             </View>
@@ -274,18 +276,18 @@ export const NotificationSettingsScreen: React.FC<
 
         {/* Participant Section */}
         <View style={[styles.section, isDisabled && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>En tant que participant</Text>
+          <Text style={styles.sectionTitle}>{t("notifications.participant.title")}</Text>
           <Text style={styles.sectionSubtitle}>
-            Notifications pour vos participations
+            {t("notifications.participant.subtitle")}
           </Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>✅</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Statut des demandes</Text>
+                <Text style={styles.settingTitle}>{t("notifications.participant.requestStatus")}</Text>
                 <Text style={styles.settingDescription}>
-                  Quand votre demande est acceptée ou refusée
+                  {t("notifications.participant.requestStatusDescription")}
                 </Text>
               </View>
             </View>
@@ -307,10 +309,10 @@ export const NotificationSettingsScreen: React.FC<
               <Text style={styles.settingIcon}>📝</Text>
               <View style={styles.settingText}>
                 <Text style={styles.settingTitle}>
-                  Modifications d'événements
+                  {t("notifications.participant.eventUpdates")}
                 </Text>
                 <Text style={styles.settingDescription}>
-                  Quand un événement auquel vous participez est modifié
+                  {t("notifications.participant.eventUpdatesDescription")}
                 </Text>
               </View>
             </View>
@@ -331,9 +333,9 @@ export const NotificationSettingsScreen: React.FC<
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🔔</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Rappels</Text>
+                <Text style={styles.settingTitle}>{t("notifications.participant.reminders")}</Text>
                 <Text style={styles.settingDescription}>
-                  Rappels avant le début de l'événement
+                  {t("notifications.participant.remindersDescription")}
                 </Text>
               </View>
             </View>
@@ -355,9 +357,7 @@ export const NotificationSettingsScreen: React.FC<
         <View style={styles.infoSection}>
           <Text style={styles.infoIcon}>💡</Text>
           <Text style={styles.infoText}>
-            Les notifications de proximité utilisent votre position en
-            arrière-plan de manière économe en batterie. Vous pouvez désactiver
-            cette fonctionnalité à tout moment.
+            {t("notifications.info")}
           </Text>
         </View>
       </ScrollView>

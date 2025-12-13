@@ -14,6 +14,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { Input, Button, AlertModal, useAlert } from "../components";
 import {
@@ -52,6 +53,7 @@ const EVENT_TYPES: EventType[] = [
 export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   navigation,
 }) => {
+  const { t, i18n } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<EventType>("SHEVA_BERAKHOT");
@@ -86,8 +88,8 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
     if (!name) return;
     if (initialParticipants.length >= parseInt(maxParticipants) - 1) {
       showAlert(
-        "Maximum atteint",
-        "Vous devez laisser au moins une place pour les demandes",
+        t("events.create.maxReached"),
+        t("events.create.maxReachedMessage"),
         undefined,
         "warning"
       );
@@ -102,36 +104,28 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   };
 
   const formatDate = (date: Date) => {
-    const days = [
-      "Dimanche",
-      "Lundi",
-      "Mardi",
-      "Mercredi",
-      "Jeudi",
-      "Vendredi",
-      "Samedi",
-    ];
-    const months = [
-      "janvier",
-      "février",
-      "mars",
-      "avril",
-      "mai",
-      "juin",
-      "juillet",
-      "août",
-      "septembre",
-      "octobre",
-      "novembre",
-      "décembre",
-    ];
-    return `${days[date.getDay()]} ${date.getDate()} ${
-      months[date.getMonth()]
-    } ${date.getFullYear()}`;
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleDateString(locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("fr-FR", {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -164,8 +158,8 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
       longitude === null
     ) {
       showAlert(
-        "Erreur",
-        "Veuillez remplir tous les champs obligatoires",
+        t("common.error"),
+        t("events.create.fillRequired"),
         undefined,
         "error"
       );
@@ -194,15 +188,15 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
       });
 
       showAlert(
-        "Succès",
-        "Événement créé avec succès!",
-        [{ text: "OK", onPress: () => navigation.goBack() }],
+        t("common.success"),
+        t("events.create.success"),
+        [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
         "success"
       );
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible de créer l'événement",
+        t("common.error"),
+        error.message || t("events.create.error"),
         undefined,
         "error"
       );
@@ -234,11 +228,11 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
             >
               <View style={styles.modalHeader}>
                 <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.modalCancel}>Annuler</Text>
+                  <Text style={styles.modalCancel}>{t("common.cancel")}</Text>
                 </TouchableOpacity>
-                <Text style={styles.modalTitle}>Date</Text>
+                <Text style={styles.modalTitle}>{t("events.create.date")}</Text>
                 <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.modalDone}>OK</Text>
+                  <Text style={styles.modalDone}>{t("common.ok")}</Text>
                 </TouchableOpacity>
               </View>
               <DateTimePicker
@@ -294,11 +288,11 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
             >
               <View style={styles.modalHeader}>
                 <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                  <Text style={styles.modalCancel}>Annuler</Text>
+                  <Text style={styles.modalCancel}>{t("common.cancel")}</Text>
                 </TouchableOpacity>
-                <Text style={styles.modalTitle}>Heure</Text>
+                <Text style={styles.modalTitle}>{t("events.create.time")}</Text>
                 <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                  <Text style={styles.modalDone}>OK</Text>
+                  <Text style={styles.modalDone}>{t("common.ok")}</Text>
                 </TouchableOpacity>
               </View>
               <DateTimePicker
@@ -339,15 +333,19 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
       <View style={styles.addressModalContainer}>
         <View style={styles.addressModalHeader}>
           <TouchableOpacity onPress={() => setShowAddressModal(false)}>
-            <Text style={styles.addressModalCancel}>Annuler</Text>
+            <Text style={styles.addressModalCancel}>
+              {t("events.create.cancelSearch")}
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.addressModalTitle}>Rechercher une adresse</Text>
+          <Text style={styles.addressModalTitle}>
+            {t("events.create.location")}
+          </Text>
           <View style={styles.placeholder} />
         </View>
 
         <GooglePlacesAutocomplete
           ref={googlePlacesRef}
-          placeholder="Tapez une adresse..."
+          placeholder={t("events.create.typeAddress")}
           onPress={(data, details = null) => {
             if (details) {
               // Extract address components
@@ -420,9 +418,9 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
     >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Retour</Text>
+          <Text style={styles.backButton}>{t("events.create.back")}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nouvel événement</Text>
+        <Text style={styles.headerTitle}>{t("events.create.title")}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -432,7 +430,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.sectionTitle}>Type d'événement</Text>
+        <Text style={styles.sectionTitle}>{t("events.create.eventType")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -462,15 +460,15 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         </ScrollView>
 
         <Input
-          label="Titre *"
-          placeholder="Ex: Sheva Berakhot David & Sarah"
+          label={t("events.create.eventTitle")}
+          placeholder={t("events.create.eventTitlePlaceholder")}
           value={title}
           onChangeText={setTitle}
         />
 
         <Input
-          label="Description"
-          placeholder="Détails supplémentaires..."
+          label={t("events.create.description")}
+          placeholder={t("events.create.descriptionPlaceholder")}
           value={description}
           onChangeText={setDescription}
           multiline
@@ -479,7 +477,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         />
 
         {/* Date & Time Pickers */}
-        <Text style={styles.sectionTitle}>Date et heure</Text>
+        <Text style={styles.sectionTitle}>{t("events.create.dateTime")}</Text>
         <View style={styles.row}>
           <TouchableOpacity
             style={[styles.pickerButton, styles.halfInput]}
@@ -487,7 +485,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           >
             <Text style={styles.pickerIcon}>📅</Text>
             <View style={styles.pickerTextContainer}>
-              <Text style={styles.pickerLabel}>Date</Text>
+              <Text style={styles.pickerLabel}>{t("events.create.date")}</Text>
               <Text style={styles.pickerValue}>{formatDate(selectedDate)}</Text>
             </View>
           </TouchableOpacity>
@@ -498,14 +496,14 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           >
             <Text style={styles.pickerIcon}>🕐</Text>
             <View style={styles.pickerTextContainer}>
-              <Text style={styles.pickerLabel}>Heure</Text>
+              <Text style={styles.pickerLabel}>{t("events.create.time")}</Text>
               <Text style={styles.pickerValue}>{formatTime(selectedTime)}</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Address Picker */}
-        <Text style={styles.sectionTitle}>Lieu</Text>
+        <Text style={styles.sectionTitle}>{t("events.create.location")}</Text>
         <TouchableOpacity
           style={styles.addressButton}
           onPress={() => setShowAddressModal(true)}
@@ -519,7 +517,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
               </>
             ) : (
               <Text style={styles.addressPlaceholder}>
-                Rechercher une adresse...
+                {t("events.create.searchAddress")}
               </Text>
             )}
           </View>
@@ -527,16 +525,18 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         </TouchableOpacity>
 
         {/* Participants déjà présents */}
-        <Text style={styles.sectionTitle}>Personnes déjà présentes</Text>
+        <Text style={styles.sectionTitle}>
+          {t("events.create.existingParticipants")}
+        </Text>
         <Text style={styles.sectionSubtitle}>
-          Ajoutez les noms des personnes qui seront déjà sur place
+          {t("events.create.existingParticipantsSubtitle")}
         </Text>
 
         <View style={styles.addParticipantRow}>
           <View style={styles.addParticipantInput}>
             <Input
               label=""
-              placeholder="Nom du participant"
+              placeholder={t("events.create.participantName")}
               value={newParticipantName}
               onChangeText={setNewParticipantName}
               autoCapitalize="words"
@@ -573,19 +573,20 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         {initialParticipants.length > 0 && (
           <View style={styles.currentCountInfo}>
             <Text style={styles.currentCountText}>
-              👥 {initialParticipants.length} personne
-              {initialParticipants.length > 1 ? "s" : ""} déjà présente
-              {initialParticipants.length > 1 ? "s" : ""}
+              👥{" "}
+              {t("events.create.peopleAlready", {
+                count: initialParticipants.length,
+              })}
             </Text>
           </View>
         )}
 
         {/* Nombre de personnes recherchées */}
         <Text style={styles.sectionTitle}>
-          Combien de personnes recherchez-vous ?
+          {t("events.create.howManyNeeded")}
         </Text>
         <Text style={styles.sectionSubtitle}>
-          Indiquez le nombre de personnes supplémentaires dont vous avez besoin
+          {t("events.create.howManyNeededSubtitle")}
         </Text>
 
         <View style={styles.participantsPicker}>
@@ -606,7 +607,9 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
           <View style={styles.participantsValueContainer}>
             <Text style={styles.participantsValue}>{remainingSpots}</Text>
             <Text style={styles.participantsLabel}>
-              personne{remainingSpots > 1 ? "s" : ""}
+              {remainingSpots > 1
+                ? t("events.create.persons")
+                : t("events.create.person")}
             </Text>
           </View>
 
@@ -629,25 +632,29 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
 
         <View style={styles.participantsSummary}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Déjà présents</Text>
+            <Text style={styles.summaryLabel}>
+              {t("events.create.alreadyPresent")}
+            </Text>
             <Text style={styles.summaryValue}>
               {initialParticipants.length}
             </Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Recherchés</Text>
+            <Text style={styles.summaryLabel}>{t("events.create.needed")}</Text>
             <Text style={[styles.summaryValue, styles.summaryHighlight]}>
               {remainingSpots}
             </Text>
           </View>
           <View style={[styles.summaryRow, styles.summaryRowTotal]}>
-            <Text style={styles.summaryLabelTotal}>Total pour le minyan</Text>
+            <Text style={styles.summaryLabelTotal}>
+              {t("events.create.totalMinyan")}
+            </Text>
             <Text style={styles.summaryValueTotal}>{maxParticipants}</Text>
           </View>
         </View>
 
         <Button
-          title="Créer l'événement"
+          title={t("events.create.submit")}
           onPress={handleCreate}
           loading={loading}
           style={styles.createButton}

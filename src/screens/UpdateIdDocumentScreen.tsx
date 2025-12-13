@@ -12,6 +12,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { AlertModal, useAlert } from "../components";
@@ -30,6 +31,7 @@ interface UpdateIdDocumentScreenProps {
 export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
   navigation,
 }) => {
+  const { t, i18n } = useTranslation();
   const { user, refreshSession } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -60,8 +62,8 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       showAlert(
-        "Permission refusée",
-        "L'accès à la caméra est nécessaire pour prendre une photo",
+        t("updateId.permissionDenied"),
+        t("updateId.cameraPermission"),
         undefined,
         "warning"
       );
@@ -85,8 +87,8 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       showAlert(
-        "Permission refusée",
-        "L'accès à la galerie est nécessaire",
+        t("updateId.permissionDenied"),
+        t("updateId.galleryPermission"),
         undefined,
         "warning"
       );
@@ -123,8 +125,8 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
       }
     } catch (error) {
       showAlert(
-        "Erreur",
-        "Impossible de lire le fichier sélectionné",
+        t("common.error"),
+        t("updateId.fileError"),
         undefined,
         "error"
       );
@@ -134,8 +136,8 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
   const handleUpload = async () => {
     if (!selectedImage) {
       showAlert(
-        "Image requise",
-        "Veuillez sélectionner une image de votre pièce d'identité",
+        t("updateId.imageRequired"),
+        t("updateId.imageRequiredMessage"),
         undefined,
         "warning"
       );
@@ -147,15 +149,15 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
       await usersApi.uploadIdDocument(selectedImage);
       refreshSession();
       showAlert(
-        "Pièce d'identité mise à jour",
-        "Votre nouvelle pièce d'identité a été enregistrée",
-        [{ text: "OK", onPress: () => navigation.goBack() }],
+        t("updateId.success"),
+        t("updateId.successMessage"),
+        [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
         "success"
       );
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible de mettre à jour la pièce d'identité",
+        t("common.error"),
+        error.message || t("updateId.uploadError"),
         undefined,
         "error"
       );
@@ -165,6 +167,16 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
   };
 
   const hasCurrentId = !!user?.idDocumentUrl;
+
+  const formatDate = (dateString: string) => {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return new Date(dateString).toLocaleDateString(locale);
+  };
 
   return (
     <View style={styles.container}>
@@ -176,7 +188,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         >
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pièce d'identité</Text>
+        <Text style={styles.headerTitle}>{t("updateId.title")}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -184,12 +196,12 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         {/* Current ID (if exists) */}
         {hasCurrentId && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pièce d'identité actuelle</Text>
+            <Text style={styles.sectionTitle}>{t("updateId.currentId")}</Text>
             <View style={styles.currentIdCard}>
               {loadingCurrent ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={styles.loadingText}>Chargement...</Text>
+                  <Text style={styles.loadingText}>{t("updateId.loading")}</Text>
                 </View>
               ) : currentIdUrl ? (
                 <Image
@@ -201,14 +213,13 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
                 <View style={styles.noPreview}>
                   <Text style={styles.noPreviewIcon}>🪪</Text>
                   <Text style={styles.noPreviewText}>
-                    Pièce d'identité enregistrée
+                    {t("updateId.idSaved")}
                   </Text>
                 </View>
               )}
               {user?.idUploadedAt && (
                 <Text style={styles.uploadDate}>
-                  Mise à jour le{" "}
-                  {new Date(user.idUploadedAt).toLocaleDateString("fr-FR")}
+                  {t("updateId.updatedOn")} {formatDate(user.idUploadedAt)}
                 </Text>
               )}
             </View>
@@ -218,7 +229,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         {/* New ID Upload */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {hasCurrentId ? "Mettre à jour" : "Ajouter une pièce d'identité"}
+            {hasCurrentId ? t("updateId.updateTitle") : t("updateId.addTitle")}
           </Text>
 
           {selectedImage ? (
@@ -239,21 +250,21 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
             <View style={styles.uploadOptions}>
               <TouchableOpacity style={styles.uploadBtn} onPress={takePhoto}>
                 <Text style={styles.uploadBtnIcon}>📷</Text>
-                <Text style={styles.uploadBtnText}>Prendre une photo</Text>
+                <Text style={styles.uploadBtnText}>{t("updateId.takePhoto")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.uploadBtn, styles.uploadBtnSecondary]}
                 onPress={pickImage}
               >
                 <Text style={styles.uploadBtnIcon}>🖼️</Text>
-                <Text style={styles.uploadBtnTextSecondary}>Galerie</Text>
+                <Text style={styles.uploadBtnTextSecondary}>{t("updateId.gallery")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.uploadBtn, styles.uploadBtnSecondary]}
                 onPress={pickFromFiles}
               >
                 <Text style={styles.uploadBtnIcon}>📁</Text>
-                <Text style={styles.uploadBtnTextSecondary}>Fichiers</Text>
+                <Text style={styles.uploadBtnTextSecondary}>{t("updateId.files")}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -263,11 +274,9 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         <View style={styles.infoBox}>
           <Text style={styles.infoIcon}>🔒</Text>
           <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Sécurité de vos données</Text>
+            <Text style={styles.infoTitle}>{t("updateId.securityTitle")}</Text>
             <Text style={styles.infoText}>
-              Votre pièce d'identité est stockée de manière sécurisée et n'est
-              visible que par les organisateurs d'événements auxquels vous
-              souhaitez participer.
+              {t("updateId.securityText")}
             </Text>
           </View>
         </View>
@@ -283,7 +292,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.submitBtnText}>
-                {hasCurrentId ? "Mettre à jour" : "Enregistrer"}
+                {hasCurrentId ? t("updateId.update") : t("updateId.save")}
               </Text>
             )}
           </TouchableOpacity>

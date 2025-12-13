@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { usersApi } from "../lib/api";
 import { colors } from "../lib/colors";
 
@@ -35,6 +36,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
   onReject,
   actionLoading = false,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
       const result = await usersApi.getIdDocument(userId);
       setImageUrl(result.url);
     } catch (err: any) {
-      setError(err.message || "Impossible de charger la pièce d'identité");
+      setError(err.message || t("idViewer.loadError"));
     } finally {
       setLoading(false);
     }
@@ -76,7 +78,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerInfo}>
-              <Text style={styles.headerTitle}>Pièce d'identité</Text>
+              <Text style={styles.headerTitle}>{t("idViewer.title")}</Text>
               <Text style={styles.headerSubtitle}>{userName}</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
@@ -89,7 +91,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={styles.loadingText}>Chargement...</Text>
+                <Text style={styles.loadingText}>{t("idViewer.loading")}</Text>
               </View>
             ) : error ? (
               <View style={styles.errorContainer}>
@@ -99,7 +101,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
                   style={styles.retryBtn}
                   onPress={loadIdDocument}
                 >
-                  <Text style={styles.retryBtnText}>Réessayer</Text>
+                  <Text style={styles.retryBtnText}>{t("idViewer.retry")}</Text>
                 </TouchableOpacity>
               </View>
             ) : imageUrl ? (
@@ -115,8 +117,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
           <View style={styles.securityNotice}>
             <Text style={styles.securityIcon}>🔒</Text>
             <Text style={styles.securityText}>
-              Cette image est sécurisée et ne peut être consultée que par vous
-              en tant qu'organisateur.
+              {t("idViewer.securityNotice")}
             </Text>
           </View>
 
@@ -131,7 +132,9 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
                 onPress={() => onReject(requestId)}
                 disabled={actionLoading}
               >
-                <Text style={styles.rejectButtonText}>Refuser</Text>
+                <Text style={styles.rejectButtonText}>
+                  {t("idViewer.reject")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -142,7 +145,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
                 disabled={actionLoading}
               >
                 <Text style={styles.acceptButtonText}>
-                  {actionLoading ? "..." : "Accepter"}
+                  {actionLoading ? "..." : t("idViewer.accept")}
                 </Text>
               </TouchableOpacity>
             </View>

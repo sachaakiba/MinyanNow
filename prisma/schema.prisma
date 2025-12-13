@@ -20,6 +20,7 @@ model User {
   phoneNumberVerified Boolean  @default(false)
   image               String?
   pushToken           String? // Expo push notification token
+  language            String   @default("fr") // Langue préférée (fr, en, he)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

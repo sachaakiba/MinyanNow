@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { AlertModal, useAlert, DatePickerModal } from "../components";
@@ -29,6 +30,7 @@ interface EditProfileScreenProps {
 export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   navigation,
 }) => {
+  const { t, i18n } = useTranslation();
   const { user, refreshSession } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
 
@@ -43,7 +45,13 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   const [saving, setSaving] = useState(false);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("fr-FR", {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -53,8 +61,8 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       showAlert(
-        "Champs requis",
-        "Le prénom et le nom sont obligatoires",
+        t("editProfile.fieldsRequired"),
+        t("editProfile.fieldsRequiredMessage"),
         undefined,
         "warning"
       );
@@ -63,8 +71,8 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 
     if (!dateOfBirth) {
       showAlert(
-        "Date de naissance",
-        "Veuillez sélectionner votre date de naissance",
+        t("editProfile.dateRequired"),
+        t("editProfile.dateRequiredMessage"),
         undefined,
         "warning"
       );
@@ -83,15 +91,15 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 
       refreshSession();
       showAlert(
-        "Profil mis à jour",
-        "Vos informations ont été sauvegardées",
-        [{ text: "OK", onPress: () => navigation.goBack() }],
+        t("editProfile.success"),
+        t("editProfile.successMessage"),
+        [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
         "success"
       );
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible de sauvegarder les modifications",
+        t("common.error"),
+        error.message || t("editProfile.error"),
         undefined,
         "error"
       );
@@ -113,7 +121,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         >
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Modifier le profil</Text>
+        <Text style={styles.headerTitle}>{t("editProfile.title")}</Text>
         <TouchableOpacity
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={handleSave}
@@ -122,7 +130,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
           {saving ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.saveBtnText}>Enregistrer</Text>
+            <Text style={styles.saveBtnText}>{t("editProfile.save")}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -148,12 +156,12 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         <View style={styles.form}>
           {/* Prénom */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Prénom *</Text>
+            <Text style={styles.label}>{t("editProfile.firstName")}</Text>
             <TextInput
               style={styles.input}
               value={firstName}
               onChangeText={setFirstName}
-              placeholder="Votre prénom"
+              placeholder={t("editProfile.firstNamePlaceholder")}
               placeholderTextColor="#9CA3AF"
               autoCapitalize="words"
             />
@@ -161,12 +169,12 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 
           {/* Nom */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nom *</Text>
+            <Text style={styles.label}>{t("editProfile.lastName")}</Text>
             <TextInput
               style={styles.input}
               value={lastName}
               onChangeText={setLastName}
-              placeholder="Votre nom de famille"
+              placeholder={t("editProfile.lastNamePlaceholder")}
               placeholderTextColor="#9CA3AF"
               autoCapitalize="words"
             />
@@ -174,19 +182,19 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 
           {/* Prénom hébraïque */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Prénom hébraïque</Text>
+            <Text style={styles.label}>{t("editProfile.hebrewName")}</Text>
             <TextInput
               style={styles.input}
               value={hebrewName}
               onChangeText={setHebrewName}
-              placeholder="Ex: Moshe ben Avraham"
+              placeholder={t("editProfile.hebrewNamePlaceholder")}
               placeholderTextColor="#9CA3AF"
             />
           </View>
 
           {/* Date de naissance */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date de naissance *</Text>
+            <Text style={styles.label}>{t("editProfile.dateOfBirth")}</Text>
             <TouchableOpacity
               style={styles.selectInput}
               onPress={() => setShowDatePicker(true)}
@@ -199,7 +207,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
               >
                 {dateOfBirth
                   ? formatDate(dateOfBirth)
-                  : "Sélectionner une date"}
+                  : t("editProfile.selectDate")}
               </Text>
               <Text style={styles.selectIcon}>📅</Text>
             </TouchableOpacity>
@@ -207,12 +215,12 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 
           {/* Synagogue */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Synagogue</Text>
+            <Text style={styles.label}>{t("editProfile.synagogue")}</Text>
             <TextInput
               style={styles.input}
               value={synagogue}
               onChangeText={setSynagogue}
-              placeholder="Nom de votre synagogue"
+              placeholder={t("editProfile.synagoguePlaceholder")}
               placeholderTextColor="#9CA3AF"
             />
           </View>
@@ -221,9 +229,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         {/* Info */}
         <View style={styles.infoBox}>
           <Text style={styles.infoIcon}>ℹ️</Text>
-          <Text style={styles.infoText}>
-            Les champs marqués d'un * sont obligatoires.
-          </Text>
+          <Text style={styles.infoText}>{t("editProfile.requiredFields")}</Text>
         </View>
       </ScrollView>
 
@@ -238,7 +244,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         onClose={() => setShowDatePicker(false)}
         maximumDate={new Date()}
         minimumDate={new Date(1920, 0, 1)}
-        title="Date de naissance"
+        title={t("editProfile.dateOfBirth")}
       />
 
       {/* Alert Modal */}

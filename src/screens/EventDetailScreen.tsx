@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 
 import {
@@ -48,6 +49,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   navigation,
   route,
 }) => {
+  const { t, i18n } = useTranslation();
   const { eventId } = route.params;
   const { user } = useAuth();
 
@@ -96,15 +98,15 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       setViewingIdUser(null);
       loadEvent();
       showAlert(
-        "Participant accepté",
-        "Le participant a été ajouté à votre événement",
+        t("common.success"),
+        t("events.detail.participantAccepted"),
         undefined,
         "success"
       );
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible d'accepter la demande",
+        t("common.error"),
+        error.message || t("events.detail.acceptError"),
         undefined,
         "error"
       );
@@ -121,15 +123,15 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       setViewingIdUser(null);
       loadEvent();
       showAlert(
-        "Demande refusée",
-        "La demande a été refusée",
+        t("common.success"),
+        t("events.detail.requestRejected"),
         undefined,
         "info"
       );
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible de refuser la demande",
+        t("common.error"),
+        error.message || t("events.detail.rejectError"),
         undefined,
         "error"
       );
@@ -152,9 +154,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       setMyRequest(userRequest || null);
     } catch (error) {
       showAlert(
-        "Erreur",
-        "Impossible de charger l'événement",
-        [{ text: "OK", onPress: () => navigation.goBack() }],
+        t("common.error"),
+        t("events.detail.loadError"),
+        [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
         "error"
       );
     } finally {
@@ -168,10 +170,15 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     setActionLoading(true);
     try {
       await requestsApi.create(event.id);
-      showAlert("Succès", "Votre demande a été envoyée!", undefined, "success");
+      showAlert(
+        t("common.success"),
+        t("events.detail.requestSent"),
+        undefined,
+        "success"
+      );
       loadEvent();
     } catch (error: any) {
-      showAlert("Erreur", error.message, undefined, "error");
+      showAlert(t("common.error"), error.message, undefined, "error");
     } finally {
       setActionLoading(false);
     }
@@ -181,21 +188,26 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     if (!myRequest) return;
 
     showAlert(
-      "Annuler",
-      "Voulez-vous annuler votre demande?",
+      t("events.detail.cancelRequest"),
+      t("events.detail.cancelRequestMessage"),
       [
-        { text: "Non", style: "cancel" },
+        { text: t("common.no"), style: "cancel" },
         {
-          text: "Oui",
+          text: t("common.yes"),
           style: "destructive",
           onPress: async () => {
             setActionLoading(true);
             try {
               await requestsApi.cancel(myRequest.id);
-              showAlert("Succès", "Demande annulée", undefined, "success");
+              showAlert(
+                t("common.success"),
+                t("events.detail.requestCancelled"),
+                undefined,
+                "success"
+              );
               loadEvent();
             } catch (error: any) {
-              showAlert("Erreur", error.message, undefined, "error");
+              showAlert(t("common.error"), error.message, undefined, "error");
             } finally {
               setActionLoading(false);
             }
@@ -212,7 +224,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       await requestsApi.accept(requestId);
       loadEvent();
     } catch (error: any) {
-      showAlert("Erreur", error.message, undefined, "error");
+      showAlert(t("common.error"), error.message, undefined, "error");
     } finally {
       setActionLoading(false);
     }
@@ -224,7 +236,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       await requestsApi.reject(requestId);
       loadEvent();
     } catch (error: any) {
-      showAlert("Erreur", error.message, undefined, "error");
+      showAlert(t("common.error"), error.message, undefined, "error");
     } finally {
       setActionLoading(false);
     }
@@ -235,12 +247,12 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     name: string
   ) => {
     showAlert(
-      "Retirer le participant",
-      `Voulez-vous retirer ${name} de la liste ?`,
+      t("events.detail.removeParticipant"),
+      t("events.detail.removeParticipantMessage", { name }),
       [
-        { text: "Non", style: "cancel" },
+        { text: t("common.no"), style: "cancel" },
         {
-          text: "Oui",
+          text: t("common.yes"),
           style: "destructive",
           onPress: async () => {
             setActionLoading(true);
@@ -249,8 +261,8 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               loadEvent();
             } catch (error: any) {
               showAlert(
-                "Erreur",
-                error.message || "Impossible de retirer le participant",
+                t("common.error"),
+                error.message || t("events.detail.rejectError"),
                 undefined,
                 "error"
               );
@@ -271,12 +283,12 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     if (!event) return;
 
     showAlert(
-      "Retirer le participant",
-      `Voulez-vous retirer ${name} de la liste ?`,
+      t("events.detail.removeParticipant"),
+      t("events.detail.removeParticipantMessage", { name }),
       [
-        { text: "Non", style: "cancel" },
+        { text: t("common.no"), style: "cancel" },
         {
-          text: "Oui",
+          text: t("common.yes"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -287,8 +299,8 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               setEvent(updatedEvent);
             } catch (error: any) {
               showAlert(
-                "Erreur",
-                error.message || "Impossible de retirer le participant",
+                t("common.error"),
+                error.message || t("events.detail.rejectError"),
                 undefined,
                 "error"
               );
@@ -337,8 +349,8 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       setEditingParticipantIndex(null);
     } catch (error: any) {
       showAlert(
-        "Erreur",
-        error.message || "Impossible de sauvegarder le participant",
+        t("common.error"),
+        error.message || t("events.detail.saveParticipantError"),
         undefined,
         "error"
       );
@@ -349,24 +361,24 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     if (!event) return;
 
     showAlert(
-      "Supprimer",
-      "Voulez-vous vraiment supprimer cet événement?",
+      t("events.detail.deleteEvent"),
+      t("events.detail.deleteEventMessage"),
       [
-        { text: "Non", style: "cancel" },
+        { text: t("common.no"), style: "cancel" },
         {
-          text: "Oui",
+          text: t("common.yes"),
           style: "destructive",
           onPress: async () => {
             try {
               await eventsApi.delete(event.id);
               showAlert(
-                "Succès",
-                "Événement supprimé",
-                [{ text: "OK", onPress: () => navigation.goBack() }],
+                t("common.success"),
+                t("events.detail.eventDeleted"),
+                [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
                 "success"
               );
             } catch (error: any) {
-              showAlert("Erreur", error.message, undefined, "error");
+              showAlert(t("common.error"), error.message, undefined, "error");
             }
           },
         },
@@ -380,7 +392,12 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     setShowNavigationModal(false);
     const url = `https://waze.com/ul?ll=${event.latitude},${event.longitude}&navigate=yes`;
     Linking.openURL(url).catch(() => {
-      showAlert("Erreur", "Impossible d'ouvrir Waze", undefined, "error");
+      showAlert(
+        t("common.error"),
+        t("events.detail.errorOpenWaze"),
+        undefined,
+        "error"
+      );
     });
   };
 
@@ -412,29 +429,28 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-    const months = [
-      "janvier",
-      "février",
-      "mars",
-      "avril",
-      "mai",
-      "juin",
-      "juillet",
-      "août",
-      "septembre",
-      "octobre",
-      "novembre",
-      "décembre",
-    ];
-    return `${days[date.getDay()]} ${date.getDate()} ${
-      months[date.getMonth()]
-    }`;
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleDateString(locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "long",
+    });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString("fr-FR", {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -497,7 +513,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         {/* Progress Card */}
         <View style={styles.card}>
           <View style={styles.progressHeader}>
-            <Text style={styles.progressTitle}>Participants</Text>
+            <Text style={styles.progressTitle}>
+              {t("events.detail.participants")}
+            </Text>
             <Text style={styles.progressCount}>
               {event.currentCount}/{event.maxParticipants}
             </Text>
@@ -515,12 +533,13 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
           {!isFull && (
             <Text style={styles.neededText}>
-              {needed} place{needed > 1 ? "s" : ""} restante
-              {needed > 1 ? "s" : ""}
+              {t("events.detail.spotsLeft", { count: needed })}
             </Text>
           )}
 
-          {isFull && <Text style={styles.fullText}>✓ Complet</Text>}
+          {isFull && (
+            <Text style={styles.fullText}>{t("events.detail.full")}</Text>
+          )}
         </View>
 
         {/* Details Card */}
@@ -530,7 +549,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               <Text style={styles.detailIcon}>📅</Text>
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Date</Text>
+              <Text style={styles.detailLabel}>{t("events.detail.date")}</Text>
               <Text style={styles.detailValue}>{formatDate(event.date)}</Text>
             </View>
           </View>
@@ -542,7 +561,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               <Text style={styles.detailIcon}>🕐</Text>
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Heure</Text>
+              <Text style={styles.detailLabel}>{t("events.detail.time")}</Text>
               <Text style={styles.detailValue}>{formatTime(event.date)}</Text>
             </View>
           </View>
@@ -554,7 +573,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               <Text style={styles.detailIcon}>📍</Text>
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Lieu</Text>
+              <Text style={styles.detailLabel}>
+                {t("events.detail.location")}
+              </Text>
               {isOrganizer || myRequest?.status === "ACCEPTED" ? (
                 <>
                   <Text style={styles.detailValue}>{event.address}</Text>
@@ -564,7 +585,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 <>
                   <Text style={styles.detailValue}>{event.city}</Text>
                   <Text style={styles.addressHidden}>
-                    🔒 Adresse visible après acceptation
+                    {t("events.detail.addressHidden")}
                   </Text>
                 </>
               )}
@@ -583,7 +604,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         {/* Description Card */}
         {event.description && (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Description</Text>
+            <Text style={styles.cardTitle}>
+              {t("events.detail.description")}
+            </Text>
             <Text style={styles.descriptionText}>{event.description}</Text>
           </View>
         )}
@@ -599,7 +622,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               </Text>
             </View>
             <View style={styles.organizerInfo}>
-              <Text style={styles.organizerLabel}>Organisé par</Text>
+              <Text style={styles.organizerLabel}>
+                {t("events.detail.organizedBy")}
+              </Text>
               <Text style={styles.organizerName}>
                 {event.organizer.name || event.organizer.email}
               </Text>
@@ -611,13 +636,17 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         {(isOrganizer || myRequest?.status === "ACCEPTED") && (
           <View style={styles.card}>
             <View style={styles.cardTitleRow}>
-              <Text style={styles.cardTitle}>Participants</Text>
+              <Text style={styles.cardTitle}>
+                {t("events.detail.participantsList")}
+              </Text>
               {isOrganizer && (
                 <TouchableOpacity
                   style={styles.addParticipantBtn}
                   onPress={openAddParticipantModal}
                 >
-                  <Text style={styles.addParticipantBtnText}>+ Ajouter</Text>
+                  <Text style={styles.addParticipantBtnText}>
+                    {t("events.detail.addParticipant")}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -650,7 +679,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   </View>
                 ) : (
                   <View style={styles.participantBadge}>
-                    <Text style={styles.participantBadgeText}>Confirmé</Text>
+                    <Text style={styles.participantBadgeText}>
+                      {t("events.detail.confirmed")}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -685,7 +716,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   </View>
                 ) : (
                   <View style={styles.participantBadge}>
-                    <Text style={styles.participantBadgeText}>Confirmé</Text>
+                    <Text style={styles.participantBadgeText}>
+                      {t("events.detail.confirmed")}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -696,7 +729,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               event.initialParticipants.length === 0) &&
               acceptedRequests.length === 0 && (
                 <Text style={styles.noParticipantsText}>
-                  Aucun participant pour le moment
+                  {t("events.detail.noParticipants")}
                 </Text>
               )}
           </View>
@@ -707,8 +740,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           <View style={styles.participantsHiddenCard}>
             <Text style={styles.participantsHiddenIcon}>👥</Text>
             <Text style={styles.participantsHiddenText}>
-              La liste des participants sera visible après acceptation de votre
-              demande
+              {t("events.detail.hiddenParticipants")}
             </Text>
           </View>
         )}
@@ -737,10 +769,10 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   </Text>
                   <Text style={styles.statusText}>
                     {myRequest.status === "ACCEPTED"
-                      ? "Vous participez"
+                      ? t("events.detail.youParticipate")
                       : myRequest.status === "PENDING"
-                      ? "Demande en attente"
-                      : "Demande refusée"}
+                      ? t("events.detail.pendingRequest")
+                      : t("events.detail.rejectedRequest")}
                   </Text>
                 </View>
                 {myRequest.status !== "REJECTED" && (
@@ -750,14 +782,16 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                     disabled={actionLoading}
                   >
                     <Text style={styles.cancelLinkText}>
-                      Annuler ma participation
+                      {t("events.detail.cancelParticipation")}
                     </Text>
                   </TouchableOpacity>
                 )}
               </>
             ) : isFull ? (
               <View style={styles.fullCard}>
-                <Text style={styles.fullCardText}>Événement complet</Text>
+                <Text style={styles.fullCardText}>
+                  {t("events.detail.eventFull")}
+                </Text>
               </View>
             ) : (
               <TouchableOpacity
@@ -769,7 +803,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Text style={styles.joinButtonText}>Rejoindre</Text>
+                    <Text style={styles.joinButtonText}>
+                      {t("events.detail.join")}
+                    </Text>
                     <Text style={styles.joinButtonArrow}>→</Text>
                   </>
                 )}
@@ -782,10 +818,10 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         {isOrganizer && pendingRequests.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              Demandes ({pendingRequests.length})
+              {t("events.detail.requests")} ({pendingRequests.length})
             </Text>
             <Text style={styles.cardSubtitle}>
-              Vérifiez l'identité avant d'accepter
+              {t("events.detail.verifyId")}
             </Text>
             {pendingRequests.map((request) => (
               <TouchableOpacity
@@ -813,7 +849,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   <View style={styles.viewIdHint}>
                     <Text style={styles.viewIdHintIcon}>🪪</Text>
                     <Text style={styles.viewIdHintText}>
-                      Appuyez pour vérifier l'identité
+                      {t("events.detail.tapToVerify")}
                     </Text>
                   </View>
                 </View>
@@ -827,7 +863,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         {isOrganizer && acceptedRequests.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              Participants ({acceptedRequests.length})
+              {t("events.detail.participants")} ({acceptedRequests.length})
             </Text>
             {acceptedRequests.map((request) => (
               <View key={request.id} style={styles.participantItem}>
@@ -861,12 +897,12 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
               {editingParticipantIndex !== null
-                ? "Modifier le participant"
-                : "Ajouter un participant"}
+                ? t("events.detail.editParticipant")
+                : t("events.detail.addParticipantTitle")}
             </Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Nom du participant"
+              placeholder={t("events.create.participantName")}
               value={participantName}
               onChangeText={setParticipantName}
               autoCapitalize="words"
@@ -881,7 +917,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   setEditingParticipantIndex(null);
                 }}
               >
-                <Text style={styles.modalCancelBtnText}>Annuler</Text>
+                <Text style={styles.modalCancelBtnText}>
+                  {t("common.cancel")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -892,7 +930,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 disabled={!participantName.trim()}
               >
                 <Text style={styles.modalSaveBtnText}>
-                  {editingParticipantIndex !== null ? "Modifier" : "Ajouter"}
+                  {editingParticipantIndex !== null
+                    ? t("common.edit")
+                    : t("common.add")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -914,9 +954,11 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         >
           <View style={styles.navigationModalContent}>
             <Image source={rabinIcon} style={styles.navigationModalIcon} />
-            <Text style={styles.navigationModalTitle}>Itinéraire</Text>
+            <Text style={styles.navigationModalTitle}>
+              {t("events.detail.navigation")}
+            </Text>
             <Text style={styles.navigationModalSubtitle}>
-              Choisissez votre application de navigation
+              {t("events.detail.chooseNavApp")}
             </Text>
             <View style={styles.navigationModalButtons}>
               <TouchableOpacity
@@ -924,7 +966,9 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 onPress={openInWaze}
               >
                 <Image source={wazeLogo} style={styles.navigationOptionLogo} />
-                <Text style={styles.navigationOptionText}>Waze</Text>
+                <Text style={styles.navigationOptionText}>
+                  {t("events.detail.waze")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.navigationOption}
@@ -934,14 +978,18 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   source={googleMapsLogo}
                   style={styles.navigationOptionLogo}
                 />
-                <Text style={styles.navigationOptionText}>Google Maps</Text>
+                <Text style={styles.navigationOptionText}>
+                  {t("events.detail.googleMaps")}
+                </Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity
               style={styles.navigationCancelBtn}
               onPress={() => setShowNavigationModal(false)}
             >
-              <Text style={styles.navigationCancelBtnText}>Annuler</Text>
+              <Text style={styles.navigationCancelBtnText}>
+                {t("common.cancel")}
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

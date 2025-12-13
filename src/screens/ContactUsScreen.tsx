@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { AlertModal, useAlert } from "../components";
 import { useAuth } from "../context/AuthContext";
@@ -37,53 +38,22 @@ type ContactReason =
 
 interface ReasonOption {
   id: ContactReason;
-  label: string;
   icon: string;
-  emailSubject: string;
 }
 
 const CONTACT_REASONS: ReasonOption[] = [
-  {
-    id: "general",
-    label: "Question générale",
-    icon: "❓",
-    emailSubject: "Question générale",
-  },
-  {
-    id: "bug",
-    label: "Signaler un bug",
-    icon: "🐛",
-    emailSubject: "Signalement de bug",
-  },
-  {
-    id: "suggestion",
-    label: "Suggestion d'amélioration",
-    icon: "💡",
-    emailSubject: "Suggestion d'amélioration",
-  },
-  {
-    id: "account",
-    label: "Problème de compte",
-    icon: "👤",
-    emailSubject: "Problème de compte",
-  },
-  {
-    id: "security",
-    label: "Signalement de sécurité",
-    icon: "🔒",
-    emailSubject: "Signalement de sécurité",
-  },
-  {
-    id: "other",
-    label: "Autre",
-    icon: "📝",
-    emailSubject: "Contact",
-  },
+  { id: "general", icon: "❓" },
+  { id: "bug", icon: "🐛" },
+  { id: "suggestion", icon: "💡" },
+  { id: "account", icon: "👤" },
+  { id: "security", icon: "🔒" },
+  { id: "other", icon: "📝" },
 ];
 
 export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
   navigation,
 }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
   const [selectedReason, setSelectedReason] = useState<ContactReason | null>(
@@ -92,11 +62,14 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
 
+  const getReasonLabel = (id: ContactReason) => t(`contactUs.reasons.${id}`);
+  const getEmailSubject = (id: ContactReason) => t(`contactUs.emailSubjects.${id}`);
+
   const handleSendEmail = async () => {
     if (!selectedReason) {
       showAlert(
-        "Motif requis",
-        "Veuillez sélectionner un motif de contact.",
+        t("contactUs.reasonRequired"),
+        t("contactUs.reasonRequiredMessage"),
         undefined,
         "error"
       );
@@ -105,8 +78,8 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
 
     if (message.trim().length < 10) {
       showAlert(
-        "Message trop court",
-        "Veuillez décrire votre demande plus en détail (minimum 10 caractères).",
+        t("contactUs.messageTooShort"),
+        t("contactUs.messageTooShortMessage"),
         undefined,
         "error"
       );
@@ -115,9 +88,8 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
 
     setSending(true);
 
-    const reason = CONTACT_REASONS.find((r) => r.id === selectedReason);
     const subject = encodeURIComponent(
-      `[MinyanNow] ${reason?.emailSubject || "Contact"}`
+      `[MinyanNow] ${getEmailSubject(selectedReason)}`
     );
 
     // Construire le corps de l'email avec les infos utilisateur
@@ -137,11 +109,11 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
       if (supported) {
         await Linking.openURL(mailtoUrl);
         showAlert(
-          "Email prêt",
-          "Votre application de messagerie s'est ouverte. Envoyez l'email pour nous contacter.",
+          t("contactUs.emailReady"),
+          t("contactUs.emailReadyMessage"),
           [
             {
-              text: "OK",
+              text: t("common.ok"),
               onPress: () => navigation.goBack(),
             },
           ],
@@ -149,16 +121,16 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
         );
       } else {
         showAlert(
-          "Erreur",
-          `Impossible d'ouvrir l'application de messagerie. Envoyez un email directement à ${CONTACT_EMAIL}`,
+          t("common.error"),
+          `${t("contactUs.emailError")} ${CONTACT_EMAIL}`,
           undefined,
           "error"
         );
       }
     } catch (error) {
       showAlert(
-        "Erreur",
-        `Une erreur est survenue. Envoyez un email directement à ${CONTACT_EMAIL}`,
+        t("common.error"),
+        `${t("contactUs.emailError")} ${CONTACT_EMAIL}`,
         undefined,
         "error"
       );
@@ -173,8 +145,8 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
       await Linking.openURL(mailtoUrl);
     } catch (error) {
       showAlert(
-        "Erreur",
-        `Impossible d'ouvrir l'application de messagerie. Notre adresse: ${CONTACT_EMAIL}`,
+        t("common.error"),
+        `${t("contactUs.emailError")} ${CONTACT_EMAIL}`,
         undefined,
         "error"
       );
@@ -194,7 +166,7 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
         >
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nous contacter</Text>
+        <Text style={styles.headerTitle}>{t("contactUs.title")}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -209,18 +181,16 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
             <Text style={styles.introIcon}>💬</Text>
           </View>
           <Text style={styles.introTitle}>
-            Comment pouvons-nous vous aider ?
+            {t("contactUs.intro")}
           </Text>
           <Text style={styles.introText}>
-            Nous sommes là pour répondre à vos questions et vous accompagner.
-            Sélectionnez le motif de votre demande et décrivez-nous votre
-            situation.
+            {t("contactUs.introText")}
           </Text>
         </View>
 
         {/* Contact Reasons */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Motif de contact</Text>
+          <Text style={styles.sectionTitle}>{t("contactUs.reasonTitle")}</Text>
           <View style={styles.reasonsGrid}>
             {CONTACT_REASONS.map((reason) => (
               <TouchableOpacity
@@ -238,7 +208,7 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
                     selectedReason === reason.id && styles.reasonLabelActive,
                   ]}
                 >
-                  {reason.label}
+                  {getReasonLabel(reason.id)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -247,10 +217,10 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
 
         {/* Message */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Votre message</Text>
+          <Text style={styles.sectionTitle}>{t("contactUs.messageTitle")}</Text>
           <TextInput
             style={styles.messageInput}
-            placeholder="Décrivez votre demande en détail..."
+            placeholder={t("contactUs.messagePlaceholder")}
             placeholderTextColor="#9CA3AF"
             multiline
             numberOfLines={6}
@@ -258,7 +228,7 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
             value={message}
             onChangeText={setMessage}
           />
-          <Text style={styles.charCount}>{message.length} caractères</Text>
+          <Text style={styles.charCount}>{message.length} {t("common.characters")}</Text>
         </View>
 
         {/* Send Button */}
@@ -272,14 +242,14 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
           disabled={sending || !selectedReason || message.trim().length < 10}
         >
           <Text style={styles.sendButtonText}>
-            {sending ? "Ouverture..." : "Envoyer par email"}
+            {sending ? t("contactUs.sending") : t("contactUs.send")}
           </Text>
         </TouchableOpacity>
 
         {/* Alternative Contact */}
         <View style={styles.alternativeSection}>
           <Text style={styles.alternativeTitle}>
-            Ou contactez-nous directement
+            {t("contactUs.alternative")}
           </Text>
           <TouchableOpacity
             style={styles.emailCard}
@@ -289,7 +259,7 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
               <Text style={styles.emailIcon}>📧</Text>
             </View>
             <View style={styles.emailContent}>
-              <Text style={styles.emailLabel}>Email</Text>
+              <Text style={styles.emailLabel}>{t("contactUs.email")}</Text>
               <Text style={styles.emailAddress}>{CONTACT_EMAIL}</Text>
             </View>
             <Text style={styles.emailArrow}>›</Text>
@@ -300,8 +270,7 @@ export const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
         <View style={styles.responseTimeSection}>
           <Text style={styles.responseTimeIcon}>⏱️</Text>
           <Text style={styles.responseTimeText}>
-            Nous nous efforçons de répondre à toutes les demandes sous 24 à 48
-            heures ouvrées.
+            {t("contactUs.responseTime")}
           </Text>
         </View>
 

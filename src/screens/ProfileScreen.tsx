@@ -8,18 +8,26 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors";
 
 export const ProfileScreen: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useAuth();
 
   const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return "Non renseigné";
-    return new Date(dateString).toLocaleDateString("fr-FR", {
+    if (!dateString) return t("profile.notProvided");
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return new Date(dateString).toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -30,7 +38,7 @@ export const ProfileScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mon Profil</Text>
+        <Text style={styles.headerTitle}>{t("profile.title")}</Text>
         <TouchableOpacity
           style={styles.settingsBtn}
           onPress={() => navigation.navigate("Settings")}
@@ -52,7 +60,7 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.userName}>
             {user?.firstName && user?.lastName
               ? `${user.firstName} ${user.lastName}`
-              : user?.name || "Utilisateur"}
+              : user?.name || t("profile.notProvided")}
           </Text>
           {user?.hebrewName && (
             <Text style={styles.hebrewName}>{user.hebrewName}</Text>
@@ -62,7 +70,7 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Info Cards */}
         <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>Informations personnelles</Text>
+          <Text style={styles.sectionTitle}>{t("profile.personalInfo")}</Text>
 
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
@@ -70,9 +78,9 @@ export const ProfileScreen: React.FC = () => {
                 <Text>👤</Text>
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Prénom</Text>
+                <Text style={styles.infoLabel}>{t("profile.firstName")}</Text>
                 <Text style={styles.infoValue}>
-                  {user?.firstName || "Non renseigné"}
+                  {user?.firstName || t("profile.notProvided")}
                 </Text>
               </View>
             </View>
@@ -84,9 +92,9 @@ export const ProfileScreen: React.FC = () => {
                 <Text>👤</Text>
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Nom</Text>
+                <Text style={styles.infoLabel}>{t("profile.lastName")}</Text>
                 <Text style={styles.infoValue}>
-                  {user?.lastName || "Non renseigné"}
+                  {user?.lastName || t("profile.notProvided")}
                 </Text>
               </View>
             </View>
@@ -98,9 +106,9 @@ export const ProfileScreen: React.FC = () => {
                 <Text>✡️</Text>
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Prénom hébraïque</Text>
+                <Text style={styles.infoLabel}>{t("profile.hebrewName")}</Text>
                 <Text style={styles.infoValue}>
-                  {user?.hebrewName || "Non renseigné"}
+                  {user?.hebrewName || t("profile.notProvided")}
                 </Text>
               </View>
             </View>
@@ -112,7 +120,7 @@ export const ProfileScreen: React.FC = () => {
                 <Text>📅</Text>
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Date de naissance</Text>
+                <Text style={styles.infoLabel}>{t("profile.dateOfBirth")}</Text>
                 <Text style={styles.infoValue}>
                   {formatDate(user?.dateOfBirth)}
                 </Text>
@@ -126,9 +134,9 @@ export const ProfileScreen: React.FC = () => {
                 <Text>🏛️</Text>
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Synagogue</Text>
+                <Text style={styles.infoLabel}>{t("profile.synagogue")}</Text>
                 <Text style={styles.infoValue}>
-                  {user?.synagogue || "Non renseigné"}
+                  {user?.synagogue || t("profile.notProvided")}
                 </Text>
               </View>
             </View>
@@ -140,13 +148,15 @@ export const ProfileScreen: React.FC = () => {
             onPress={() => navigation.navigate("EditProfile")}
           >
             <Text style={styles.editButtonIcon}>✏️</Text>
-            <Text style={styles.editButtonText}>Modifier mes informations</Text>
+            <Text style={styles.editButtonText}>
+              {t("profile.editProfile")}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Verification Section */}
         <View style={styles.verificationSection}>
-          <Text style={styles.sectionTitle}>Vérification</Text>
+          <Text style={styles.sectionTitle}>{t("profile.verification")}</Text>
 
           <View style={styles.verificationCard}>
             <View style={styles.verificationHeader}>
@@ -154,22 +164,35 @@ export const ProfileScreen: React.FC = () => {
                 <Text style={styles.verificationIcon}>🪪</Text>
               </View>
               <View style={styles.verificationContent}>
-                <Text style={styles.verificationTitle}>Pièce d'identité</Text>
+                <Text style={styles.verificationTitle}>
+                  {t("profile.idDocument")}
+                </Text>
                 {user?.idDocumentUrl ? (
                   <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedBadgeText}>✓ Vérifiée</Text>
+                    <Text style={styles.verifiedBadgeText}>
+                      {t("profile.idVerified")}
+                    </Text>
                   </View>
                 ) : (
                   <View style={styles.pendingBadge}>
-                    <Text style={styles.pendingBadgeText}>Non fournie</Text>
+                    <Text style={styles.pendingBadgeText}>
+                      {t("profile.idNotProvided")}
+                    </Text>
                   </View>
                 )}
               </View>
             </View>
             {user?.idUploadedAt && (
               <Text style={styles.verificationDate}>
-                Mise à jour le{" "}
-                {new Date(user.idUploadedAt).toLocaleDateString("fr-FR")}
+                {t("profile.idUpdatedAt", {
+                  date: new Date(user.idUploadedAt).toLocaleDateString(
+                    i18n.language === "he"
+                      ? "he-IL"
+                      : i18n.language === "en"
+                      ? "en-US"
+                      : "fr-FR"
+                  ),
+                })}
               </Text>
             )}
             <TouchableOpacity
@@ -177,7 +200,9 @@ export const ProfileScreen: React.FC = () => {
               onPress={() => navigation.navigate("UpdateIdDocument")}
             >
               <Text style={styles.updateIdButtonText}>
-                {user?.idDocumentUrl ? "Mettre à jour" : "Ajouter"}
+                {user?.idDocumentUrl
+                  ? t("profile.updateId")
+                  : t("profile.addId")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -193,9 +218,9 @@ export const ProfileScreen: React.FC = () => {
               <Text style={styles.actionIconText}>⚙️</Text>
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Paramètres</Text>
+              <Text style={styles.actionTitle}>{t("profile.settings")}</Text>
               <Text style={styles.actionSubtitle}>
-                Notifications, compte, aide
+                {t("profile.settingsSubtitle")}
               </Text>
             </View>
             <Text style={styles.actionArrow}>›</Text>

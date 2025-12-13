@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_ICONS } from "../lib/api";
 import { colors } from "../lib/colors";
 
@@ -24,35 +25,35 @@ export const EventCard: React.FC<EventCardProps> = ({
   isLoading = false,
   hasRequested = false,
 }) => {
+  const { t, i18n } = useTranslation();
   const needed = event.maxParticipants - event.currentCount;
   const isFull = needed <= 0;
   const progress = event.currentCount / event.maxParticipants;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-    const months = [
-      "jan",
-      "fév",
-      "mar",
-      "avr",
-      "mai",
-      "juin",
-      "juil",
-      "août",
-      "sep",
-      "oct",
-      "nov",
-      "déc",
-    ];
-    return `${days[date.getDay()]} ${date.getDate()} ${
-      months[date.getMonth()]
-    }`;
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleDateString(locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString("fr-FR", {
+    const locale =
+      i18n.language === "he"
+        ? "he-IL"
+        : i18n.language === "en"
+        ? "en-US"
+        : "fr-FR";
+    return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -71,15 +72,15 @@ export const EventCard: React.FC<EventCardProps> = ({
               {EVENT_TYPE_LABELS[event.type]}
             </Text>
             <Text style={styles.organizer}>
-              par{" "}
+              {t("eventCard.by")}{" "}
               {event.organizer?.name ||
                 event.organizer?.email ||
-                "Organisateur"}
+                t("eventCard.organizer")}
             </Text>
           </View>
         </View>
         <TouchableOpacity style={styles.detailsButton} onPress={onPress}>
-          <Text style={styles.detailsButtonText}>Détails</Text>
+          <Text style={styles.detailsButtonText}>{t("eventCard.details")}</Text>
           <Text style={styles.detailsArrow}>›</Text>
         </TouchableOpacity>
       </View>
@@ -112,7 +113,9 @@ export const EventCard: React.FC<EventCardProps> = ({
       {/* Progress bar des participants */}
       <View style={styles.progressSection}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>Participants</Text>
+          <Text style={styles.progressLabel}>
+            {t("eventCard.participants")}
+          </Text>
           <Text style={styles.progressCount}>
             {event.currentCount}/{event.maxParticipants}
           </Text>
@@ -128,8 +131,9 @@ export const EventCard: React.FC<EventCardProps> = ({
         </View>
         {!isFull && (
           <Text style={styles.neededText}>
-            {needed} place{needed > 1 ? "s" : ""} restante
-            {needed > 1 ? "s" : ""}
+            {needed > 1
+              ? t("eventCard.spotsLeftPlural", { count: needed })
+              : t("eventCard.spotsLeft", { count: needed })}
           </Text>
         )}
       </View>
@@ -149,7 +153,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
             <>
-              <Text style={styles.joinButtonText}>Rejoindre</Text>
+              <Text style={styles.joinButtonText}>{t("eventCard.join")}</Text>
               <Text style={styles.joinButtonArrow}>→</Text>
             </>
           )}
@@ -158,13 +162,15 @@ export const EventCard: React.FC<EventCardProps> = ({
 
       {hasRequested && !isFull && (
         <View style={styles.requestedBadge}>
-          <Text style={styles.requestedBadgeText}>⏳ Demande envoyée</Text>
+          <Text style={styles.requestedBadgeText}>
+            ⏳ {t("eventCard.requestSent")}
+          </Text>
         </View>
       )}
 
       {isFull && (
         <View style={styles.fullBadge}>
-          <Text style={styles.fullBadgeText}>✓ Événement complet</Text>
+          <Text style={styles.fullBadgeText}>✓ {t("eventCard.eventFull")}</Text>
         </View>
       )}
     </View>

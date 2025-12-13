@@ -10,6 +10,7 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { useTranslation } from "react-i18next";
 import { colors } from "../lib/colors";
 
 interface DatePickerModalProps {
@@ -28,11 +29,19 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
   value,
   onChange,
   onClose,
-  title = "Sélectionner",
+  title,
   mode = "date",
   minimumDate,
   maximumDate,
 }) => {
+  const { t, i18n } = useTranslation();
+  const displayTitle = title || t("datePicker.select");
+  const locale =
+    i18n.language === "he"
+      ? "he-IL"
+      : i18n.language === "en"
+      ? "en-US"
+      : "fr-FR";
   const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") {
       onClose();
@@ -65,11 +74,11 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
           >
             <View style={styles.modalHeader}>
               <TouchableOpacity onPress={onClose}>
-                <Text style={styles.modalCancel}>Annuler</Text>
+                <Text style={styles.modalCancel}>{t("datePicker.cancel")}</Text>
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>{title}</Text>
+              <Text style={styles.modalTitle}>{displayTitle}</Text>
               <TouchableOpacity onPress={onClose}>
-                <Text style={styles.modalDone}>OK</Text>
+                <Text style={styles.modalDone}>{t("datePicker.ok")}</Text>
               </TouchableOpacity>
             </View>
             <DateTimePicker
@@ -81,7 +90,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
               }}
               minimumDate={minimumDate}
               maximumDate={maximumDate}
-              locale="fr-FR"
+              locale={locale}
               style={
                 mode === "date" ? styles.iosDatePicker : styles.iosTimePicker
               }
