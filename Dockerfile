@@ -6,19 +6,16 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
+COPY tsconfig.json ./
 
-# Installer les dépendances
-RUN npm ci --only=production
+# Installer TOUTES les dépendances (y compris devDependencies pour dotenv et tsx)
+RUN npm ci
 
 # Générer le client Prisma
 RUN npx prisma generate
 
 # Copier le code source
 COPY src ./src
-COPY tsconfig.json ./
-
-# Build TypeScript (optionnel, on utilise tsx)
-# RUN npm run build
 
 # Exposer le port
 EXPOSE 3000
