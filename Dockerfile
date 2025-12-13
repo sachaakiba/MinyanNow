@@ -2,6 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Argument de build pour DATABASE_URL (nécessaire pour prisma generate)
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 # Copier les fichiers de dépendances
 COPY package*.json ./
 COPY prisma ./prisma/
