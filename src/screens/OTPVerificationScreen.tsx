@@ -12,7 +12,7 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import { Button, AlertModal, useAlert } from "../components";
+import { AlertModal, useAlert } from "../components";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors";
@@ -74,10 +74,11 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
   const handleOtpChange = (value: string, index: number) => {
     setError(null);
 
+    let newOtp = [...otp];
+
     // Gère le copier-coller du code complet
     if (value.length > 1) {
       const digits = value.replace(/\D/g, "").slice(0, OTP_LENGTH);
-      const newOtp = [...otp];
       digits.split("").forEach((digit, i) => {
         if (i < OTP_LENGTH) {
           newOtp[i] = digit;
@@ -88,18 +89,30 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
       // Focus sur le dernier input rempli ou le prochain vide
       const nextIndex = Math.min(digits.length, OTP_LENGTH - 1);
       inputRefs.current[nextIndex]?.focus();
+
+      // Auto-submit si le code est complet
+      if (digits.length === OTP_LENGTH) {
+        handleVerifyWithCode(newOtp);
+      }
       return;
     }
 
     // Gère la saisie normale
     const digit = value.replace(/\D/g, "");
-    const newOtp = [...otp];
     newOtp[index] = digit;
     setOtp(newOtp);
 
     // Passe au prochain input si un chiffre est entré
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit si c'est le dernier chiffre et que le code est complet
+    if (digit && index === OTP_LENGTH - 1) {
+      const isComplete = newOtp.every((d) => d !== "");
+      if (isComplete) {
+        handleVerifyWithCode(newOtp);
+      }
     }
   };
 
@@ -110,11 +123,10 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
     }
   };
 
-  const handleVerify = async () => {
-    const code = otp.join("");
+  const handleVerifyWithCode = async (otpArray: string[]) => {
+    const code = otpArray.join("");
 
     if (code.length !== OTP_LENGTH) {
-      setError(t("auth.otp.invalidCode"));
       return;
     }
 
@@ -230,12 +242,9 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
 
         {error && <Text style={styles.errorText}>{error}</Text>}
 
-        <Button
-          title={loading ? t("auth.otp.verifying") : t("common.confirm")}
-          onPress={handleVerify}
-          loading={loading}
-          style={styles.button}
-        />
+        {loading && (
+          <Text style={styles.verifyingText}>{t("auth.otp.verifying")}</Text>
+        )}
 
         <View style={styles.resendContainer}>
           <Text style={styles.resendText}>{t("auth.otp.resendText")} </Text>
@@ -337,8 +346,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 16,
   },
-  button: {
+  verifyingText: {
+    fontSize: 16,
+    color: colors.primary,
+    textAlign: "center",
     marginTop: 16,
+    fontWeight: "500",
   },
   resendContainer: {
     flexDirection: "row",

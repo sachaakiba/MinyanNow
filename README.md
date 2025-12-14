@@ -32,6 +32,14 @@ A React Native (Expo) application with authentication using Better Auth and Pris
    - `BETTER_AUTH_URL` - Auth server URL
    - `EXPO_PUBLIC_API_URL` - API URL for the mobile app
 
+   **Twilio SMS (for OTP):**
+
+   - `TWILIO_ACCOUNT_SID` - Your Twilio Account SID (from [Twilio Console](https://console.twilio.com))
+   - `TWILIO_AUTH_TOKEN` - Your Twilio Auth Token
+   - `TWILIO_PHONE_NUMBER` - Your Twilio phone number in E.164 format (e.g., `+15551234567`)
+
+   > Note: If Twilio credentials are not configured, OTP codes will only be logged to the console (useful for development).
+
 ## Running the Application
 
 You need to run both the backend server and the Expo app:

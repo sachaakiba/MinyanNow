@@ -55,13 +55,15 @@
     "react-native-maps": "1.20.1",
     "react-native-safe-area-context": "^5.6.2",
     "react-native-screens": "~4.16.0",
-    "react-native-svg": "^15.15.1"
+    "react-native-svg": "^15.15.1",
+    "twilio": "^5.10.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/pg": "^8.16.0",
     "@types/react": "~19.1.0",
+    "@types/twilio": "^3.19.2",
     "dotenv": "^17.2.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",

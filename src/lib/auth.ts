@@ -2,7 +2,14 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { expo } from "@better-auth/expo";
 import { phoneNumber } from "better-auth/plugins";
+import twilio from "twilio";
 import prisma from "./prisma";
+
+// Initialize Twilio client (only if credentials are configured)
+const twilioClient =
+  process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
+    ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+    : null;
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -12,17 +19,29 @@ export const auth = betterAuth({
     expo(),
     phoneNumber({
       sendOTP: async ({ phoneNumber, code }) => {
-        // Pour le développement, on log le code dans la console
-        // En production, tu devras intégrer un service SMS comme Twilio, Vonage, etc.
-        console.log(`📱 OTP for ${phoneNumber}: ${code}`);
+        // Always log the code in development for debugging
+        if (process.env.NODE_ENV === "development") {
+          console.log(`📱 OTP for ${phoneNumber}: ${code}`);
+        }
 
-        // TODO: En production, utiliser un service SMS
-        // Exemple avec Twilio:
-        // await twilioClient.messages.create({
-        //   body: `Votre code MinyanNow: ${code}`,
-        //   from: process.env.TWILIO_PHONE_NUMBER,
-        //   to: phoneNumber,
-        // });
+        // Send SMS via Twilio if configured
+        if (twilioClient && process.env.TWILIO_PHONE_NUMBER) {
+          try {
+            await twilioClient.messages.create({
+              body: `Votre code MinyanNow: ${code}`,
+              from: process.env.TWILIO_PHONE_NUMBER,
+              to: phoneNumber,
+            });
+            console.log(`✅ SMS sent successfully to ${phoneNumber}`);
+          } catch (error) {
+            console.error(`❌ Failed to send SMS to ${phoneNumber}:`, error);
+            throw new Error("Failed to send OTP via SMS");
+          }
+        } else {
+          console.warn(
+            "⚠️ Twilio not configured - OTP only logged to console"
+          );
+        }
       },
       // Configuration OTP
       otpLength: 6,
@@ -41,11 +60,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: false, // Désactivé car on utilise uniquement le téléphone
   },
-  trustedOrigins: [
-    "minyannow://",
-    "exp://192.168.1.158:8081",
-    "exp://localhost:8081",
-  ],
+  trustedOrigins: ["*"], 
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
