@@ -6,7 +6,7 @@ const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "MinyanNow",
-  slug: "MinyanNow",
+  slug: "minyannow",
   scheme: "minyannow",
   version: "1.0.0",
   orientation: "portrait",
@@ -18,6 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
+  owner: "sachakiba",
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.minyannow.app",
@@ -26,7 +27,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
-        "MinyanNow a besoin de votre localisation pour afficher les événements à proximité.",
+        "MinyanNow needs your location to display nearby events.",
+      NSLocationAlwaysAndWhenInUseUsageDescription:
+        "MinyanNow needs your location in background to notify you about nearby events.",
+      NSLocationAlwaysUsageDescription:
+        "MinyanNow needs your location in background to notify you about nearby events.",
     },
   },
   android: {
@@ -54,11 +59,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         color: "#4F46E5",
       },
     ],
+    [
+      "expo-location",
+      {
+        locationAlwaysAndWhenInUsePermission:
+          "MinyanNow needs your location in background to notify you about nearby events.",
+        locationAlwaysPermission:
+          "MinyanNow needs your location in background to notify you about nearby events.",
+        locationWhenInUsePermission:
+          "MinyanNow needs your location to display nearby events.",
+        isAndroidBackgroundLocationEnabled: true,
+        isAndroidForegroundServiceEnabled: true,
+      },
+    ],
   ],
   extra: {
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     eas: {
-      projectId: process.env.EAS_PROJECT_ID || "66d64d92-4479-464f-b15e-3bf5db122e1a",
+      projectId: process.env.EAS_PROJECT_ID,
     },
   },
 });
