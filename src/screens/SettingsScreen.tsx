@@ -208,7 +208,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* Version */}
         <View style={styles.versionContainer}>
           <Text style={styles.versionText}>
-            {t("settings.version", { version: "1.0.0" })}
+            {t("settings.version", { version: "Bêta 1.0.0" })}
           </Text>
         </View>
       </ScrollView>

@@ -8,11 +8,10 @@ import {
   Switch,
   ActivityIndicator,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
-import { AlertModal, useAlert } from "../components";
+import { AlertModal, useAlert, RadiusSelector } from "../components";
 import { usersApi } from "../lib/api";
 import { colors } from "../lib/colors";
 
@@ -186,7 +185,9 @@ export const NotificationSettingsScreen: React.FC<
 
         {/* Proximity Section */}
         <View style={[styles.section, isDisabled && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>{t("notifications.proximity.title")}</Text>
+          <Text style={styles.sectionTitle}>
+            {t("notifications.proximity.title")}
+          </Text>
           <Text style={styles.sectionSubtitle}>
             {t("notifications.proximity.subtitle")}
           </Text>
@@ -195,7 +196,9 @@ export const NotificationSettingsScreen: React.FC<
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>📍</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>{t("notifications.proximity.toggle")}</Text>
+                <Text style={styles.settingTitle}>
+                  {t("notifications.proximity.toggle")}
+                </Text>
                 <Text style={styles.settingDescription}>
                   {t("notifications.proximity.toggleDescription")}
                 </Text>
@@ -217,35 +220,28 @@ export const NotificationSettingsScreen: React.FC<
           {preferences.notifyProximity && !isDisabled && (
             <View style={styles.sliderContainer}>
               <View style={styles.sliderHeader}>
-                <Text style={styles.sliderLabel}>{t("notifications.proximity.radius")}</Text>
+                <Text style={styles.sliderLabel}>
+                  {t("notifications.proximity.radius")}
+                </Text>
                 <Text style={styles.sliderValue}>
                   {getRadiusLabel(preferences.proximityRadius)}
                 </Text>
               </View>
-              <Slider
-                style={styles.slider}
-                minimumValue={100}
-                maximumValue={2000}
-                step={100}
+              <RadiusSelector
                 value={preferences.proximityRadius}
                 onValueChange={(value) =>
                   updatePreference("proximityRadius", value)
                 }
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor="#E5E7EB"
-                thumbTintColor={colors.primary}
               />
-              <View style={styles.sliderLabels}>
-                <Text style={styles.sliderMinMax}>100m</Text>
-                <Text style={styles.sliderMinMax}>2km</Text>
-              </View>
             </View>
           )}
         </View>
 
         {/* Organizer Section */}
         <View style={[styles.section, isDisabled && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>{t("notifications.organizer.title")}</Text>
+          <Text style={styles.sectionTitle}>
+            {t("notifications.organizer.title")}
+          </Text>
           <Text style={styles.sectionSubtitle}>
             {t("notifications.organizer.subtitle")}
           </Text>
@@ -254,7 +250,9 @@ export const NotificationSettingsScreen: React.FC<
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🙋</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>{t("notifications.organizer.newRequests")}</Text>
+                <Text style={styles.settingTitle}>
+                  {t("notifications.organizer.newRequests")}
+                </Text>
                 <Text style={styles.settingDescription}>
                   {t("notifications.organizer.newRequestsDescription")}
                 </Text>
@@ -276,7 +274,9 @@ export const NotificationSettingsScreen: React.FC<
 
         {/* Participant Section */}
         <View style={[styles.section, isDisabled && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>{t("notifications.participant.title")}</Text>
+          <Text style={styles.sectionTitle}>
+            {t("notifications.participant.title")}
+          </Text>
           <Text style={styles.sectionSubtitle}>
             {t("notifications.participant.subtitle")}
           </Text>
@@ -285,7 +285,9 @@ export const NotificationSettingsScreen: React.FC<
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>✅</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>{t("notifications.participant.requestStatus")}</Text>
+                <Text style={styles.settingTitle}>
+                  {t("notifications.participant.requestStatus")}
+                </Text>
                 <Text style={styles.settingDescription}>
                   {t("notifications.participant.requestStatusDescription")}
                 </Text>
@@ -333,7 +335,9 @@ export const NotificationSettingsScreen: React.FC<
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🔔</Text>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>{t("notifications.participant.reminders")}</Text>
+                <Text style={styles.settingTitle}>
+                  {t("notifications.participant.reminders")}
+                </Text>
                 <Text style={styles.settingDescription}>
                   {t("notifications.participant.remindersDescription")}
                 </Text>
@@ -356,9 +360,7 @@ export const NotificationSettingsScreen: React.FC<
         {/* Info Section */}
         <View style={styles.infoSection}>
           <Text style={styles.infoIcon}>💡</Text>
-          <Text style={styles.infoText}>
-            {t("notifications.info")}
-          </Text>
+          <Text style={styles.infoText}>{t("notifications.info")}</Text>
         </View>
       </ScrollView>
 
@@ -529,18 +531,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: colors.primary,
-  },
-  slider: {
-    width: "100%",
-    height: 40,
-  },
-  sliderLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  sliderMinMax: {
-    fontSize: 12,
-    color: "#9CA3AF",
   },
   infoSection: {
     flexDirection: "row",
