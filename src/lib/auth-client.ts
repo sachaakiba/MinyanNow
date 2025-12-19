@@ -6,6 +6,9 @@ import Constants from "expo-constants";
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
+// Debug: Log the API URL being used
+console.log("🔐 Auth API_URL configured:", API_URL);
+
 export const authClient = createAuthClient({
   baseURL: API_URL,
   plugins: [

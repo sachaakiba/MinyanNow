@@ -2,6 +2,11 @@ import Constants from "expo-constants";
 import { authClient } from "./auth-client";
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || "http://localhost:3000";
+
+// Debug: Log the API URL being used
+console.log("🔗 API_URL configured:", API_URL);
+console.log("📦 Constants.expoConfig?.extra?.apiUrl:", Constants.expoConfig?.extra?.apiUrl);
+console.log("🌍 process.env.EXPO_PUBLIC_API_URL:", process.env.EXPO_PUBLIC_API_URL);
 // Event Types
 export type EventType =
   | "SHEVA_BERAKHOT"
