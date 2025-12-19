@@ -75,6 +75,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    apiUrl: process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000",
     eas: {
       projectId: process.env.EAS_PROJECT_ID,
     },
