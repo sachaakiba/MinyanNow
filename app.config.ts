@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "light",
   newArchEnabled: false,
   splash: {
-    image: "./assets/splash-icon.png",
+    image: "./assets/rabin.png",
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
@@ -22,6 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.minyannow.app",
+    icon: "./assets/rabin.png",
     config: {
       googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     },
