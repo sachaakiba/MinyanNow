@@ -19,20 +19,20 @@
     },
     "production": {
       "distribution": "store",
-      "cache": {
-        "disabled": true
-      },
       "ios": {
         "autoIncrement": true
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://minyannow-production.up.railway.app"
       }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "$APPLE_ID",
-        "ascAppId": "$ASC_APP_ID",
-        "appleTeamId": "$APPLE_TEAM_ID"
+        "appleId": "lkm98@outlook.fr",
+        "ascAppId": "6756735371",
+        "appleTeamId": "TV6JF33F9Q"
       }
     }
   }
