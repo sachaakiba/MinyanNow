@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:update-quick": "npm run prisma:generate && npm run db:push"
+    "prisma:update-quick": "npm run prisma:generate && npm run db:push",
+    "submit:ios:prod": "bash scripts/submit-ios-prod.sh"
   },
   "dependencies": {
     "@better-auth/expo": "^1.4.6",

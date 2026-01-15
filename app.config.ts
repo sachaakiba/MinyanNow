@@ -22,7 +22,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.minyannow.app",
-    buildNumber: "1",
     icon: "./assets/rabin.png",
     config: {
       googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -79,7 +78,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     apiUrl: process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000",
     eas: {
-      projectId: process.env.EAS_PROJECT_ID,
+      projectId: "7a4dc1fa-aadb-487b-b96e-f8b512914372",
     },
   },
 });
