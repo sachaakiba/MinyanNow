@@ -22,6 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.minyannow.app",
+    buildNumber: "1",
     icon: "./assets/rabin.png",
     config: {
       googleMapsApiKey: GOOGLE_MAPS_API_KEY,

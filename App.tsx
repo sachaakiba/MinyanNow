@@ -18,7 +18,13 @@ export default function App() {
   }, []);
 
   if (!isI18nReady) {
-    return <SplashScreen />;
+    return (
+      <SplashScreen
+        onFinish={function (): void {
+          throw new Error("Function not implemented.");
+        }}
+      />
+    );
   }
 
   return (
