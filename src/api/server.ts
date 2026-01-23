@@ -6,9 +6,19 @@ import eventsRouter from "./routes/events";
 import requestsRouter from "./routes/requests";
 import usersRouter from "./routes/users";
 import "dotenv/config";
+import prisma from "../lib/prisma";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Test database connection on startup
+console.log("🔍 Testing database connection...");
+prisma.$connect()
+  .then(() => console.log("✅ Database connected successfully"))
+  .catch((error) => {
+    console.error("❌ Database connection failed:", error);
+    process.exit(1);
+  });
 
 // CORS configuration - allow all origins for development
 app.use(
@@ -33,8 +43,29 @@ app.use("/api/requests", requestsRouter);
 app.use("/api/users", usersRouter);
 
 // Health check
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/health", async (req, res) => {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ 
+      status: "ok", 
+      timestamp: new Date().toISOString(),
+      database: "connected",
+      env: {
+        hasAuthSecret: !!process.env.BETTER_AUTH_SECRET,
+        hasAuthUrl: !!process.env.BETTER_AUTH_URL,
+        hasDatabaseUrl: !!process.env.DATABASE_URL,
+        authUrl: process.env.BETTER_AUTH_URL,
+      }
+    });
+  } catch (error) {
+    console.error("Health check failed:", error);
+    res.status(500).json({ 
+      status: "error", 
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
 });
 
 app.listen(PORT, "0.0.0.0", () => {
