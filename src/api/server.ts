@@ -19,13 +19,38 @@ console.log(`  - BETTER_AUTH_SECRET: ${process.env.BETTER_AUTH_SECRET ? '✅ Set
 console.log(`  - BETTER_AUTH_URL: ${process.env.BETTER_AUTH_URL || '❌ Missing'}`);
 
 // Test database connection on startup
-console.log("🔍 Testing database connection...");
-prisma.$connect()
-  .then(() => console.log("✅ Database connected successfully"))
-  .catch((error) => {
+async function startServer() {
+  try {
+    console.log("🔍 Testing database connection...");
+    await prisma.$connect();
+    console.log("✅ Database connected successfully");
+
+    // Start the server after DB is ready
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      const apiUrl = process.env.BETTER_AUTH_URL || `http://localhost:${PORT}`;
+      console.log(`\n✅ Server successfully started!`);
+      console.log(`🚀 Listening on 0.0.0.0:${PORT}`);
+      console.log(`🌐 Public URL: ${apiUrl}`);
+      console.log(`📝 Auth endpoints: ${apiUrl}/api/auth/*`);
+      console.log(`📅 Events API: ${apiUrl}/api/events`);
+      console.log(`🙋 Requests API: ${apiUrl}/api/requests`);
+      console.log(`💚 Health check: ${apiUrl}/health`);
+    });
+
+    server.on('error', (error: any) => {
+      console.error('❌ Server failed to start:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use`);
+      }
+      process.exit(1);
+    });
+  } catch (error) {
     console.error("❌ Database connection failed:", error);
     process.exit(1);
-  });
+  }
+}
+
+startServer();
 
 // CORS configuration - allow all origins for development
 app.use(
@@ -73,25 +98,6 @@ app.get("/health", async (req, res) => {
       error: error instanceof Error ? error.message : "Unknown error"
     });
   }
-});
-
-const server = app.listen(PORT, "0.0.0.0", () => {
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL || `http://localhost:${PORT}`;
-  console.log(`\n✅ Server successfully started!`);
-  console.log(`🚀 Listening on 0.0.0.0:${PORT}`);
-  console.log(`🌐 Public URL: ${apiUrl}`);
-  console.log(`📝 Auth endpoints: ${apiUrl}/api/auth/*`);
-  console.log(`📅 Events API: ${apiUrl}/api/events`);
-  console.log(`🙋 Requests API: ${apiUrl}/api/requests`);
-  console.log(`💚 Health check: ${apiUrl}/health`);
-});
-
-server.on('error', (error: any) => {
-  console.error('❌ Server failed to start:', error);
-  if (error.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use`);
-  }
-  process.exit(1);
 });
 
 export default app;
