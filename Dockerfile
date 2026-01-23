@@ -21,8 +21,5 @@ RUN npx prisma generate
 # Copier le code source
 COPY src ./src
 
-# Exposer le port
-EXPOSE 3000
-
-# Démarrer le serveur
+# Démarrer le serveur (Railway gère le port automatiquement via $PORT)
 CMD ["npx", "tsx", "src/api/server.ts"]
