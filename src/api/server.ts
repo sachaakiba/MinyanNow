@@ -11,7 +11,7 @@ import prisma from "../lib/prisma";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-console.log("🔧 Environment check:");
+console.log("🔧 Environment check test:");
 console.log(`  - PORT: ${PORT}`);
 console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);
