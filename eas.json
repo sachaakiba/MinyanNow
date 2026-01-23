@@ -23,7 +23,7 @@
         "autoIncrement": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://minyannow-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://minyan-rec.up.railway.app"
       }
     }
   },
