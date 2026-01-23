@@ -47,8 +47,8 @@ app.get("/health", async (req, res) => {
   try {
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
-    res.json({ 
-      status: "ok", 
+    res.json({
+      status: "ok",
       timestamp: new Date().toISOString(),
       database: "connected",
       env: {
@@ -60,8 +60,8 @@ app.get("/health", async (req, res) => {
     });
   } catch (error) {
     console.error("Health check failed:", error);
-    res.status(500).json({ 
-      status: "error", 
+    res.status(500).json({
+      status: "error",
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error"
     });
