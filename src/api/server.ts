@@ -11,6 +11,13 @@ import prisma from "../lib/prisma";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+console.log("🔧 Environment check:");
+console.log(`  - PORT: ${PORT}`);
+console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);
+console.log(`  - BETTER_AUTH_SECRET: ${process.env.BETTER_AUTH_SECRET ? '✅ Set' : '❌ Missing'}`);
+console.log(`  - BETTER_AUTH_URL: ${process.env.BETTER_AUTH_URL || '❌ Missing'}`);
+
 // Test database connection on startup
 console.log("🔍 Testing database connection...");
 prisma.$connect()
@@ -68,13 +75,23 @@ app.get("/health", async (req, res) => {
   }
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL || `http://localhost:${PORT}`;
-  console.log(`🚀 Server running on ${apiUrl}`);
-  console.log(`📝 Auth endpoints available at ${apiUrl}/api/auth/*`);
+  console.log(`\n✅ Server successfully started!`);
+  console.log(`🚀 Listening on 0.0.0.0:${PORT}`);
+  console.log(`🌐 Public URL: ${apiUrl}`);
+  console.log(`📝 Auth endpoints: ${apiUrl}/api/auth/*`);
   console.log(`📅 Events API: ${apiUrl}/api/events`);
   console.log(`🙋 Requests API: ${apiUrl}/api/requests`);
-  console.log(`\n📱 For mobile testing, use your local IP address or EXPO_PUBLIC_API_URL from .env`);
+  console.log(`💚 Health check: ${apiUrl}/health`);
+});
+
+server.on('error', (error: any) => {
+  console.error('❌ Server failed to start:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+  }
+  process.exit(1);
 });
 
 export default app;
