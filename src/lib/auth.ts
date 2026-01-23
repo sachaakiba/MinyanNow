@@ -15,6 +15,12 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  trustedOrigins: [
+    "*",
+    "minyannow://*",
+    "exp://*",
+    "http://localhost:*",
+  ],
   plugins: [
     expo(),
     phoneNumber({
@@ -60,7 +66,6 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: false, // Désactivé car on utilise uniquement le téléphone
   },
-  trustedOrigins: ["*"], 
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
