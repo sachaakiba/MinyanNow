@@ -250,6 +250,8 @@ export default {
     editProfile: "ערוך את המידע שלי",
     verification: "אימות",
     idDocument: "תעודה מזהה",
+    ketoubaDocument: "כתובה",
+    selfieDocument: "תמונת סלפי",
     idVerified: "✓ מאומת",
     idNotProvided: "לא סופקה",
     idUpdatedAt: "עודכן ב-{{date}}",
@@ -513,14 +515,22 @@ export default {
 
   // ID Viewer Modal
   idViewer: {
-    title: "תעודה מזהה",
+    title: "אימות זהות",
     loading: "טוען...",
-    loadError: "לא ניתן לטעון את התעודה המזהה",
+    loadError: "לא ניתן לטעון את המסמכים",
     retry: "נסה שוב",
-    securityNotice: "תמונה זו מאובטחת וניתנת לצפייה רק על ידכם כמארגנים.",
+    securityNotice: "מסמכים אלה מאובטחים וניתנים לצפייה רק על ידכם כמארגנים.",
     accept: "אישור",
     reject: "דחייה",
     tapToVerify: "לחצו לאימות זהות",
+    noDocument: "לא הועלה מסמך",
+    allDocumentsViewed: "כל המסמכים נבדקו",
+    viewAllDocuments: "אנא בדקו את כל {{count}} המסמכים לפני אישור",
+    tabs: {
+      id: "תעודת זהות",
+      ketouba: "כתובה",
+      selfie: "סלפי",
+    },
   },
 
   // Event Card
@@ -562,6 +572,36 @@ export default {
     cameraPermissionDenied: "הרשאת גישה למצלמה נדחתה",
     fileSelectionError: "שגיאה בבחירת הקובץ",
     uploadError: "שגיאה בהעלאה",
+  },
+
+  // Documents Screen
+  documents: {
+    title: "מסמכים נדרשים",
+    subtitle: "כדי להבטיח את בטיחות הקהילה, אנא ספקו את המסמכים הבאים.",
+    types: {
+      id: "תעודה מזהה",
+      ketouba: "כתובה",
+      selfie: "תמונת סלפי",
+    },
+    descriptions: {
+      id: "תעודת זהות, דרכון או רישיון נהיגה",
+      ketouba: "תעודת הנישואין שלכם (כתובה)",
+      selfie: "תמונה עדכנית שלכם",
+    },
+    add: "הוסף מסמך",
+    change: "שנה",
+    upload: "העלה",
+    update: "עדכן",
+    takePhoto: "צלם תמונה",
+    takeSelfie: "צלם סלפי",
+    gallery: "גלריה",
+    files: "קבצים",
+    completed: "הושלמו",
+    securityInfo: "המסמכים שלכם מאוחסנים באופן מאובטח ונראים רק למארגני אירועים כשאתם מבקשים להצטרף לאירועים שלהם.",
+    allUploaded: "כל המסמכים הועלו!",
+    missingDocuments: "מסמכים חסרים",
+    missingDocumentsMessage: "עליכם להעלות את כל המסמכים הנדרשים (תעודה מזהה, כתובה וסלפי) לפני שתוכלו ליצור או להצטרף לאירועים.",
+    goToDocuments: "העלה מסמכים",
   },
 
   // Splash Screen

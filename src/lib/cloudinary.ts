@@ -14,8 +14,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Folder for ID documents (private)
+// Folders for documents (private)
 export const ID_DOCUMENTS_FOLDER = "minyannow/id-documents";
+export const KETOUBA_DOCUMENTS_FOLDER = "minyannow/ketouba-documents";
+export const SELFIE_DOCUMENTS_FOLDER = "minyannow/selfie-documents";
 
 // Upload an ID document
 export const uploadIdDocument = async (
@@ -47,6 +49,42 @@ export const getSignedIdDocumentUrl = (publicId: string): string => {
 // Delete an ID document
 export const deleteIdDocument = async (publicId: string): Promise<void> => {
   await cloudinary.uploader.destroy(publicId, { type: "authenticated" });
+};
+
+// Upload a Ketouba document
+export const uploadKetoubaDocument = async (
+  base64Image: string,
+  userId: string
+): Promise<{ url: string; publicId: string }> => {
+  const result = await cloudinary.uploader.upload(base64Image, {
+    folder: KETOUBA_DOCUMENTS_FOLDER,
+    public_id: `ketouba_${userId}_${Date.now()}`,
+    resource_type: "image",
+    type: "authenticated",
+  });
+
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+  };
+};
+
+// Upload a Selfie document
+export const uploadSelfieDocument = async (
+  base64Image: string,
+  userId: string
+): Promise<{ url: string; publicId: string }> => {
+  const result = await cloudinary.uploader.upload(base64Image, {
+    folder: SELFIE_DOCUMENTS_FOLDER,
+    public_id: `selfie_${userId}_${Date.now()}`,
+    resource_type: "image",
+    type: "authenticated",
+  });
+
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+  };
 };
 
 export default cloudinary;

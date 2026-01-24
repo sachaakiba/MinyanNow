@@ -24,6 +24,7 @@ import {
   EVENT_TYPE_ICONS,
 } from "../lib/api";
 import { colors } from "../lib/colors";
+import { useAuth } from "../context/AuthContext";
 
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
@@ -54,6 +55,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   navigation,
 }) => {
   const { t, i18n } = useTranslation();
+  const { hasAllDocuments } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<EventType>("SHEVA_BERAKHOT");
@@ -150,6 +152,20 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   };
 
   const handleCreate = async () => {
+    // Check if all documents are uploaded
+    if (!hasAllDocuments) {
+      showAlert(
+        t("documents.missingDocuments"),
+        t("documents.missingDocumentsMessage"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("documents.goToDocuments"), onPress: () => navigation.goBack() },
+        ],
+        "warning"
+      );
+      return;
+    }
+
     if (
       !title ||
       !address ||

@@ -11,12 +11,13 @@ import prisma from "../lib/prisma";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-console.log("🔧 Environment check test:");
+console.log("🔧 Environment check:");
 console.log(`  - PORT: ${PORT}`);
 console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);
 console.log(`  - BETTER_AUTH_SECRET: ${process.env.BETTER_AUTH_SECRET ? '✅ Set' : '❌ Missing'}`);
 console.log(`  - BETTER_AUTH_URL: ${process.env.BETTER_AUTH_URL || '❌ Missing'}`);
+console.log(`  - SMS Mode: ${process.env.NODE_ENV === 'development' ? '📝 Console only (no Twilio)' : '📱 Twilio enabled'}`);
 
 // Test database connection on startup
 async function startServer() {

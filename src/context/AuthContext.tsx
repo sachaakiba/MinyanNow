@@ -29,6 +29,10 @@ interface User {
   profileCompleted?: boolean;
   idDocumentUrl?: string | null;
   idUploadedAt?: string | null;
+  ketoubaDocumentUrl?: string | null;
+  ketoubaUploadedAt?: string | null;
+  selfieDocumentUrl?: string | null;
+  selfieUploadedAt?: string | null;
 }
 
 interface ProfileData {
@@ -45,6 +49,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isProfileComplete: boolean;
   hasIdDocument: boolean;
+  hasKetoubaDocument: boolean;
+  hasSelfieDocument: boolean;
+  hasAllDocuments: boolean;
   sendOTP: (
     phoneNumber: string
   ) => Promise<{ success: boolean; error?: string }>;
@@ -110,6 +117,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const isProfileComplete = !!userProfile?.profileCompleted;
   const hasIdDocument = !!userProfile?.idDocumentUrl;
+  const hasKetoubaDocument = !!userProfile?.ketoubaDocumentUrl;
+  const hasSelfieDocument = !!userProfile?.selfieDocumentUrl;
+  const hasAllDocuments = hasIdDocument && hasKetoubaDocument && hasSelfieDocument;
 
   console.log("🔐 Auth state:", {
     isAuthenticated: !!sessionUser,
@@ -118,11 +128,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     isStillLoadingProfile,
     isProfileComplete,
     hasIdDocument,
+    hasKetoubaDocument,
+    hasSelfieDocument,
+    hasAllDocuments,
     userProfile: userProfile
       ? {
           id: userProfile.id,
           profileCompleted: userProfile.profileCompleted,
           idDocumentUrl: !!userProfile.idDocumentUrl,
+          ketoubaDocumentUrl: !!userProfile.ketoubaDocumentUrl,
+          selfieDocumentUrl: !!userProfile.selfieDocumentUrl,
         }
       : null,
   });
@@ -189,6 +204,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         isAuthenticated: !!sessionUser,
         isProfileComplete,
         hasIdDocument,
+        hasKetoubaDocument,
+        hasSelfieDocument,
+        hasAllDocuments,
         sendOTP: handleSendOTP,
         verifyOTP: handleVerifyOTP,
         completeProfile: handleCompleteProfile,

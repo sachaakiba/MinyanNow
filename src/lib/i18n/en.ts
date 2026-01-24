@@ -257,6 +257,8 @@ export default {
     editProfile: "Edit my information",
     verification: "Verification",
     idDocument: "ID document",
+    ketoubaDocument: "Ketouba",
+    selfieDocument: "Selfie Photo",
     idVerified: "✓ Verified",
     idNotProvided: "Not provided",
     idUpdatedAt: "Updated on {{date}}",
@@ -525,14 +527,22 @@ export default {
 
   // ID Viewer Modal
   idViewer: {
-    title: "ID Document",
+    title: "Identity Verification",
     loading: "Loading...",
-    loadError: "Unable to load ID document",
+    loadError: "Unable to load documents",
     retry: "Retry",
-    securityNotice: "This image is secure and can only be viewed by you as an organizer.",
+    securityNotice: "These documents are secure and can only be viewed by you as an organizer.",
     accept: "Accept",
     reject: "Reject",
     tapToVerify: "Tap to verify identity",
+    noDocument: "No document uploaded",
+    allDocumentsViewed: "All documents have been reviewed",
+    viewAllDocuments: "Please review all {{count}} documents before accepting",
+    tabs: {
+      id: "ID Card",
+      ketouba: "Ketouba",
+      selfie: "Selfie",
+    },
   },
 
   // Event Card
@@ -574,6 +584,36 @@ export default {
     cameraPermissionDenied: "Camera access permission denied",
     fileSelectionError: "Error selecting file",
     uploadError: "Error uploading",
+  },
+
+  // Documents Screen
+  documents: {
+    title: "Required Documents",
+    subtitle: "To ensure the safety of the community, please provide the following documents.",
+    types: {
+      id: "ID Document",
+      ketouba: "Ketouba",
+      selfie: "Selfie Photo",
+    },
+    descriptions: {
+      id: "ID card, passport or driver's license",
+      ketouba: "Your marriage certificate (Ketouba)",
+      selfie: "A recent photo of yourself",
+    },
+    add: "Add document",
+    change: "Change",
+    upload: "Upload",
+    update: "Update",
+    takePhoto: "Take a photo",
+    takeSelfie: "Take a selfie",
+    gallery: "Gallery",
+    files: "Files",
+    completed: "completed",
+    securityInfo: "Your documents are stored securely and are only visible to event organizers when you request to join their events.",
+    allUploaded: "All documents have been uploaded!",
+    missingDocuments: "Missing documents",
+    missingDocumentsMessage: "You need to upload all required documents (ID, Ketouba, and Selfie) before you can create or join events.",
+    goToDocuments: "Upload documents",
   },
 
   // Splash Screen

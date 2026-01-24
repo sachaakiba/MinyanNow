@@ -3,6 +3,8 @@ import prisma from "../../lib/prisma";
 import { userGuard, AuthenticatedRequest } from "../middleware/userGuard";
 import {
   uploadIdDocument,
+  uploadKetoubaDocument,
+  uploadSelfieDocument,
   getSignedIdDocumentUrl,
   deleteIdDocument,
 } from "../../lib/cloudinary";
@@ -56,6 +58,10 @@ router.get("/me", userGuard, async (req, res) => {
         profileCompleted: true,
         idDocumentUrl: true,
         idUploadedAt: true,
+        ketoubaDocumentUrl: true,
+        ketoubaUploadedAt: true,
+        selfieDocumentUrl: true,
+        selfieUploadedAt: true,
         createdAt: true,
       },
     });
@@ -72,7 +78,7 @@ router.put("/profile", userGuard, async (req, res) => {
   try {
     const authReq = req as AuthenticatedRequest;
     console.log("📝 Profile update request body:", req.body);
-    
+
     const {
       firstName,
       lastName,
@@ -198,6 +204,106 @@ router.post("/id-document", userGuard, async (req, res) => {
   } catch (error) {
     console.error("Error uploading ID document:", error);
     res.status(500).json({ error: "Failed to upload ID document" });
+  }
+});
+
+// Upload Ketouba document
+router.post("/ketouba-document", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { image } = req.body; // Base64 image
+
+    if (!image) {
+      return res.status(400).json({ error: "Image is required" });
+    }
+
+    // Check if user already has a Ketouba document and delete it
+    const existingUser = await prisma.user.findUnique({
+      where: { id: authReq.user.id },
+      select: { ketoubaDocumentId: true },
+    });
+
+    if (existingUser?.ketoubaDocumentId) {
+      try {
+        await deleteIdDocument(existingUser.ketoubaDocumentId);
+      } catch (error) {
+        console.error("Error deleting old Ketouba document:", error);
+      }
+    }
+
+    // Upload new Ketouba document
+    const { url, publicId } = await uploadKetoubaDocument(image, authReq.user.id);
+
+    // Update user with new Ketouba document info
+    const user = await prisma.user.update({
+      where: { id: authReq.user.id },
+      data: {
+        ketoubaDocumentUrl: url,
+        ketoubaDocumentId: publicId,
+        ketoubaUploadedAt: new Date(),
+      },
+      select: {
+        id: true,
+        ketoubaDocumentUrl: true,
+        ketoubaUploadedAt: true,
+      },
+    });
+
+    console.log(`Ketouba document uploaded for user ${authReq.user.id}`);
+    res.json({ success: true, ketoubaUploadedAt: user.ketoubaUploadedAt });
+  } catch (error) {
+    console.error("Error uploading Ketouba document:", error);
+    res.status(500).json({ error: "Failed to upload Ketouba document" });
+  }
+});
+
+// Upload Selfie document
+router.post("/selfie-document", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { image } = req.body; // Base64 image
+
+    if (!image) {
+      return res.status(400).json({ error: "Image is required" });
+    }
+
+    // Check if user already has a Selfie document and delete it
+    const existingUser = await prisma.user.findUnique({
+      where: { id: authReq.user.id },
+      select: { selfieDocumentId: true },
+    });
+
+    if (existingUser?.selfieDocumentId) {
+      try {
+        await deleteIdDocument(existingUser.selfieDocumentId);
+      } catch (error) {
+        console.error("Error deleting old Selfie document:", error);
+      }
+    }
+
+    // Upload new Selfie document
+    const { url, publicId } = await uploadSelfieDocument(image, authReq.user.id);
+
+    // Update user with new Selfie document info
+    const user = await prisma.user.update({
+      where: { id: authReq.user.id },
+      data: {
+        selfieDocumentUrl: url,
+        selfieDocumentId: publicId,
+        selfieUploadedAt: new Date(),
+      },
+      select: {
+        id: true,
+        selfieDocumentUrl: true,
+        selfieUploadedAt: true,
+      },
+    });
+
+    console.log(`Selfie document uploaded for user ${authReq.user.id}`);
+    res.json({ success: true, selfieUploadedAt: user.selfieUploadedAt });
+  } catch (error) {
+    console.error("Error uploading Selfie document:", error);
+    res.status(500).json({ error: "Failed to upload Selfie document" });
   }
 });
 
@@ -350,6 +456,78 @@ router.get("/:userId/id-document", userGuard, async (req, res) => {
   } catch (error) {
     console.error("Error fetching ID document:", error);
     res.status(500).json({ error: "Failed to fetch ID document" });
+  }
+});
+
+// Get all documents for a specific user (ID, Ketouba, Selfie)
+router.get("/:userId/documents", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { userId } = req.params;
+
+    // User can always view their own documents
+    if (userId !== authReq.user.id) {
+      // Check if the requesting user is an organizer of an event where the target user has a pending request
+      const pendingRequest = await prisma.eventRequest.findFirst({
+        where: {
+          userId: userId,
+          status: "PENDING",
+          event: {
+            organizerId: authReq.user.id,
+          },
+        },
+      });
+
+      if (!pendingRequest) {
+        return res.status(403).json({
+          error: "Vous ne pouvez voir les documents que des demandeurs de vos événements",
+        });
+      }
+    }
+
+    // Get all user's documents
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        idDocumentId: true,
+        idUploadedAt: true,
+        ketoubaDocumentId: true,
+        ketoubaUploadedAt: true,
+        selfieDocumentId: true,
+        selfieUploadedAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Generate signed URLs for each document
+    const documents = {
+      idDocument: user.idDocumentId
+        ? {
+          url: getSignedIdDocumentUrl(user.idDocumentId),
+          uploadedAt: user.idUploadedAt,
+        }
+        : null,
+      ketoubaDocument: user.ketoubaDocumentId
+        ? {
+          url: getSignedIdDocumentUrl(user.ketoubaDocumentId),
+          uploadedAt: user.ketoubaUploadedAt,
+        }
+        : null,
+      selfieDocument: user.selfieDocumentId
+        ? {
+          url: getSignedIdDocumentUrl(user.selfieDocumentId),
+          uploadedAt: user.selfieUploadedAt,
+        }
+        : null,
+    };
+
+    res.json(documents);
+  } catch (error) {
+    console.error("Error fetching user documents:", error);
+    res.status(500).json({ error: "Failed to fetch user documents" });
   }
 });
 

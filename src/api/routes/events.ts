@@ -156,6 +156,25 @@ router.get("/:id", async (req, res) => {
 router.post("/", userGuard, async (req, res) => {
   try {
     const authReq = req as AuthenticatedRequest;
+
+    // Check if user has all required documents
+    const user = await prisma.user.findUnique({
+      where: { id: authReq.user.id },
+      select: {
+        idDocumentUrl: true,
+        ketoubaDocumentUrl: true,
+        selfieDocumentUrl: true,
+      },
+    });
+
+    if (!user?.idDocumentUrl || !user?.ketoubaDocumentUrl || !user?.selfieDocumentUrl) {
+      return res.status(403).json({
+        error: "Missing required documents",
+        message: "You must upload all required documents (ID, Ketouba, and Selfie) before creating an event",
+        code: "MISSING_DOCUMENTS",
+      });
+    }
+
     const {
       title,
       description,
@@ -513,9 +532,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(deg2rad(lat1)) *
-      Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const d = R * c;
   return d;

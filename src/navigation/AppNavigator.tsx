@@ -9,6 +9,7 @@ import { PhoneAuthScreen } from "../screens/PhoneAuthScreen";
 import { OTPVerificationScreen } from "../screens/OTPVerificationScreen";
 import { CompleteProfileScreen } from "../screens/CompleteProfileScreen";
 import { UploadIdScreen } from "../screens/UploadIdScreen";
+import { UploadDocumentsScreen } from "../screens/UploadDocumentsScreen";
 import { MapScreen } from "../screens/MapScreen";
 import { CreateEventScreen } from "../screens/CreateEventScreen";
 import { EventDetailScreen } from "../screens/EventDetailScreen";
@@ -123,7 +124,7 @@ const MainTabs = () => {
 };
 
 export const AppNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, isProfileComplete, hasIdDocument } =
+  const { isAuthenticated, isLoading, isProfileComplete, hasAllDocuments } =
     useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
@@ -173,10 +174,10 @@ export const AppNavigator: React.FC = () => {
               component={CompleteProfileScreen}
             />
           </>
-        ) : !hasIdDocument ? (
-          // Connecté, profil complet mais pas de pièce d'identité
+        ) : !hasAllDocuments ? (
+          // Connecté, profil complet mais documents manquants (ID, Ketouba, Selfie)
           <>
-            <Stack.Screen name="UploadId" component={UploadIdScreen} />
+            <Stack.Screen name="UploadDocuments" component={UploadDocumentsScreen} />
           </>
         ) : (
           // Connecté, profil complet et pièce d'identité: app principale avec tabs
