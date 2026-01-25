@@ -14,6 +14,7 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:update-quick": "npm run prisma:generate && npm run db:push",
+    "prisma:update-prod": "bash scripts/update-db-prod.sh",
     "submit:ios:prod": "bash scripts/submit-ios-prod.sh"
   },
   "dependencies": {
