@@ -83,13 +83,28 @@ export default {
       idSecurityTitle: "🔒",
       idSecurityText:
         "Pour la sécurité de notre communauté, nous vérifions l'identité de chaque membre. Votre document est stocké de manière sécurisée et n'est visible que par les organisateurs d'événements.",
+      ketoubaDocument: "Ketouba *",
+      ketoubaRequired: "La Ketouba est requise",
+      ketoubaSecurityText:
+        "Votre certificat de mariage (Ketouba) permet de vérifier votre statut marital.",
+      ketoubaInfo: "Document accepté : Certificat de mariage (Ketouba)",
+      selfieDocument: "Photo selfie *",
+      selfieRequired: "La photo selfie est requise",
+      selfieSecurityText:
+        "Une photo récente de vous-même aide les organisateurs à vous reconnaître lors des événements.",
+      selfieInfo: "Prenez une photo claire de votre visage",
       takePhoto: "Prendre une photo",
+      takeSelfie: "Prendre un selfie",
       gallery: "Galerie",
       files: "Fichiers",
       changePhoto: "Changer de photo",
       acceptedDocuments:
         "Documents acceptés : Carte d'identité, Passeport, Permis de conduire",
       uploadingId: "Envoi de la pièce d'identité...",
+      uploadingKetouba: "Envoi de la Ketouba...",
+      uploadingSelfie: "Envoi du selfie...",
+      uploadKetoubaError: "Impossible d'envoyer la Ketouba",
+      uploadSelfieError: "Impossible d'envoyer le selfie",
       submit: "Valider mon profil",
       privacyNote:
         "🔒 Vos informations sont confidentielles et ne seront jamais partagées sans votre consentement.",

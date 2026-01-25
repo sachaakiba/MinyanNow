@@ -55,6 +55,14 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
   const [idDocumentImage, setIdDocumentImage] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState(false);
 
+  // Ketouba Document
+  const [ketoubaImage, setKetoubaImage] = useState<string | null>(null);
+  const [uploadingKetouba, setUploadingKetouba] = useState(false);
+
+  // Selfie Document
+  const [selfieImage, setSelfieImage] = useState<string | null>(null);
+  const [uploadingSelfie, setUploadingSelfie] = useState(false);
+
   // Alert modal
   const { alertState, showAlert, hideAlert } = useAlert();
 
@@ -82,6 +90,14 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     if (!idDocumentImage) {
       newErrors.idDocument = t("auth.completeProfile.idRequired");
+    }
+
+    if (!ketoubaImage) {
+      newErrors.ketouba = t("auth.completeProfile.ketoubaRequired");
+    }
+
+    if (!selfieImage) {
+      newErrors.selfie = t("auth.completeProfile.selfieRequired");
     }
 
     setErrors(newErrors);
@@ -168,6 +184,168 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     }
   };
 
+  // Ketouba functions
+  const pickKetouba = async () => {
+    setErrors((prev) => ({ ...prev, ketouba: "" }));
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      showAlert(
+        t("auth.completeProfile.permissionDenied"),
+        t("auth.completeProfile.galleryPermission"),
+        undefined,
+        "error"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]?.base64) {
+      setKetoubaImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const takeKetoubaPhoto = async () => {
+    setErrors((prev) => ({ ...prev, ketouba: "" }));
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      showAlert(
+        t("auth.completeProfile.permissionDenied"),
+        t("auth.completeProfile.cameraPermission"),
+        undefined,
+        "error"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]?.base64) {
+      setKetoubaImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const pickKetoubaFromFiles = async () => {
+    setErrors((prev) => ({ ...prev, ketouba: "" }));
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+          encoding: "base64",
+        });
+        const mimeType = asset.mimeType || "image/jpeg";
+        setKetoubaImage(`data:${mimeType};base64,${base64}`);
+      }
+    } catch (err: any) {
+      showAlert(
+        t("common.error"),
+        t("auth.completeProfile.fileError"),
+        undefined,
+        "error"
+      );
+    }
+  };
+
+  // Selfie functions
+  const pickSelfie = async () => {
+    setErrors((prev) => ({ ...prev, selfie: "" }));
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      showAlert(
+        t("auth.completeProfile.permissionDenied"),
+        t("auth.completeProfile.galleryPermission"),
+        undefined,
+        "error"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]?.base64) {
+      setSelfieImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const takeSelfiePhoto = async () => {
+    setErrors((prev) => ({ ...prev, selfie: "" }));
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      showAlert(
+        t("auth.completeProfile.permissionDenied"),
+        t("auth.completeProfile.cameraPermission"),
+        undefined,
+        "error"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]?.base64) {
+      setSelfieImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
+
+  const pickSelfieFromFiles = async () => {
+    setErrors((prev) => ({ ...prev, selfie: "" }));
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+          encoding: "base64",
+        });
+        const mimeType = asset.mimeType || "image/jpeg";
+        setSelfieImage(`data:${mimeType};base64,${base64}`);
+      }
+    } catch (err: any) {
+      showAlert(
+        t("common.error"),
+        t("auth.completeProfile.fileError"),
+        undefined,
+        "error"
+      );
+    }
+  };
+
   const handleDateChange = (selectedDate: Date) => {
     setDateOfBirth(selectedDate);
     setErrors((prev) => ({ ...prev, dateOfBirth: "" }));
@@ -211,6 +389,40 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         }
         setUploadingId(false);
       }
+
+      // Upload Ketouba (required)
+      setUploadingKetouba(true);
+      try {
+        await usersApi.uploadKetoubaDocument(ketoubaImage!);
+      } catch (error: any) {
+        showAlert(
+          t("common.error"),
+          error.message || t("auth.completeProfile.uploadKetoubaError"),
+          undefined,
+          "error"
+        );
+        setLoading(false);
+        setUploadingKetouba(false);
+        return;
+      }
+      setUploadingKetouba(false);
+
+      // Upload Selfie (required)
+      setUploadingSelfie(true);
+      try {
+        await usersApi.uploadSelfieDocument(selfieImage!);
+      } catch (error: any) {
+        showAlert(
+          t("common.error"),
+          error.message || t("auth.completeProfile.uploadSelfieError"),
+          undefined,
+          "error"
+        );
+        setLoading(false);
+        setUploadingSelfie(false);
+        return;
+      }
+      setUploadingSelfie(false);
 
       // Then complete the profile
       const result = await completeProfile({
@@ -405,10 +617,164 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
             </Text>
           </View>
 
+          {/* Ketouba */}
+          <View style={styles.idSection}>
+            <Text style={styles.idSectionTitle}>
+              📜 {t("auth.completeProfile.ketoubaDocument")}
+            </Text>
+            <View style={styles.idSecurityInfo}>
+              <Text style={styles.idSecurityIcon}>ℹ️</Text>
+              <Text style={styles.idSecurityText}>
+                {t("auth.completeProfile.ketoubaSecurityText")}
+              </Text>
+            </View>
+
+            {ketoubaImage ? (
+              <View style={styles.idPreviewContainer}>
+                <Image
+                  source={{ uri: ketoubaImage }}
+                  style={styles.idPreviewImage}
+                  resizeMode="contain"
+                />
+                <TouchableOpacity
+                  style={styles.idChangeBtn}
+                  onPress={() => setKetoubaImage(null)}
+                >
+                  <Text style={styles.idChangeBtnText}>
+                    {t("auth.completeProfile.changePhoto")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.idUploadButtonsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.idUploadBtn,
+                    errors.ketouba && styles.idUploadBtnError,
+                  ]}
+                  onPress={takeKetoubaPhoto}
+                >
+                  <Text style={styles.idUploadBtnText}>
+                    {t("auth.completeProfile.takePhoto")}
+                  </Text>
+                </TouchableOpacity>
+                <View style={styles.idUploadButtonsRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.idUploadBtnSecondary,
+                      errors.ketouba && styles.idUploadBtnError,
+                    ]}
+                    onPress={pickKetouba}
+                  >
+                    <Text style={styles.idUploadBtnTextSecondary}>
+                      {t("auth.completeProfile.gallery")}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.idUploadBtnSecondary,
+                      errors.ketouba && styles.idUploadBtnError,
+                    ]}
+                    onPress={pickKetoubaFromFiles}
+                  >
+                    <Text style={styles.idUploadBtnTextSecondary}>
+                      {t("auth.completeProfile.files")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            {errors.ketouba && (
+              <Text style={styles.errorText}>{errors.ketouba}</Text>
+            )}
+            <Text style={styles.idInfoText}>
+              {t("auth.completeProfile.ketoubaInfo")}
+            </Text>
+          </View>
+
+          {/* Selfie */}
+          <View style={styles.idSection}>
+            <Text style={styles.idSectionTitle}>
+              📸 {t("auth.completeProfile.selfieDocument")}
+            </Text>
+            <View style={styles.idSecurityInfo}>
+              <Text style={styles.idSecurityIcon}>ℹ️</Text>
+              <Text style={styles.idSecurityText}>
+                {t("auth.completeProfile.selfieSecurityText")}
+              </Text>
+            </View>
+
+            {selfieImage ? (
+              <View style={styles.idPreviewContainer}>
+                <Image
+                  source={{ uri: selfieImage }}
+                  style={styles.idPreviewImage}
+                  resizeMode="contain"
+                />
+                <TouchableOpacity
+                  style={styles.idChangeBtn}
+                  onPress={() => setSelfieImage(null)}
+                >
+                  <Text style={styles.idChangeBtnText}>
+                    {t("auth.completeProfile.changePhoto")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.idUploadButtonsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.idUploadBtn,
+                    errors.selfie && styles.idUploadBtnError,
+                  ]}
+                  onPress={takeSelfiePhoto}
+                >
+                  <Text style={styles.idUploadBtnText}>
+                    {t("auth.completeProfile.takeSelfie")}
+                  </Text>
+                </TouchableOpacity>
+                <View style={styles.idUploadButtonsRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.idUploadBtnSecondary,
+                      errors.selfie && styles.idUploadBtnError,
+                    ]}
+                    onPress={pickSelfie}
+                  >
+                    <Text style={styles.idUploadBtnTextSecondary}>
+                      {t("auth.completeProfile.gallery")}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.idUploadBtnSecondary,
+                      errors.selfie && styles.idUploadBtnError,
+                    ]}
+                    onPress={pickSelfieFromFiles}
+                  >
+                    <Text style={styles.idUploadBtnTextSecondary}>
+                      {t("auth.completeProfile.files")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            {errors.selfie && (
+              <Text style={styles.errorText}>{errors.selfie}</Text>
+            )}
+            <Text style={styles.idInfoText}>
+              {t("auth.completeProfile.selfieInfo")}
+            </Text>
+          </View>
+
           <Button
             title={
               uploadingId
                 ? t("auth.completeProfile.uploadingId")
+                : uploadingKetouba
+                ? t("auth.completeProfile.uploadingKetouba")
+                : uploadingSelfie
+                ? t("auth.completeProfile.uploadingSelfie")
                 : t("auth.completeProfile.submit")
             }
             onPress={handleSubmit}

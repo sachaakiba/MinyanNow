@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  Image,
 } from "react-native";
 import MapView, {
   Marker,
@@ -286,7 +287,13 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
 
       {/* Header - Logo only */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("map.title")}</Text>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require("../../assets/rabin.png")}
+            style={styles.headerLogo}
+          />
+          <Text style={styles.headerTitle}>{t("map.title")}</Text>
+        </View>
         <TouchableOpacity
           style={styles.refreshButton}
           onPress={loadLocationAndEvents}
@@ -368,12 +375,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: colors.primary,
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.95)",
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
     shadowColor: "#000",
@@ -381,6 +387,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    gap: 8,
+  },
+  headerLogo: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: colors.primary,
   },
   refreshButton: {
     width: 44,

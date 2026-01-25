@@ -26,7 +26,7 @@ export const auth = betterAuth({
     phoneNumber({
       sendOTP: async ({ phoneNumber, code }) => {
         // In development mode, only log to console (don't use Twilio to save costs)
-        if (process.env.NODE_ENV === "development") {
+        if (process.env.NODE_ENV === "local") {
           console.log(`\n${"=".repeat(50)}`);
           console.log(`📱 [DEV MODE] OTP for ${phoneNumber}: ${code}`);
           console.log(`${"=".repeat(50)}\n`);
