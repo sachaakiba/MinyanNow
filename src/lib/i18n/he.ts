@@ -279,6 +279,35 @@ export default {
     settingsSubtitle: "התראות, חשבון, עזרה",
   },
 
+  // Admin
+  admin: {
+    title: "ניהול",
+    all: "הכל",
+    id: "תעודה",
+    ketouba: "כתובה",
+    selfie: "סלפי",
+    idDocument: "תעודה מזהה",
+    ketoubaDocument: "כתובה",
+    selfieDocument: "תמונת סלפי",
+    document: "מסמך",
+    pending: "ממתין",
+    approved: "אושר",
+    rejected: "נדחה",
+    approve: "אשר",
+    reject: "דחה",
+    rejectionReason: "סיבת הדחייה",
+    rejectionReasonPlaceholder: "הסבר למה המסמך נדחה...",
+    rejectionReasonRequired: "סיבת הדחייה נדרשת",
+    confirmReject: "אשר דחייה",
+    noPendingDocuments: "אין מסמכים ממתינים לאימות",
+    loadError: "שגיאה בטעינת מסמכים",
+    documentLoadError: "שגיאה בטעינת מסמך",
+    documentApproved: "המסמך אושר בהצלחה",
+    documentRejected: "המסמך נדחה בהצלחה",
+    approveError: "שגיאה באישור המסמך",
+    rejectError: "שגיאה בדחיית המסמך",
+  },
+
   // Edit Profile
   editProfile: {
     title: "עריכת פרופיל",

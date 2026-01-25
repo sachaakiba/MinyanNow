@@ -5,6 +5,7 @@ import { auth } from "../lib/auth";
 import eventsRouter from "./routes/events";
 import requestsRouter from "./routes/requests";
 import usersRouter from "./routes/users";
+import adminRouter from "./routes/admin";
 import "dotenv/config";
 import prisma from "../lib/prisma";
 
@@ -74,6 +75,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api/events", eventsRouter);
 app.use("/api/requests", requestsRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/admin", adminRouter);
 
 // Health check
 app.get("/health", async (req, res) => {

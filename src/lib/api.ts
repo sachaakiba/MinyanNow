@@ -91,15 +91,23 @@ const apiFetch = async <T>(
 ): Promise<T> => {
   const url = `${API_URL}${endpoint}`;
 
-  const response = await authClient.$fetch<T>(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
+  try {
+    const response = await authClient.$fetch<T>(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+    });
 
-  return response.data as T;
+    return response.data as T;
+  } catch (error: any) {
+    // Don't throw 403 errors as authentication errors - they're permission errors
+    if (error?.status === 403 || error?.message?.includes("403") || error?.message?.includes("Forbidden")) {
+      throw new Error(error.message || "Forbidden - Admin access required");
+    }
+    throw error;
+  }
 };
 
 // Events API
@@ -279,6 +287,7 @@ export const usersApi = {
     name: string | null;
     email: string;
     phoneNumber: string | null;
+    role?: "USER" | "SUPER_ADMIN";
     firstName: string | null;
     lastName: string | null;
     hebrewName: string | null;
@@ -289,10 +298,16 @@ export const usersApi = {
     profileCompleted: boolean;
     idDocumentUrl: string | null;
     idUploadedAt: string | null;
+    idVerificationStatus?: "PENDING" | "APPROVED" | "REJECTED";
+    idRejectionReason?: string | null;
     ketoubaDocumentUrl: string | null;
     ketoubaUploadedAt: string | null;
+    ketoubaVerificationStatus?: "PENDING" | "APPROVED" | "REJECTED";
+    ketoubaRejectionReason?: string | null;
     selfieDocumentUrl: string | null;
     selfieUploadedAt: string | null;
+    selfieVerificationStatus?: "PENDING" | "APPROVED" | "REJECTED";
+    selfieRejectionReason?: string | null;
   }> => {
     return apiFetch("/api/users/me");
   },
@@ -360,4 +375,50 @@ export const EVENT_TYPE_ICONS: Record<EventType, string> = {
   MINCHA: "🌅",
   ARVIT: "🌙",
   OTHER: "✡️",
+};
+
+// Admin API
+export interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  phoneNumber: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  createdAt: string;
+  idDocumentUrl: string | null;
+  idDocumentId: string | null;
+  idUploadedAt: string | null;
+  idVerificationStatus: "PENDING" | "APPROVED" | "REJECTED";
+  ketoubaDocumentUrl: string | null;
+  ketoubaDocumentId: string | null;
+  ketoubaUploadedAt: string | null;
+  ketoubaVerificationStatus: "PENDING" | "APPROVED" | "REJECTED";
+  selfieDocumentUrl: string | null;
+  selfieDocumentId: string | null;
+  selfieUploadedAt: string | null;
+  selfieVerificationStatus: "PENDING" | "APPROVED" | "REJECTED";
+}
+
+export const adminApi = {
+  getPendingDocuments: async (type?: "id" | "ketouba" | "selfie") => {
+    const query = type ? `?type=${type}` : "";
+    return apiFetch<{ users: AdminUser[] }>(`/api/admin/pending-documents${query}`);
+  },
+
+  getDocumentUrl: async (userId: string, documentType: "id" | "ketouba" | "selfie") => {
+    return apiFetch<{ url: string }>(`/api/admin/users/${userId}/document/${documentType}`);
+  },
+
+  verifyDocument: async (
+    userId: string,
+    documentType: "id" | "ketouba" | "selfie",
+    action: "approve" | "reject",
+    rejectionReason?: string
+  ) => {
+    return apiFetch<{ success: boolean; message: string }>("/api/admin/verify-document", {
+      method: "POST",
+      body: JSON.stringify({ userId, documentType, action, rejectionReason }),
+    });
+  },
 };

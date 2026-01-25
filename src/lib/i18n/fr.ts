@@ -286,6 +286,35 @@ export default {
     settingsSubtitle: "Notifications, compte, aide",
   },
 
+  // Admin
+  admin: {
+    title: "Administration",
+    all: "Tous",
+    id: "ID",
+    ketouba: "Ketouba",
+    selfie: "Selfie",
+    idDocument: "Pièce d'identité",
+    ketoubaDocument: "Ketouba",
+    selfieDocument: "Photo selfie",
+    document: "Document",
+    pending: "En attente",
+    approved: "Approuvé",
+    rejected: "Rejeté",
+    approve: "Approuver",
+    reject: "Rejeter",
+    rejectionReason: "Raison du rejet",
+    rejectionReasonPlaceholder: "Expliquez pourquoi le document est rejeté...",
+    rejectionReasonRequired: "La raison du rejet est obligatoire",
+    confirmReject: "Confirmer le rejet",
+    noPendingDocuments: "Aucun document en attente de vérification",
+    loadError: "Erreur lors du chargement des documents",
+    documentLoadError: "Erreur lors du chargement du document",
+    documentApproved: "Document approuvé avec succès",
+    documentRejected: "Document rejeté avec succès",
+    approveError: "Erreur lors de l'approbation",
+    rejectError: "Erreur lors du rejet",
+  },
+
   // Edit Profile
   editProfile: {
     title: "Modifier le profil",

@@ -23,6 +23,7 @@ interface User {
   name: string | null;
   phoneNumber?: string | null;
   phoneNumberVerified?: boolean;
+  role?: "USER" | "SUPER_ADMIN";
   firstName?: string | null;
   lastName?: string | null;
   hebrewName?: string | null;
@@ -60,6 +61,7 @@ interface AuthContextType {
   hasKetoubaDocument: boolean;
   hasSelfieDocument: boolean;
   hasAllDocuments: boolean;
+  isSuperAdmin: boolean;
   sendOTP: (
     phoneNumber: string
   ) => Promise<{ success: boolean; error?: string }>;
@@ -131,11 +133,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   // Si on a un sessionUser mais pas encore de userProfile, on est en chargement
   const isStillLoadingProfile = !!sessionUser?.id && !userProfile;
 
+  // Only show loading if we have a session but profile is still loading
+  // Don't show loading if user is not authenticated (to avoid flickering on login screen)
+  const isLoadingState = sessionUser?.id 
+    ? (isPending || profileLoading || isStillLoadingProfile)
+    : false;
+
   const isProfileComplete = !!userProfile?.profileCompleted;
   const hasIdDocument = !!userProfile?.idDocumentUrl;
   const hasKetoubaDocument = !!userProfile?.ketoubaDocumentUrl;
   const hasSelfieDocument = !!userProfile?.selfieDocumentUrl;
   const hasAllDocuments = hasIdDocument && hasKetoubaDocument && hasSelfieDocument;
+  const isSuperAdmin = userProfile?.role === "SUPER_ADMIN" || sessionUser?.role === "SUPER_ADMIN";
 
   console.log("🔐 Auth state:", {
     isAuthenticated: !!sessionUser,
@@ -147,9 +156,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     hasKetoubaDocument,
     hasSelfieDocument,
     hasAllDocuments,
+    isSuperAdmin,
+    userRole: userProfile?.role || sessionUser?.role,
     userProfile: userProfile
       ? {
           id: userProfile.id,
+          role: userProfile.role,
           profileCompleted: userProfile.profileCompleted,
           idDocumentUrl: !!userProfile.idDocumentUrl,
           ketoubaDocumentUrl: !!userProfile.ketoubaDocumentUrl,
@@ -221,13 +233,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     <AuthContext.Provider
       value={{
         user,
-        isLoading: isPending || profileLoading || isStillLoadingProfile,
+        isLoading: isLoadingState,
         isAuthenticated: !!sessionUser,
         isProfileComplete,
         hasIdDocument,
         hasKetoubaDocument,
         hasSelfieDocument,
         hasAllDocuments,
+        isSuperAdmin,
         sendOTP: handleSendOTP,
         verifyOTP: handleVerifyOTP,
         completeProfile: handleCompleteProfile,
