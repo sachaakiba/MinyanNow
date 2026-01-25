@@ -3,6 +3,7 @@ export type RootStackParamList = {
   OTPVerification: { phoneNumber: string };
   CompleteProfile: undefined;
   UploadId: undefined;
+  UploadDocuments: undefined;
   MainTabs: undefined;
   CreateEvent: undefined;
   EditEvent: { eventId: string };
@@ -10,7 +11,7 @@ export type RootStackParamList = {
   Settings: undefined;
   NotificationSettings: undefined;
   EditProfile: undefined;
-  UpdateIdDocument: undefined;
+  UpdateIdDocument: { documentType?: "id" | "ketouba" | "selfie" } | undefined;
   TermsOfService: undefined;
   PrivacyPolicy: undefined;
   HelpCenter: undefined;
@@ -26,6 +27,6 @@ export type TabParamList = {
 
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
+    interface RootParamList extends RootStackParamList { }
   }
 }

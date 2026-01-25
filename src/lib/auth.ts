@@ -15,16 +15,25 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  trustedOrigins: [
+    "*",
+    "minyannow://*",
+    "exp://*",
+    "http://localhost:*",
+  ],
   plugins: [
     expo(),
     phoneNumber({
       sendOTP: async ({ phoneNumber, code }) => {
-        // Always log the code in development for debugging
-        if (process.env.NODE_ENV === "development") {
-          console.log(`📱 OTP for ${phoneNumber}: ${code}`);
+        // In development mode, only log to console (don't use Twilio to save costs)
+        if (process.env.NODE_ENV === "local") {
+          console.log(`\n${"=".repeat(50)}`);
+          console.log(`📱 [DEV MODE] OTP for ${phoneNumber}: ${code}`);
+          console.log(`${"=".repeat(50)}\n`);
+          return; // Skip Twilio in development
         }
 
-        // Send SMS via Twilio if configured
+        // In production/recipe: Send SMS via Twilio
         if (twilioClient && process.env.TWILIO_PHONE_NUMBER) {
           try {
             await twilioClient.messages.create({
@@ -38,9 +47,10 @@ export const auth = betterAuth({
             throw new Error("Failed to send OTP via SMS");
           }
         } else {
-          console.warn(
-            "⚠️ Twilio not configured - OTP only logged to console"
+          console.error(
+            "❌ Twilio not configured in production - cannot send SMS!"
           );
+          throw new Error("SMS service not configured");
         }
       },
       // Configuration OTP
@@ -60,7 +70,6 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: false, // Désactivé car on utilise uniquement le téléphone
   },
-  trustedOrigins: ["*"], 
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day

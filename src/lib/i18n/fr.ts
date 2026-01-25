@@ -83,13 +83,28 @@ export default {
       idSecurityTitle: "🔒",
       idSecurityText:
         "Pour la sécurité de notre communauté, nous vérifions l'identité de chaque membre. Votre document est stocké de manière sécurisée et n'est visible que par les organisateurs d'événements.",
+      ketoubaDocument: "Ketouba *",
+      ketoubaRequired: "La Ketouba est requise",
+      ketoubaSecurityText:
+        "Votre certificat de mariage (Ketouba) permet de vérifier votre statut marital.",
+      ketoubaInfo: "Document accepté : Certificat de mariage (Ketouba)",
+      selfieDocument: "Photo selfie *",
+      selfieRequired: "La photo selfie est requise",
+      selfieSecurityText:
+        "Une photo récente de vous-même aide les organisateurs à vous reconnaître lors des événements.",
+      selfieInfo: "Prenez une photo claire de votre visage",
       takePhoto: "Prendre une photo",
+      takeSelfie: "Prendre un selfie",
       gallery: "Galerie",
       files: "Fichiers",
       changePhoto: "Changer de photo",
       acceptedDocuments:
         "Documents acceptés : Carte d'identité, Passeport, Permis de conduire",
       uploadingId: "Envoi de la pièce d'identité...",
+      uploadingKetouba: "Envoi de la Ketouba...",
+      uploadingSelfie: "Envoi du selfie...",
+      uploadKetoubaError: "Impossible d'envoyer la Ketouba",
+      uploadSelfieError: "Impossible d'envoyer le selfie",
       submit: "Valider mon profil",
       privacyNote:
         "🔒 Vos informations sont confidentielles et ne seront jamais partagées sans votre consentement.",
@@ -257,6 +272,8 @@ export default {
     editProfile: "Modifier mes informations",
     verification: "Vérification",
     idDocument: "Pièce d'identité",
+    ketoubaDocument: "Ketouba",
+    selfieDocument: "Photo selfie",
     idVerified: "✓ Vérifiée",
     idNotProvided: "Non fournie",
     idUpdatedAt: "Mise à jour le {{date}}",
@@ -525,14 +542,22 @@ export default {
 
   // ID Viewer Modal
   idViewer: {
-    title: "Pièce d'identité",
+    title: "Vérification d'identité",
     loading: "Chargement...",
-    loadError: "Impossible de charger la pièce d'identité",
+    loadError: "Impossible de charger les documents",
     retry: "Réessayer",
-    securityNotice: "Cette image est sécurisée et ne peut être consultée que par vous en tant qu'organisateur.",
+    securityNotice: "Ces documents sont sécurisés et ne peuvent être consultés que par vous en tant qu'organisateur.",
     accept: "Accepter",
     reject: "Refuser",
     tapToVerify: "Appuyez pour vérifier l'identité",
+    noDocument: "Aucun document téléchargé",
+    allDocumentsViewed: "Tous les documents ont été vérifiés",
+    viewAllDocuments: "Veuillez vérifier les {{count}} documents avant d'accepter",
+    tabs: {
+      id: "Pièce d'identité",
+      ketouba: "Ketouba",
+      selfie: "Selfie",
+    },
   },
 
   // Event Card
@@ -574,6 +599,36 @@ export default {
     cameraPermissionDenied: "Permission d'accès à la caméra refusée",
     fileSelectionError: "Erreur lors de la sélection du fichier",
     uploadError: "Erreur lors de l'envoi",
+  },
+
+  // Documents Screen
+  documents: {
+    title: "Documents requis",
+    subtitle: "Pour garantir la sécurité de la communauté, veuillez fournir les documents suivants.",
+    types: {
+      id: "Pièce d'identité",
+      ketouba: "Ketouba",
+      selfie: "Photo selfie",
+    },
+    descriptions: {
+      id: "Carte d'identité, passeport ou permis de conduire",
+      ketouba: "Votre certificat de mariage (Ketouba)",
+      selfie: "Une photo récente de vous-même",
+    },
+    add: "Ajouter le document",
+    change: "Changer",
+    upload: "Télécharger",
+    update: "Mettre à jour",
+    takePhoto: "Prendre une photo",
+    takeSelfie: "Prendre un selfie",
+    gallery: "Galerie",
+    files: "Fichiers",
+    completed: "complété(s)",
+    securityInfo: "Vos documents sont stockés de manière sécurisée et ne sont visibles que par les organisateurs d'événements lorsque vous demandez à rejoindre leurs événements.",
+    allUploaded: "Tous les documents ont été téléchargés !",
+    missingDocuments: "Documents manquants",
+    missingDocumentsMessage: "Vous devez télécharger tous les documents requis (Pièce d'identité, Ketouba et Selfie) avant de pouvoir créer ou rejoindre des événements.",
+    goToDocuments: "Télécharger les documents",
   },
 
   // Splash Screen

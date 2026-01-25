@@ -158,9 +158,10 @@ export const ProfileScreen: React.FC = () => {
         <View style={styles.verificationSection}>
           <Text style={styles.sectionTitle}>{t("profile.verification")}</Text>
 
+          {/* ID Document Card */}
           <View style={styles.verificationCard}>
             <View style={styles.verificationHeader}>
-              <View style={styles.verificationIconContainer}>
+              <View style={[styles.verificationIconContainer, user?.idDocumentUrl && styles.verificationIconContainerVerified]}>
                 <Text style={styles.verificationIcon}>🪪</Text>
               </View>
               <View style={styles.verificationContent}>
@@ -197,10 +198,110 @@ export const ProfileScreen: React.FC = () => {
             )}
             <TouchableOpacity
               style={styles.updateIdButton}
-              onPress={() => navigation.navigate("UpdateIdDocument")}
+              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "id" })}
             >
               <Text style={styles.updateIdButtonText}>
                 {user?.idDocumentUrl
+                  ? t("profile.updateId")
+                  : t("profile.addId")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Ketouba Document Card */}
+          <View style={styles.verificationCard}>
+            <View style={styles.verificationHeader}>
+              <View style={[styles.verificationIconContainer, user?.ketoubaDocumentUrl && styles.verificationIconContainerVerified]}>
+                <Text style={styles.verificationIcon}>💒</Text>
+              </View>
+              <View style={styles.verificationContent}>
+                <Text style={styles.verificationTitle}>
+                  {t("profile.ketoubaDocument")}
+                </Text>
+                {user?.ketoubaDocumentUrl ? (
+                  <View style={styles.verifiedBadge}>
+                    <Text style={styles.verifiedBadgeText}>
+                      {t("profile.idVerified")}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.pendingBadge}>
+                    <Text style={styles.pendingBadgeText}>
+                      {t("profile.idNotProvided")}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            {user?.ketoubaUploadedAt && (
+              <Text style={styles.verificationDate}>
+                {t("profile.idUpdatedAt", {
+                  date: new Date(user.ketoubaUploadedAt).toLocaleDateString(
+                    i18n.language === "he"
+                      ? "he-IL"
+                      : i18n.language === "en"
+                      ? "en-US"
+                      : "fr-FR"
+                  ),
+                })}
+              </Text>
+            )}
+            <TouchableOpacity
+              style={styles.updateIdButton}
+              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "ketouba" })}
+            >
+              <Text style={styles.updateIdButtonText}>
+                {user?.ketoubaDocumentUrl
+                  ? t("profile.updateId")
+                  : t("profile.addId")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Selfie Document Card */}
+          <View style={styles.verificationCard}>
+            <View style={styles.verificationHeader}>
+              <View style={[styles.verificationIconContainer, user?.selfieDocumentUrl && styles.verificationIconContainerVerified]}>
+                <Text style={styles.verificationIcon}>🤳</Text>
+              </View>
+              <View style={styles.verificationContent}>
+                <Text style={styles.verificationTitle}>
+                  {t("profile.selfieDocument")}
+                </Text>
+                {user?.selfieDocumentUrl ? (
+                  <View style={styles.verifiedBadge}>
+                    <Text style={styles.verifiedBadgeText}>
+                      {t("profile.idVerified")}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.pendingBadge}>
+                    <Text style={styles.pendingBadgeText}>
+                      {t("profile.idNotProvided")}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            {user?.selfieUploadedAt && (
+              <Text style={styles.verificationDate}>
+                {t("profile.idUpdatedAt", {
+                  date: new Date(user.selfieUploadedAt).toLocaleDateString(
+                    i18n.language === "he"
+                      ? "he-IL"
+                      : i18n.language === "en"
+                      ? "en-US"
+                      : "fr-FR"
+                  ),
+                })}
+              </Text>
+            )}
+            <TouchableOpacity
+              style={styles.updateIdButton}
+              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "selfie" })}
+            >
+              <Text style={styles.updateIdButtonText}>
+                {user?.selfieDocumentUrl
                   ? t("profile.updateId")
                   : t("profile.addId")}
               </Text>
@@ -374,6 +475,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 16,
+    marginBottom: 12,
   },
   verificationHeader: {
     flexDirection: "row",
@@ -382,11 +484,14 @@ const styles = StyleSheet.create({
   verificationIconContainer: {
     width: 52,
     height: 52,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "#F3F4F6",
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,
+  },
+  verificationIconContainerVerified: {
+    backgroundColor: "#DCFCE7",
   },
   verificationIcon: {
     fontSize: 26,

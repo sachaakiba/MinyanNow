@@ -12,6 +12,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
@@ -19,40 +20,90 @@ import { AlertModal, useAlert } from "../components";
 import { usersApi } from "../lib/api";
 import { colors } from "../lib/colors";
 
+type DocumentType = "id" | "ketouba" | "selfie";
+
 type UpdateIdDocumentScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "UpdateIdDocument"
+>;
+
+type UpdateIdDocumentScreenRouteProp = RouteProp<
   RootStackParamList,
   "UpdateIdDocument"
 >;
 
 interface UpdateIdDocumentScreenProps {
   navigation: UpdateIdDocumentScreenNavigationProp;
+  route: UpdateIdDocumentScreenRouteProp;
 }
 
 export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
   navigation,
+  route,
 }) => {
   const { t, i18n } = useTranslation();
   const { user, refreshSession } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
+  
+  const documentType: DocumentType = route.params?.documentType || "id";
+  
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [currentIdUrl, setCurrentIdUrl] = useState<string | null>(null);
+  const [currentDocUrl, setCurrentDocUrl] = useState<string | null>(null);
   const [loadingCurrent, setLoadingCurrent] = useState(false);
 
-  useEffect(() => {
-    if (user?.idDocumentUrl) {
-      loadCurrentId();
+  const getDocumentInfo = () => {
+    switch (documentType) {
+      case "id":
+        return {
+          icon: "🪪",
+          title: t("profile.idDocument"),
+          currentUrl: user?.idDocumentUrl,
+          uploadedAt: user?.idUploadedAt,
+        };
+      case "ketouba":
+        return {
+          icon: "💒",
+          title: t("profile.ketoubaDocument"),
+          currentUrl: user?.ketoubaDocumentUrl,
+          uploadedAt: user?.ketoubaUploadedAt,
+        };
+      case "selfie":
+        return {
+          icon: "🤳",
+          title: t("profile.selfieDocument"),
+          currentUrl: user?.selfieDocumentUrl,
+          uploadedAt: user?.selfieUploadedAt,
+        };
     }
-  }, [user?.idDocumentUrl]);
+  };
 
-  const loadCurrentId = async () => {
+  const docInfo = getDocumentInfo();
+
+  useEffect(() => {
+    if (docInfo.currentUrl && user?.id) {
+      loadCurrentDocument();
+    }
+  }, [docInfo.currentUrl, user?.id]);
+
+  const loadCurrentDocument = async () => {
     if (!user?.id) return;
     setLoadingCurrent(true);
     try {
-      const result = await usersApi.getIdDocument(user.id);
-      setCurrentIdUrl(result.url);
+      const result = await usersApi.getUserDocuments(user.id);
+      switch (documentType) {
+        case "id":
+          setCurrentDocUrl(result.idDocument?.url || null);
+          break;
+        case "ketouba":
+          setCurrentDocUrl(result.ketoubaDocument?.url || null);
+          break;
+        case "selfie":
+          setCurrentDocUrl(result.selfieDocument?.url || null);
+          break;
+      }
     } catch (error) {
-      console.error("Error loading current ID:", error);
+      console.error("Error loading current document:", error);
     } finally {
       setLoadingCurrent(false);
     }
@@ -73,9 +124,12 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: "images",
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: documentType === "selfie" ? [1, 1] : [4, 3],
       quality: 0.8,
       base64: true,
+      cameraType: documentType === "selfie" 
+        ? ImagePicker.CameraType.front 
+        : ImagePicker.CameraType.back,
     });
 
     if (!result.canceled && result.assets[0].base64) {
@@ -98,7 +152,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: "images",
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: documentType === "selfie" ? [1, 1] : [4, 3],
       quality: 0.8,
       base64: true,
     });
@@ -146,7 +200,18 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
 
     setUploading(true);
     try {
-      await usersApi.uploadIdDocument(selectedImage);
+      switch (documentType) {
+        case "id":
+          await usersApi.uploadIdDocument(selectedImage);
+          break;
+        case "ketouba":
+          await usersApi.uploadKetoubaDocument(selectedImage);
+          break;
+        case "selfie":
+          await usersApi.uploadSelfieDocument(selectedImage);
+          break;
+      }
+      
       refreshSession();
       showAlert(
         t("updateId.success"),
@@ -166,7 +231,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
     }
   };
 
-  const hasCurrentId = !!user?.idDocumentUrl;
+  const hasCurrentDoc = !!docInfo.currentUrl;
 
   const formatDate = (dateString: string) => {
     const locale =
@@ -188,13 +253,13 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         >
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("updateId.title")}</Text>
+        <Text style={styles.headerTitle}>{docInfo.title}</Text>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Current ID (if exists) */}
-        {hasCurrentId && (
+        {/* Current Document (if exists) */}
+        {hasCurrentDoc && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("updateId.currentId")}</Text>
             <View style={styles.currentIdCard}>
@@ -203,40 +268,46 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
                   <ActivityIndicator size="small" color={colors.primary} />
                   <Text style={styles.loadingText}>{t("updateId.loading")}</Text>
                 </View>
-              ) : currentIdUrl ? (
+              ) : currentDocUrl ? (
                 <Image
-                  source={{ uri: currentIdUrl }}
-                  style={styles.currentIdImage}
+                  source={{ uri: currentDocUrl }}
+                  style={[
+                    styles.currentIdImage,
+                    documentType === "selfie" && styles.selfieImage,
+                  ]}
                   resizeMode="contain"
                 />
               ) : (
                 <View style={styles.noPreview}>
-                  <Text style={styles.noPreviewIcon}>🪪</Text>
+                  <Text style={styles.noPreviewIcon}>{docInfo.icon}</Text>
                   <Text style={styles.noPreviewText}>
                     {t("updateId.idSaved")}
                   </Text>
                 </View>
               )}
-              {user?.idUploadedAt && (
+              {docInfo.uploadedAt && (
                 <Text style={styles.uploadDate}>
-                  {t("updateId.updatedOn")} {formatDate(user.idUploadedAt)}
+                  {t("updateId.updatedOn")} {formatDate(docInfo.uploadedAt)}
                 </Text>
               )}
             </View>
           </View>
         )}
 
-        {/* New ID Upload */}
+        {/* New Document Upload */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {hasCurrentId ? t("updateId.updateTitle") : t("updateId.addTitle")}
+            {hasCurrentDoc ? t("updateId.updateTitle") : t("updateId.addTitle")}
           </Text>
 
           {selectedImage ? (
             <View style={styles.previewCard}>
               <Image
                 source={{ uri: selectedImage }}
-                style={styles.previewImage}
+                style={[
+                  styles.previewImage,
+                  documentType === "selfie" && styles.selfieImage,
+                ]}
                 resizeMode="contain"
               />
               <TouchableOpacity
@@ -250,7 +321,11 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
             <View style={styles.uploadOptions}>
               <TouchableOpacity style={styles.uploadBtn} onPress={takePhoto}>
                 <Text style={styles.uploadBtnIcon}>📷</Text>
-                <Text style={styles.uploadBtnText}>{t("updateId.takePhoto")}</Text>
+                <Text style={styles.uploadBtnText}>
+                  {documentType === "selfie" 
+                    ? t("documents.takeSelfie") 
+                    : t("updateId.takePhoto")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.uploadBtn, styles.uploadBtnSecondary]}
@@ -292,7 +367,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.submitBtnText}>
-                {hasCurrentId ? t("updateId.update") : t("updateId.save")}
+                {hasCurrentDoc ? t("updateId.update") : t("updateId.save")}
               </Text>
             )}
           </TouchableOpacity>
@@ -381,6 +456,11 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 12,
   },
+  selfieImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+  },
   noPreview: {
     padding: 40,
     alignItems: "center",
@@ -403,6 +483,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     position: "relative",
+    alignItems: "center",
   },
   previewImage: {
     width: "100%",

@@ -23,6 +23,16 @@ export interface User {
   email: string;
   idDocumentUrl?: string | null;
   idUploadedAt?: string | null;
+  ketoubaDocumentUrl?: string | null;
+  ketoubaUploadedAt?: string | null;
+  selfieDocumentUrl?: string | null;
+  selfieUploadedAt?: string | null;
+}
+
+export interface UserDocuments {
+  idDocument: { url: string; uploadedAt: string | null } | null;
+  ketoubaDocument: { url: string; uploadedAt: string | null } | null;
+  selfieDocument: { url: string; uploadedAt: string | null } | null;
 }
 
 export interface Event {
@@ -80,7 +90,7 @@ const apiFetch = async <T>(
   options: RequestInit = {}
 ): Promise<T> => {
   const url = `${API_URL}${endpoint}`;
-  
+
   const response = await authClient.$fetch<T>(url, {
     ...options,
     headers: {
@@ -88,7 +98,7 @@ const apiFetch = async <T>(
       ...(options.headers || {}),
     },
   });
-  
+
   return response.data as T;
 };
 
@@ -232,8 +242,36 @@ export const usersApi = {
     );
   },
 
+  uploadKetoubaDocument: async (
+    base64Image: string
+  ): Promise<{ success: boolean; ketoubaUploadedAt: string }> => {
+    return apiFetch<{ success: boolean; ketoubaUploadedAt: string }>(
+      "/api/users/ketouba-document",
+      {
+        method: "POST",
+        body: JSON.stringify({ image: base64Image }),
+      }
+    );
+  },
+
+  uploadSelfieDocument: async (
+    base64Image: string
+  ): Promise<{ success: boolean; selfieUploadedAt: string }> => {
+    return apiFetch<{ success: boolean; selfieUploadedAt: string }>(
+      "/api/users/selfie-document",
+      {
+        method: "POST",
+        body: JSON.stringify({ image: base64Image }),
+      }
+    );
+  },
+
   getIdDocument: async (userId: string): Promise<{ url: string }> => {
     return apiFetch<{ url: string }>(`/api/users/${userId}/id-document`);
+  },
+
+  getUserDocuments: async (userId: string): Promise<UserDocuments> => {
+    return apiFetch<UserDocuments>(`/api/users/${userId}/documents`);
   },
 
   getMe: async (): Promise<{
@@ -251,6 +289,10 @@ export const usersApi = {
     profileCompleted: boolean;
     idDocumentUrl: string | null;
     idUploadedAt: string | null;
+    ketoubaDocumentUrl: string | null;
+    ketoubaUploadedAt: string | null;
+    selfieDocumentUrl: string | null;
+    selfieUploadedAt: string | null;
   }> => {
     return apiFetch("/api/users/me");
   },

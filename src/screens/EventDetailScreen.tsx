@@ -30,7 +30,6 @@ import { AlertModal, useAlert, IDViewerModal } from "../components";
 import { colors } from "../lib/colors";
 
 // Images
-const rabinIcon = require("../../assets/rabin.png");
 const wazeLogo = require("../../assets/waze-logo.png");
 const googleMapsLogo = require("../../assets/google-maps-logo.png");
 
@@ -51,7 +50,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const { eventId } = route.params;
-  const { user } = useAuth();
+  const { user, hasAllDocuments } = useAuth();
 
   const [event, setEvent] = useState<
     (Event & { requests: EventRequest[] }) | null
@@ -70,8 +69,6 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   // Alert modal state
   const { alertState, showAlert, hideAlert } = useAlert();
 
-  // Navigation modal state
-  const [showNavigationModal, setShowNavigationModal] = useState(false);
 
   // ID Viewer modal state
   const [showIdViewer, setShowIdViewer] = useState(false);
@@ -166,6 +163,20 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   const handleRequestJoin = async () => {
     if (!event) return;
+
+    // Check if all documents are uploaded
+    if (!hasAllDocuments) {
+      showAlert(
+        t("documents.missingDocuments"),
+        t("documents.missingDocumentsMessage"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("documents.goToDocuments"), onPress: () => navigation.goBack() },
+        ],
+        "warning"
+      );
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -389,7 +400,6 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   const openInWaze = () => {
     if (!event) return;
-    setShowNavigationModal(false);
     const url = `https://waze.com/ul?ll=${event.latitude},${event.longitude}&navigate=yes`;
     Linking.openURL(url).catch(() => {
       showAlert(
@@ -403,7 +413,6 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   const openInGoogleMaps = () => {
     if (!event) return;
-    setShowNavigationModal(false);
     const url = Platform.select({
       ios: `comgooglemaps://?daddr=${event.latitude},${event.longitude}&directionsmode=driving`,
       android: `google.navigation:q=${event.latitude},${event.longitude}`,
@@ -421,10 +430,6 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         }
       });
     }
-  };
-
-  const openNavigationOptions = () => {
-    setShowNavigationModal(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -486,14 +491,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           >
             <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
-          {isOrganizer && (
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={handleDeleteEvent}
-            >
-              <Text style={styles.deleteBtnText}>🗑️</Text>
-            </TouchableOpacity>
-          )}
+  {/* Delete button moved to bottom of screen */}
         </View>
 
         {/* Event Icon */}
@@ -590,13 +588,21 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 </>
               )}
             </View>
-            {(isOrganizer || myRequest?.status === "ACCEPTED") && (
-              <TouchableOpacity
-                style={styles.navigationButton}
-                onPress={openNavigationOptions}
-              >
-                <Text style={styles.navigationButtonText}>🚗</Text>
-              </TouchableOpacity>
+{(isOrganizer || myRequest?.status === "ACCEPTED") && (
+              <View style={styles.navigationButtons}>
+                <TouchableOpacity
+                  style={styles.navigationButton}
+                  onPress={openInWaze}
+                >
+                  <Image source={wazeLogo} style={styles.navigationButtonIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.navigationButton}
+                  onPress={openInGoogleMaps}
+                >
+                  <Image source={googleMapsLogo} style={styles.navigationButtonIcon} />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </View>
@@ -883,6 +889,19 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           </View>
         )}
 
+{/* Delete Event Button for organizer */}
+        {isOrganizer && (
+          <TouchableOpacity
+            style={styles.deleteEventButton}
+            onPress={handleDeleteEvent}
+          >
+            <Text style={styles.deleteEventButtonIcon}>🗑️</Text>
+            <Text style={styles.deleteEventButtonText}>
+              {t("events.detail.deleteEvent")}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.bottomSpacing} />
       </ScrollView>
 
@@ -940,60 +959,6 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         </View>
       </Modal>
 
-      {/* Modal de navigation */}
-      <Modal
-        visible={showNavigationModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowNavigationModal(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowNavigationModal(false)}
-        >
-          <View style={styles.navigationModalContent}>
-            <Image source={rabinIcon} style={styles.navigationModalIcon} />
-            <Text style={styles.navigationModalTitle}>
-              {t("events.detail.navigation")}
-            </Text>
-            <Text style={styles.navigationModalSubtitle}>
-              {t("events.detail.chooseNavApp")}
-            </Text>
-            <View style={styles.navigationModalButtons}>
-              <TouchableOpacity
-                style={styles.navigationOption}
-                onPress={openInWaze}
-              >
-                <Image source={wazeLogo} style={styles.navigationOptionLogo} />
-                <Text style={styles.navigationOptionText}>
-                  {t("events.detail.waze")}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.navigationOption}
-                onPress={openInGoogleMaps}
-              >
-                <Image
-                  source={googleMapsLogo}
-                  style={styles.navigationOptionLogo}
-                />
-                <Text style={styles.navigationOptionText}>
-                  {t("events.detail.googleMaps")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={styles.navigationCancelBtn}
-              onPress={() => setShowNavigationModal(false)}
-            >
-              <Text style={styles.navigationCancelBtnText}>
-                {t("common.cancel")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
       {/* Alert Modal */}
       <AlertModal
@@ -1062,17 +1027,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 20,
     fontWeight: "600" as const,
-  },
-  deleteBtn: {
-    width: 40,
-    height: 40,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 12,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-  },
-  deleteBtnText: {
-    fontSize: 18,
   },
   iconContainer: {
     width: 72,
@@ -1253,17 +1207,23 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontStyle: "italic",
   },
-  navigationButton: {
-    width: 44,
-    height: 44,
-    backgroundColor: colors.primaryLight,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+  navigationButtons: {
+    flexDirection: "row" as const,
+    gap: 8,
     marginLeft: "auto",
   },
-  navigationButtonText: {
-    fontSize: 22,
+  navigationButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: colors.primaryLight,
+    borderRadius: 10,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  navigationButtonIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: "contain" as const,
   },
   divider: {
     height: 1,
@@ -1552,6 +1512,25 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: 40,
   },
+  deleteEventButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: "#FEE2E2",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    marginBottom: 16,
+    gap: 10,
+  },
+  deleteEventButtonIcon: {
+    fontSize: 18,
+  },
+  deleteEventButtonText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#DC2626",
+  },
   // Modal styles
   modalOverlay: {
     flex: 1,
@@ -1614,67 +1593,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#FFFFFF",
-  },
-  // Navigation Modal styles
-  navigationModalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 24,
-    width: "100%",
-    maxWidth: 340,
-    alignItems: "center",
-  },
-  navigationModalIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    marginBottom: 16,
-  },
-  navigationModalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 4,
-  },
-  navigationModalSubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 24,
-  },
-  navigationModalButtons: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-    marginBottom: 16,
-  },
-  navigationOption: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  navigationOptionLogo: {
-    width: 40,
-    height: 40,
-    marginBottom: 8,
-    resizeMode: "contain",
-  },
-  navigationOptionText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-  },
-  navigationCancelBtn: {
-    width: "100%",
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  navigationCancelBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#6B7280",
   },
 });

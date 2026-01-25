@@ -8,9 +8,10 @@ import {
   Image,
   ActivityIndicator,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { usersApi } from "../lib/api";
+import { usersApi, UserDocuments } from "../lib/api";
 import { colors } from "../lib/colors";
 
 interface IDViewerModalProps {
@@ -23,6 +24,8 @@ interface IDViewerModalProps {
   onReject?: (requestId: string) => void;
   actionLoading?: boolean;
 }
+
+type DocumentTab = "id" | "ketouba" | "selfie";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -39,20 +42,24 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<UserDocuments | null>(null);
+  const [activeTab, setActiveTab] = useState<DocumentTab>("id");
+  const [viewedDocs, setViewedDocs] = useState<Set<DocumentTab>>(new Set(["id"]));
 
   useEffect(() => {
     if (visible && userId) {
-      loadIdDocument();
+      loadDocuments();
+      setActiveTab("id");
+      setViewedDocs(new Set(["id"]));
     }
   }, [visible, userId]);
 
-  const loadIdDocument = async () => {
+  const loadDocuments = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await usersApi.getIdDocument(userId);
-      setImageUrl(result.url);
+      const result = await usersApi.getUserDocuments(userId);
+      setDocuments(result);
     } catch (err: any) {
       setError(err.message || t("idViewer.loadError"));
     } finally {
@@ -60,11 +67,85 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
     }
   };
 
+  const handleTabChange = (tab: DocumentTab) => {
+    setActiveTab(tab);
+    setViewedDocs((prev) => new Set([...prev, tab]));
+  };
+
   const handleClose = () => {
-    setImageUrl(null);
+    setDocuments(null);
     setError(null);
     onClose();
   };
+
+  // Check if all available documents have been viewed
+  const allDocumentsViewed = () => {
+    const availableDocs: DocumentTab[] = [];
+    if (documents?.idDocument) availableDocs.push("id");
+    if (documents?.ketoubaDocument) availableDocs.push("ketouba");
+    if (documents?.selfieDocument) availableDocs.push("selfie");
+    return availableDocs.every((doc) => viewedDocs.has(doc));
+  };
+
+  // Count available documents
+  const getAvailableDocsCount = () => {
+    let count = 0;
+    if (documents?.idDocument) count++;
+    if (documents?.ketoubaDocument) count++;
+    if (documents?.selfieDocument) count++;
+    return count;
+  };
+
+  const getCurrentDocument = () => {
+    if (!documents) return null;
+    switch (activeTab) {
+      case "id":
+        return documents.idDocument;
+      case "ketouba":
+        return documents.ketoubaDocument;
+      case "selfie":
+        return documents.selfieDocument;
+      default:
+        return null;
+    }
+  };
+
+  const getTabLabel = (tab: DocumentTab) => {
+    switch (tab) {
+      case "id":
+        return t("idViewer.tabs.id");
+      case "ketouba":
+        return t("idViewer.tabs.ketouba");
+      case "selfie":
+        return t("idViewer.tabs.selfie");
+    }
+  };
+
+  const getTabIcon = (tab: DocumentTab) => {
+    switch (tab) {
+      case "id":
+        return "🪪";
+      case "ketouba":
+        return "💒";
+      case "selfie":
+        return "🤳";
+    }
+  };
+
+  const isTabAvailable = (tab: DocumentTab) => {
+    if (!documents) return false;
+    switch (tab) {
+      case "id":
+        return !!documents.idDocument;
+      case "ketouba":
+        return !!documents.ketoubaDocument;
+      case "selfie":
+        return !!documents.selfieDocument;
+    }
+  };
+
+  const currentDoc = getCurrentDocument();
+  const availableTabs: DocumentTab[] = ["id", "ketouba", "selfie"];
 
   return (
     <Modal
@@ -86,8 +167,53 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
             </TouchableOpacity>
           </View>
 
+          {/* Tabs */}
+          {!loading && !error && documents && (
+            <View style={styles.tabsContainer}>
+              {availableTabs.map((tab) => {
+                const available = isTabAvailable(tab);
+                const isActive = activeTab === tab;
+                const isViewed = viewedDocs.has(tab);
+                
+                return (
+                  <TouchableOpacity
+                    key={tab}
+                    style={[
+                      styles.tab,
+                      isActive && styles.tabActive,
+                      !available && styles.tabDisabled,
+                    ]}
+                    onPress={() => available && handleTabChange(tab)}
+                    disabled={!available}
+                  >
+                    <Text style={styles.tabIcon}>{getTabIcon(tab)}</Text>
+                    <Text
+                      style={[
+                        styles.tabLabel,
+                        isActive && styles.tabLabelActive,
+                        !available && styles.tabLabelDisabled,
+                      ]}
+                    >
+                      {getTabLabel(tab)}
+                    </Text>
+                    {available && isViewed && (
+                      <View style={styles.viewedBadge}>
+                        <Text style={styles.viewedBadgeText}>✓</Text>
+                      </View>
+                    )}
+                    {!available && (
+                      <View style={styles.unavailableBadge}>
+                        <Text style={styles.unavailableBadgeText}>-</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
           {/* Content */}
-          <View style={styles.content}>
+          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={colors.primary} />
@@ -99,19 +225,38 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
                 <Text style={styles.errorText}>{error}</Text>
                 <TouchableOpacity
                   style={styles.retryBtn}
-                  onPress={loadIdDocument}
+                  onPress={loadDocuments}
                 >
                   <Text style={styles.retryBtnText}>{t("idViewer.retry")}</Text>
                 </TouchableOpacity>
               </View>
-            ) : imageUrl ? (
+            ) : currentDoc ? (
               <Image
-                source={{ uri: imageUrl }}
+                source={{ uri: currentDoc.url }}
                 style={styles.idImage}
                 resizeMode="contain"
               />
-            ) : null}
-          </View>
+            ) : (
+              <View style={styles.noDocContainer}>
+                <Text style={styles.noDocIcon}>📄</Text>
+                <Text style={styles.noDocText}>{t("idViewer.noDocument")}</Text>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Verification Status */}
+          {!loading && !error && documents && requestId && (
+            <View style={styles.verificationStatus}>
+              <Text style={styles.verificationIcon}>
+                {allDocumentsViewed() ? "✅" : "⚠️"}
+              </Text>
+              <Text style={styles.verificationText}>
+                {allDocumentsViewed()
+                  ? t("idViewer.allDocumentsViewed")
+                  : t("idViewer.viewAllDocuments", { count: getAvailableDocsCount() })}
+              </Text>
+            </View>
+          )}
 
           {/* Security Notice */}
           <View style={styles.securityNotice}>
@@ -140,6 +285,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
                 style={[
                   styles.acceptButton,
                   actionLoading && styles.buttonDisabled,
+                  !allDocumentsViewed() && styles.acceptButtonWarning,
                 ]}
                 onPress={() => onAccept(requestId)}
                 disabled={actionLoading}
@@ -205,15 +351,93 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#6B7280",
   },
+  tabsContainer: {
+    flexDirection: "row",
+    padding: 12,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: "#F9FAFB",
+    position: "relative",
+  },
+  tabActive: {
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  tabDisabled: {
+    backgroundColor: "#F3F4F6",
+    opacity: 0.5,
+  },
+  tabIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#6B7280",
+    textAlign: "center",
+  },
+  tabLabelActive: {
+    color: colors.primary,
+  },
+  tabLabelDisabled: {
+    color: "#9CA3AF",
+  },
+  viewedBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#10B981",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewedBadgeText: {
+    fontSize: 10,
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  unavailableBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#D1D5DB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  unavailableBadgeText: {
+    fontSize: 10,
+    color: "#6B7280",
+    fontWeight: "700",
+  },
   content: {
+    flex: 1,
+    minHeight: 250,
+    maxHeight: 350,
+  },
+  contentContainer: {
     padding: 20,
-    minHeight: 300,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    minHeight: 300,
+    minHeight: 250,
   },
   loadingText: {
     marginTop: 12,
@@ -224,7 +448,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    minHeight: 300,
+    minHeight: 250,
   },
   errorIcon: {
     fontSize: 48,
@@ -247,11 +471,45 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
   },
+  noDocContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 250,
+  },
+  noDocIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+    opacity: 0.5,
+  },
+  noDocText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+  },
   idImage: {
     width: "100%",
-    height: SCREEN_WIDTH * 0.8,
+    height: SCREEN_WIDTH * 0.7,
     borderRadius: 12,
     backgroundColor: "#F3F4F6",
+  },
+  verificationStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: "#FFFBEB",
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  verificationIcon: {
+    fontSize: 16,
+  },
+  verificationText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#92400E",
+    fontWeight: "500",
   },
   securityNotice: {
     flexDirection: "row",
@@ -295,6 +553,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
+  },
+  acceptButtonWarning: {
+    backgroundColor: "#F59E0B",
   },
   acceptButtonText: {
     fontSize: 16,

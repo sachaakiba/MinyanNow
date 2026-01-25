@@ -15,6 +15,24 @@ router.post("/:eventId", userGuard, async (req, res) => {
     const { eventId } = req.params;
     const { message } = req.body;
 
+    // Check if user has all required documents
+    const user = await prisma.user.findUnique({
+      where: { id: authReq.user.id },
+      select: {
+        idDocumentUrl: true,
+        ketoubaDocumentUrl: true,
+        selfieDocumentUrl: true,
+      },
+    });
+
+    if (!user?.idDocumentUrl || !user?.ketoubaDocumentUrl || !user?.selfieDocumentUrl) {
+      return res.status(403).json({
+        error: "Missing required documents",
+        message: "You must upload all required documents (ID, Ketouba, and Selfie) before requesting to join an event",
+        code: "MISSING_DOCUMENTS",
+      });
+    }
+
     // Check if event exists with organizer info
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -90,7 +108,7 @@ router.post("/:eventId", userGuard, async (req, res) => {
       participantName,
       event.title
     );
-    
+
     if (event.organizer.pushToken) {
       console.log("📱 Sending push notification to organizer...");
       await sendPushNotification(event.organizer.pushToken, {
@@ -216,12 +234,6 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
       },
     });
 
-    // Update event current count
-    const updatedEvent = await prisma.event.update({
-      where: { id: request.eventId },
-      data: { currentCount: { increment: 1 } },
-    });
-
     // 🔔 Send notification to participant
     const notification = NotificationTemplates.requestAccepted(
       request.event.title
@@ -231,8 +243,13 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
       data: { type: "request_accepted", eventId: request.eventId },
     });
 
+    // Calculate current count (initial participants + accepted requests)
+    const newAcceptedCount = acceptedCount + 1;
+    const currentCount =
+      request.event.initialParticipants.length + newAcceptedCount;
+
     // 🔔 If event is now full, notify organizer
-    if (updatedEvent.currentCount >= updatedEvent.maxParticipants) {
+    if (currentCount >= request.event.maxParticipants) {
       const organizer = await prisma.user.findUnique({
         where: { id: request.event.organizerId },
         select: { pushToken: true },
@@ -279,14 +296,6 @@ router.put("/:requestId/reject", userGuard, async (req, res) => {
         .json({ error: "Not authorized to reject this request" });
     }
 
-    // If was accepted, decrement count
-    if (request.status === "ACCEPTED") {
-      await prisma.event.update({
-        where: { id: request.eventId },
-        data: { currentCount: { decrement: 1 } },
-      });
-    }
-
     const updatedRequest = await prisma.eventRequest.update({
       where: { id: requestId },
       data: { status: "REJECTED" },
@@ -331,14 +340,6 @@ router.delete("/:requestId", userGuard, async (req, res) => {
       return res
         .status(403)
         .json({ error: "Not authorized to cancel this request" });
-    }
-
-    // If was accepted, decrement count
-    if (request.status === "ACCEPTED") {
-      await prisma.event.update({
-        where: { id: request.eventId },
-        data: { currentCount: { decrement: 1 } },
-      });
     }
 
     await prisma.eventRequest.delete({
