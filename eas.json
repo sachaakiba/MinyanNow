@@ -27,7 +27,7 @@
         "autoIncrement": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://minyan-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "beneficial-charisma-prod.up.railway.app"
       }
     }
   },
