@@ -15,6 +15,8 @@ import {
 } from "../lib/auth-client";
 import { usersApi } from "../lib/api";
 
+type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 interface User {
   id: string;
   email: string;
@@ -29,10 +31,16 @@ interface User {
   profileCompleted?: boolean;
   idDocumentUrl?: string | null;
   idUploadedAt?: string | null;
+  idVerificationStatus?: VerificationStatus;
+  idRejectionReason?: string | null;
   ketoubaDocumentUrl?: string | null;
   ketoubaUploadedAt?: string | null;
+  ketoubaVerificationStatus?: VerificationStatus;
+  ketoubaRejectionReason?: string | null;
   selfieDocumentUrl?: string | null;
   selfieUploadedAt?: string | null;
+  selfieVerificationStatus?: VerificationStatus;
+  selfieRejectionReason?: string | null;
 }
 
 interface ProfileData {
@@ -64,6 +72,7 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,17 +83,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const { data: session, isPending, refetch } = useSession();
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const sessionUser = session?.user as User | null;
 
   // Fetch full user profile when session is available
-  const fetchUserProfile = useCallback(async () => {
+  const fetchUserProfile = useCallback(async (isManualRefresh = false) => {
     if (!sessionUser?.id) {
       setUserProfile(null);
       return;
     }
 
-    setProfileLoading(true);
+    // Only set profileLoading for initial load, not for manual refresh
+    if (!isManualRefresh) {
+      setProfileLoading(true);
+    }
+    
     try {
       const profile = await usersApi.getMe();
       console.log("📱 Profile loaded:", profile);
@@ -96,7 +110,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       console.error("Error fetching user profile:", error);
       setUserProfile(sessionUser);
     } finally {
-      setProfileLoading(false);
+      if (!isManualRefresh) {
+        setProfileLoading(false);
+      }
     }
   }, [sessionUser?.id]);
 
@@ -193,7 +209,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const refreshSession = () => {
     refetch();
-    fetchUserProfile();
+    fetchUserProfile(false);
+  };
+
+  const refreshProfile = async () => {
+    // Use isManualRefresh=true to avoid affecting isLoading state
+    await fetchUserProfile(true);
   };
 
   return (
@@ -212,6 +233,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         completeProfile: handleCompleteProfile,
         signOut: handleSignOut,
         refreshSession,
+        refreshProfile,
       }}
     >
       {children}

@@ -18,7 +18,7 @@ console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Mis
 console.log(`  - BETTER_AUTH_SECRET: ${process.env.BETTER_AUTH_SECRET ? '✅ Set' : '❌ Missing'}`);
 console.log(`  - BETTER_AUTH_URL: ${process.env.BETTER_AUTH_URL || '❌ Missing'}`);
 console.log(`  - SMS Mode: ${process.env.NODE_ENV === 'development' ? '📝 Console only (no Twilio)' : '📱 Twilio enabled'}`);
-
+console.log(`  - DB USED: ${process.env.DATABASE_URL}`);
 // Test database connection on startup
 async function startServer() {
   try {

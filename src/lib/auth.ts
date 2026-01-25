@@ -84,6 +84,7 @@ export const auth = betterAuth({
       synagogue: { type: "string", required: false },
       community: { type: "string", required: false },
       profileCompleted: { type: "boolean", required: false },
+      role: { type: "string", required: false },
     },
   },
 });

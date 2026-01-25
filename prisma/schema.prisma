@@ -10,6 +10,19 @@ datasource db {
   provider = "postgresql"
 }
 
+// Statut de vérification des documents par un superAdmin
+enum DocumentVerificationStatus {
+  PENDING // En attente de vérification
+  APPROVED // Approuvé par un superAdmin
+  REJECTED // Rejeté par un superAdmin
+}
+
+// Rôle utilisateur
+enum UserRole {
+  USER // Utilisateur standard
+  SUPER_ADMIN // Peut valider les documents
+}
+
 // Better Auth models
 model User {
   id                  String   @id @default(cuid())
@@ -24,6 +37,9 @@ model User {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  // Rôle utilisateur (USER par défaut, SUPER_ADMIN pour valider les documents)
+  role UserRole @default(USER)
+
   // Informations de profil
   firstName         String? // Prénom
   lastName          String? // Nom de famille
@@ -35,19 +51,31 @@ model User {
   profileCompleted  Boolean   @default(false) // Profil complété
 
   // Vérification d'identité - Pièce d'identité
-  idDocumentUrl String? // URL Cloudinary de la pièce d'identité
-  idDocumentId  String? // ID public Cloudinary pour suppression
-  idUploadedAt  DateTime? // Date d'upload de la pièce d'identité
+  idDocumentUrl        String? // URL Cloudinary de la pièce d'identité
+  idDocumentId         String? // ID public Cloudinary pour suppression
+  idUploadedAt         DateTime? // Date d'upload de la pièce d'identité
+  idVerificationStatus DocumentVerificationStatus @default(PENDING) // Statut de vérification
+  idVerifiedAt         DateTime? // Date de vérification par superAdmin
+  idVerifiedBy         String? // ID du superAdmin qui a vérifié
+  idRejectionReason    String? // Raison du rejet (si rejeté)
 
   // Vérification d'identité - Ketouba (certificat de mariage)
-  ketoubaDocumentUrl String? // URL Cloudinary de la Ketouba
-  ketoubaDocumentId  String? // ID public Cloudinary pour suppression
-  ketoubaUploadedAt  DateTime? // Date d'upload de la Ketouba
+  ketoubaDocumentUrl        String? // URL Cloudinary de la Ketouba
+  ketoubaDocumentId         String? // ID public Cloudinary pour suppression
+  ketoubaUploadedAt         DateTime? // Date d'upload de la Ketouba
+  ketoubaVerificationStatus DocumentVerificationStatus @default(PENDING) // Statut de vérification
+  ketoubaVerifiedAt         DateTime? // Date de vérification par superAdmin
+  ketoubaVerifiedBy         String? // ID du superAdmin qui a vérifié
+  ketoubaRejectionReason    String? // Raison du rejet (si rejeté)
 
   // Vérification d'identité - Selfie (photo de la personne)
-  selfieDocumentUrl String? // URL Cloudinary du selfie
-  selfieDocumentId  String? // ID public Cloudinary pour suppression
-  selfieUploadedAt  DateTime? // Date d'upload du selfie
+  selfieDocumentUrl        String? // URL Cloudinary du selfie
+  selfieDocumentId         String? // ID public Cloudinary pour suppression
+  selfieUploadedAt         DateTime? // Date d'upload du selfie
+  selfieVerificationStatus DocumentVerificationStatus @default(PENDING) // Statut de vérification
+  selfieVerifiedAt         DateTime? // Date de vérification par superAdmin
+  selfieVerifiedBy         String? // ID du superAdmin qui a vérifié
+  selfieRejectionReason    String? // Raison du rejet (si rejeté)
 
   // Préférences de notifications
   notificationsEnabled Boolean   @default(true) // Master toggle

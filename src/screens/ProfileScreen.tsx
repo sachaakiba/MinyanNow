@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -13,11 +14,23 @@ import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors";
 
+type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 export const ProfileScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshProfile();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshProfile]);
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return t("profile.notProvided");
@@ -34,6 +47,48 @@ export const ProfileScreen: React.FC = () => {
     });
   };
 
+  // Helper to get badge style and text based on verification status
+  const getVerificationBadge = (
+    hasDocument: boolean,
+    status: VerificationStatus | undefined,
+    rejectionReason?: string | null
+  ) => {
+    if (!hasDocument) {
+      return {
+        style: styles.pendingBadge,
+        textStyle: styles.pendingBadgeText,
+        text: t("profile.idNotProvided"),
+        iconContainerStyle: styles.verificationIconContainer,
+      };
+    }
+
+    switch (status) {
+      case "APPROVED":
+        return {
+          style: styles.verifiedBadge,
+          textStyle: styles.verifiedBadgeText,
+          text: t("profile.idVerified"),
+          iconContainerStyle: [styles.verificationIconContainer, styles.verificationIconContainerVerified],
+        };
+      case "REJECTED":
+        return {
+          style: styles.rejectedBadge,
+          textStyle: styles.rejectedBadgeText,
+          text: t("profile.idRejected"),
+          reason: rejectionReason,
+          iconContainerStyle: [styles.verificationIconContainer, styles.verificationIconContainerRejected],
+        };
+      case "PENDING":
+      default:
+        return {
+          style: styles.awaitingBadge,
+          textStyle: styles.awaitingBadgeText,
+          text: t("profile.idPendingVerification"),
+          iconContainerStyle: [styles.verificationIconContainer, styles.verificationIconContainerPending],
+        };
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -47,7 +102,18 @@ export const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
@@ -159,154 +225,166 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>{t("profile.verification")}</Text>
 
           {/* ID Document Card */}
-          <View style={styles.verificationCard}>
-            <View style={styles.verificationHeader}>
-              <View style={[styles.verificationIconContainer, user?.idDocumentUrl && styles.verificationIconContainerVerified]}>
-                <Text style={styles.verificationIcon}>🪪</Text>
-              </View>
-              <View style={styles.verificationContent}>
-                <Text style={styles.verificationTitle}>
-                  {t("profile.idDocument")}
-                </Text>
-                {user?.idDocumentUrl ? (
-                  <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedBadgeText}>
-                      {t("profile.idVerified")}
-                    </Text>
+          {(() => {
+            const idBadge = getVerificationBadge(
+              !!user?.idDocumentUrl,
+              user?.idVerificationStatus as VerificationStatus,
+              user?.idRejectionReason
+            );
+            return (
+              <View style={styles.verificationCard}>
+                <View style={styles.verificationHeader}>
+                  <View style={idBadge.iconContainerStyle}>
+                    <Text style={styles.verificationIcon}>🪪</Text>
                   </View>
-                ) : (
-                  <View style={styles.pendingBadge}>
-                    <Text style={styles.pendingBadgeText}>
-                      {t("profile.idNotProvided")}
+                  <View style={styles.verificationContent}>
+                    <Text style={styles.verificationTitle}>
+                      {t("profile.idDocument")}
                     </Text>
+                    <View style={idBadge.style}>
+                      <Text style={idBadge.textStyle}>{idBadge.text}</Text>
+                    </View>
                   </View>
+                </View>
+                {idBadge.reason && (
+                  <Text style={styles.rejectionReason}>
+                    {t("profile.rejectionReason")}: {idBadge.reason}
+                  </Text>
                 )}
+                {user?.idUploadedAt && (
+                  <Text style={styles.verificationDate}>
+                    {t("profile.idUpdatedAt", {
+                      date: new Date(user.idUploadedAt).toLocaleDateString(
+                        i18n.language === "he"
+                          ? "he-IL"
+                          : i18n.language === "en"
+                          ? "en-US"
+                          : "fr-FR"
+                      ),
+                    })}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={styles.updateIdButton}
+                  onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "id" })}
+                >
+                  <Text style={styles.updateIdButtonText}>
+                    {user?.idDocumentUrl
+                      ? t("profile.updateId")
+                      : t("profile.addId")}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            {user?.idUploadedAt && (
-              <Text style={styles.verificationDate}>
-                {t("profile.idUpdatedAt", {
-                  date: new Date(user.idUploadedAt).toLocaleDateString(
-                    i18n.language === "he"
-                      ? "he-IL"
-                      : i18n.language === "en"
-                      ? "en-US"
-                      : "fr-FR"
-                  ),
-                })}
-              </Text>
-            )}
-            <TouchableOpacity
-              style={styles.updateIdButton}
-              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "id" })}
-            >
-              <Text style={styles.updateIdButtonText}>
-                {user?.idDocumentUrl
-                  ? t("profile.updateId")
-                  : t("profile.addId")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+            );
+          })()}
 
           {/* Ketouba Document Card */}
-          <View style={styles.verificationCard}>
-            <View style={styles.verificationHeader}>
-              <View style={[styles.verificationIconContainer, user?.ketoubaDocumentUrl && styles.verificationIconContainerVerified]}>
-                <Text style={styles.verificationIcon}>💒</Text>
-              </View>
-              <View style={styles.verificationContent}>
-                <Text style={styles.verificationTitle}>
-                  {t("profile.ketoubaDocument")}
-                </Text>
-                {user?.ketoubaDocumentUrl ? (
-                  <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedBadgeText}>
-                      {t("profile.idVerified")}
-                    </Text>
+          {(() => {
+            const ketoubaBadge = getVerificationBadge(
+              !!user?.ketoubaDocumentUrl,
+              user?.ketoubaVerificationStatus as VerificationStatus,
+              user?.ketoubaRejectionReason
+            );
+            return (
+              <View style={styles.verificationCard}>
+                <View style={styles.verificationHeader}>
+                  <View style={ketoubaBadge.iconContainerStyle}>
+                    <Text style={styles.verificationIcon}>💒</Text>
                   </View>
-                ) : (
-                  <View style={styles.pendingBadge}>
-                    <Text style={styles.pendingBadgeText}>
-                      {t("profile.idNotProvided")}
+                  <View style={styles.verificationContent}>
+                    <Text style={styles.verificationTitle}>
+                      {t("profile.ketoubaDocument")}
                     </Text>
+                    <View style={ketoubaBadge.style}>
+                      <Text style={ketoubaBadge.textStyle}>{ketoubaBadge.text}</Text>
+                    </View>
                   </View>
+                </View>
+                {ketoubaBadge.reason && (
+                  <Text style={styles.rejectionReason}>
+                    {t("profile.rejectionReason")}: {ketoubaBadge.reason}
+                  </Text>
                 )}
+                {user?.ketoubaUploadedAt && (
+                  <Text style={styles.verificationDate}>
+                    {t("profile.idUpdatedAt", {
+                      date: new Date(user.ketoubaUploadedAt).toLocaleDateString(
+                        i18n.language === "he"
+                          ? "he-IL"
+                          : i18n.language === "en"
+                          ? "en-US"
+                          : "fr-FR"
+                      ),
+                    })}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={styles.updateIdButton}
+                  onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "ketouba" })}
+                >
+                  <Text style={styles.updateIdButtonText}>
+                    {user?.ketoubaDocumentUrl
+                      ? t("profile.updateId")
+                      : t("profile.addId")}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            {user?.ketoubaUploadedAt && (
-              <Text style={styles.verificationDate}>
-                {t("profile.idUpdatedAt", {
-                  date: new Date(user.ketoubaUploadedAt).toLocaleDateString(
-                    i18n.language === "he"
-                      ? "he-IL"
-                      : i18n.language === "en"
-                      ? "en-US"
-                      : "fr-FR"
-                  ),
-                })}
-              </Text>
-            )}
-            <TouchableOpacity
-              style={styles.updateIdButton}
-              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "ketouba" })}
-            >
-              <Text style={styles.updateIdButtonText}>
-                {user?.ketoubaDocumentUrl
-                  ? t("profile.updateId")
-                  : t("profile.addId")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+            );
+          })()}
 
           {/* Selfie Document Card */}
-          <View style={styles.verificationCard}>
-            <View style={styles.verificationHeader}>
-              <View style={[styles.verificationIconContainer, user?.selfieDocumentUrl && styles.verificationIconContainerVerified]}>
-                <Text style={styles.verificationIcon}>🤳</Text>
-              </View>
-              <View style={styles.verificationContent}>
-                <Text style={styles.verificationTitle}>
-                  {t("profile.selfieDocument")}
-                </Text>
-                {user?.selfieDocumentUrl ? (
-                  <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedBadgeText}>
-                      {t("profile.idVerified")}
-                    </Text>
+          {(() => {
+            const selfieBadge = getVerificationBadge(
+              !!user?.selfieDocumentUrl,
+              user?.selfieVerificationStatus as VerificationStatus,
+              user?.selfieRejectionReason
+            );
+            return (
+              <View style={styles.verificationCard}>
+                <View style={styles.verificationHeader}>
+                  <View style={selfieBadge.iconContainerStyle}>
+                    <Text style={styles.verificationIcon}>🤳</Text>
                   </View>
-                ) : (
-                  <View style={styles.pendingBadge}>
-                    <Text style={styles.pendingBadgeText}>
-                      {t("profile.idNotProvided")}
+                  <View style={styles.verificationContent}>
+                    <Text style={styles.verificationTitle}>
+                      {t("profile.selfieDocument")}
                     </Text>
+                    <View style={selfieBadge.style}>
+                      <Text style={selfieBadge.textStyle}>{selfieBadge.text}</Text>
+                    </View>
                   </View>
+                </View>
+                {selfieBadge.reason && (
+                  <Text style={styles.rejectionReason}>
+                    {t("profile.rejectionReason")}: {selfieBadge.reason}
+                  </Text>
                 )}
+                {user?.selfieUploadedAt && (
+                  <Text style={styles.verificationDate}>
+                    {t("profile.idUpdatedAt", {
+                      date: new Date(user.selfieUploadedAt).toLocaleDateString(
+                        i18n.language === "he"
+                          ? "he-IL"
+                          : i18n.language === "en"
+                          ? "en-US"
+                          : "fr-FR"
+                      ),
+                    })}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={styles.updateIdButton}
+                  onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "selfie" })}
+                >
+                  <Text style={styles.updateIdButtonText}>
+                    {user?.selfieDocumentUrl
+                      ? t("profile.updateId")
+                      : t("profile.addId")}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            {user?.selfieUploadedAt && (
-              <Text style={styles.verificationDate}>
-                {t("profile.idUpdatedAt", {
-                  date: new Date(user.selfieUploadedAt).toLocaleDateString(
-                    i18n.language === "he"
-                      ? "he-IL"
-                      : i18n.language === "en"
-                      ? "en-US"
-                      : "fr-FR"
-                  ),
-                })}
-              </Text>
-            )}
-            <TouchableOpacity
-              style={styles.updateIdButton}
-              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "selfie" })}
-            >
-              <Text style={styles.updateIdButtonText}>
-                {user?.selfieDocumentUrl
-                  ? t("profile.updateId")
-                  : t("profile.addId")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+            );
+          })()}
         </View>
 
         {/* Quick Actions */}
@@ -493,6 +571,12 @@ const styles = StyleSheet.create({
   verificationIconContainerVerified: {
     backgroundColor: "#DCFCE7",
   },
+  verificationIconContainerPending: {
+    backgroundColor: "#FEF3C7",
+  },
+  verificationIconContainerRejected: {
+    backgroundColor: "#FEE2E2",
+  },
   verificationIcon: {
     fontSize: 26,
   },
@@ -518,7 +602,7 @@ const styles = StyleSheet.create({
     color: "#166534",
   },
   pendingBadge: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#F3F4F6",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -527,7 +611,37 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontSize: 12,
     fontWeight: "600",
+    color: "#6B7280",
+  },
+  awaitingBadge: {
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  awaitingBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
     color: "#92400E",
+  },
+  rejectedBadge: {
+    backgroundColor: "#FEE2E2",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  rejectedBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#DC2626",
+  },
+  rejectionReason: {
+    fontSize: 12,
+    color: "#DC2626",
+    marginTop: 8,
+    fontStyle: "italic",
   },
   verificationDate: {
     fontSize: 12,
