@@ -113,7 +113,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("auth.completeProfile.permissionDenied"),
         t("auth.completeProfile.galleryPermission"),
         undefined,
-        "error"
+        "error",
       );
       return;
     }
@@ -141,7 +141,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("auth.completeProfile.permissionDenied"),
         t("auth.completeProfile.cameraPermission"),
         undefined,
-        "error"
+        "error",
       );
       return;
     }
@@ -164,7 +164,15 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
+        type: [
+          "image/*",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf",
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -181,7 +189,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("common.error"),
         t("auth.completeProfile.fileError"),
         undefined,
-        "error"
+        "error",
       );
     }
   };
@@ -196,7 +204,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("auth.completeProfile.permissionDenied"),
         t("auth.completeProfile.galleryPermission"),
         undefined,
-        "error"
+        "error",
       );
       return;
     }
@@ -224,7 +232,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("auth.completeProfile.permissionDenied"),
         t("auth.completeProfile.cameraPermission"),
         undefined,
-        "error"
+        "error",
       );
       return;
     }
@@ -247,7 +255,15 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
+        type: [
+          "image/*",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf",
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -264,7 +280,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("common.error"),
         t("auth.completeProfile.fileError"),
         undefined,
-        "error"
+        "error",
       );
     }
   };
@@ -279,7 +295,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("auth.completeProfile.permissionDenied"),
         t("auth.completeProfile.galleryPermission"),
         undefined,
-        "error"
+        "error",
       );
       return;
     }
@@ -307,7 +323,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("auth.completeProfile.permissionDenied"),
         t("auth.completeProfile.cameraPermission"),
         undefined,
-        "error"
+        "error",
       );
       return;
     }
@@ -330,7 +346,15 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
+        type: [
+          "image/*",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf",
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -347,7 +371,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
         t("common.error"),
         t("auth.completeProfile.fileError"),
         undefined,
-        "error"
+        "error",
       );
     }
   };
@@ -363,8 +387,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleDateString(locale, {
       day: "2-digit",
       month: "long",
@@ -387,7 +411,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
             t("common.error"),
             error.message || t("auth.completeProfile.uploadError"),
             undefined,
-            "error"
+            "error",
           );
           setLoading(false);
           setUploadingId(false);
@@ -405,7 +429,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
           t("common.error"),
           error.message || t("auth.completeProfile.uploadKetoubaError"),
           undefined,
-          "error"
+          "error",
         );
         setLoading(false);
         setUploadingKetouba(false);
@@ -422,7 +446,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
           t("common.error"),
           error.message || t("auth.completeProfile.uploadSelfieError"),
           undefined,
-          "error"
+          "error",
         );
         setLoading(false);
         setUploadingSelfie(false);
@@ -446,7 +470,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
           t("common.error"),
           result.error || t("auth.completeProfile.saveError"),
           undefined,
-          "error"
+          "error",
         );
       }
     } catch (error) {
@@ -778,10 +802,10 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
               uploadingId
                 ? t("auth.completeProfile.uploadingId")
                 : uploadingKetouba
-                ? t("auth.completeProfile.uploadingKetouba")
-                : uploadingSelfie
-                ? t("auth.completeProfile.uploadingSelfie")
-                : t("auth.completeProfile.submit")
+                  ? t("auth.completeProfile.uploadingKetouba")
+                  : uploadingSelfie
+                    ? t("auth.completeProfile.uploadingSelfie")
+                    : t("auth.completeProfile.submit")
             }
             onPress={handleSubmit}
             loading={loading}
