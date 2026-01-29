@@ -88,7 +88,8 @@ export const auth = betterAuth({
           try {
             await resendClient.emails.send({
               from: 'onboarding@resend.dev',
-              to: process.env.NODE_ENV === "local" ? 'tyqva0527@gmail.com' : email,
+              to: "tyqva0527@gmail.com",
+              // to: process.env.NODE_ENV === "local" ? 'tyqva0527@gmail.com' : email,
               subject: "Votre code MinyanNow",
               text: `Votre code de vérification: ${otp}`,
               html: `<p>Votre code de vérification: <strong>${otp}</strong></p>`,
