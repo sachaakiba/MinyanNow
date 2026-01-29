@@ -36,6 +36,22 @@ export default {
 
   // Auth
   auth: {
+    welcome: {
+      appName: "MinyanNow",
+      title: "Bienvenue",
+      subtitle: "Trouvez et rejoignez des minyans près de chez vous",
+    },
+    tabs: {
+      phone: "Téléphone",
+      email: "Email",
+    },
+    switch: {
+      or: "ou",
+      useEmail: "Se connecter par email",
+      usePhone: "Retour au téléphone",
+      connectByEmail: "Pas de téléphone ? Connectez-vous par email.",
+      connectByEmailLink: "Connectez-vous par email",
+    },
     phoneAuth: {
       title: "Bienvenue",
       appName: "MinyanNow",
@@ -49,15 +65,27 @@ export default {
       privacyLink: "Politique de confidentialité",
       invalidPhone: "Numéro de téléphone invalide",
       sendingCode: "Envoi du code...",
+      countryLabel: "Pays",
+      selectCountry: "Sélectionner un pays",
+    },
+    emailAuth: {
+      emailLabel: "Adresse email",
+      emailPlaceholder: "exemple@email.com",
+      invalidEmail: "Adresse email invalide",
+      continueButton: "Continuer",
+      sendingCode: "Envoi du code...",
     },
     otp: {
       title: "Vérification",
       subtitle: "Entrez le code envoyé au",
+      subtitlePhone: "Entrez le code envoyé au",
+      subtitleEmail: "Entrez le code envoyé à",
       resendText: "Vous n'avez pas reçu le code ?",
       resendLink: "Renvoyer",
       resendCountdown: "Renvoyer dans {{seconds}}s",
       verifying: "Vérification...",
       invalidCode: "Code invalide",
+      codeResent: "Code renvoyé avec succès",
       back: "← Retour",
     },
     completeProfile: {
@@ -343,6 +371,8 @@ export default {
   updateId: {
     title: "Pièce d'identité",
     currentId: "Pièce d'identité actuelle",
+    currentKetouba: "Ketouba actuelle",
+    currentSelfie: "Photo selfie actuelle",
     loading: "Chargement...",
     idSaved: "Pièce d'identité enregistrée",
     updatedOn: "Mise à jour le",
@@ -365,6 +395,14 @@ export default {
     galleryPermission: "L'accès à la galerie est nécessaire",
     fileError: "Impossible de lire le fichier sélectionné",
     uploadError: "Impossible de mettre à jour la pièce d'identité",
+    viewPDF: "Voir le PDF",
+    tapToOpen: "Appuyez pour ouvrir",
+    pdfReady: "PDF prêt à être envoyé",
+    pdfOpenError: "Impossible d'ouvrir le PDF",
+    pdfDocument: "Document PDF",
+    openPDF: "Ouvrir le PDF",
+    loadingPDF: "Chargement du PDF...",
+    openInBrowser: "Ouvrir dans le navigateur",
   },
 
   // Settings

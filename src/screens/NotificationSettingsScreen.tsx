@@ -14,6 +14,7 @@ import { RootStackParamList } from "../types/navigation";
 import { AlertModal, useAlert, RadiusSelector } from "../components";
 import { usersApi } from "../lib/api";
 import { colors } from "../lib/colors";
+import { proximityService } from "../services/ProximityService";
 
 type NotificationSettingsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -106,6 +107,27 @@ export const NotificationSettingsScreen: React.FC<
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const testProximityNotifications = async () => {
+    console.log("🧪 Testing proximity notifications...");
+    try {
+      await proximityService.checkNow();
+      showAlert(
+        "Test de proximité",
+        "Vérification des événements à proximité effectuée. Consultez les logs pour plus de détails.",
+        undefined,
+        "success"
+      );
+    } catch (error) {
+      console.error("Error testing proximity:", error);
+      showAlert(
+        "Erreur",
+        "Erreur lors du test de proximité. Vérifiez les permissions de localisation.",
+        undefined,
+        "error"
+      );
     }
   };
 
@@ -233,6 +255,14 @@ export const NotificationSettingsScreen: React.FC<
                   updatePreference("proximityRadius", value)
                 }
               />
+              <TouchableOpacity
+                style={styles.testButton}
+                onPress={testProximityNotifications}
+              >
+                <Text style={styles.testButtonText}>
+                  🧪 Tester les notifications de proximité
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -531,6 +561,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: colors.primary,
+  },
+  testButton: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  testButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
   infoSection: {
     flexDirection: "row",

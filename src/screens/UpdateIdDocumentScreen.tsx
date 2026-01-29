@@ -7,10 +7,14 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Linking,
+  Dimensions,
 } from "react-native";
+import { WebView } from "react-native-webview";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import * as WebBrowser from "expo-web-browser";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -19,6 +23,8 @@ import { useAuth } from "../context/AuthContext";
 import { AlertModal, useAlert } from "../components";
 import { usersApi } from "../lib/api";
 import { colors } from "../lib/colors";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type DocumentType = "id" | "ketouba" | "selfie";
 
@@ -44,13 +50,15 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
   const { t, i18n } = useTranslation();
   const { user, refreshSession } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
-  
+
   const documentType: DocumentType = route.params?.documentType || "id";
-  
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [currentDocUrl, setCurrentDocUrl] = useState<string | null>(null);
   const [loadingCurrent, setLoadingCurrent] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false); // Track if image failed to load (probably a PDF)
 
   const getDocumentInfo = () => {
     switch (documentType) {
@@ -81,10 +89,67 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
   const docInfo = getDocumentInfo();
 
   useEffect(() => {
+    // Reset image error state when document changes
+    setImageLoadError(false);
     if (docInfo.currentUrl && user?.id) {
       loadCurrentDocument();
     }
   }, [docInfo.currentUrl, user?.id]);
+
+  // Helper to check if URL or data URI is a PDF
+  const isPDF = (url: string | null): boolean => {
+    if (!url) return false;
+
+    // Log pour debug
+    console.log("🔍 Checking if PDF:", url);
+
+    // Check data URI
+    if (url.includes("application/pdf")) {
+      console.log("✅ Detected PDF from data URI");
+      return true;
+    }
+
+    // Check file extension
+    if (url.toLowerCase().includes(".pdf")) {
+      console.log("✅ Detected PDF from .pdf extension");
+      return true;
+    }
+
+    // Check Cloudinary URLs with /raw/ (new PDFs uploaded correctly)
+    if (url.includes("cloudinary.com") && url.includes("/raw/")) {
+      console.log("✅ Detected PDF from Cloudinary /raw/ path");
+      return true;
+    }
+
+    // For old documents: if image failed to load and it's in a document folder, assume it's a PDF
+    if (
+      imageLoadError &&
+      url.includes("cloudinary.com") &&
+      (url.includes("id-documents") ||
+        url.includes("ketouba-documents") ||
+        url.includes("selfie-documents"))
+    ) {
+      console.log("✅ Detected PDF from image load error in document folder");
+      return true;
+    }
+
+    console.log("❌ Not detected as PDF");
+    return false;
+  };
+
+  // Open PDF in browser
+  const openPDF = async (url: string) => {
+    try {
+      await WebBrowser.openBrowserAsync(url);
+    } catch (error) {
+      showAlert(
+        t("common.error"),
+        t("updateId.pdfOpenError") || "Could not open PDF",
+        undefined,
+        "error",
+      );
+    }
+  };
 
   const loadCurrentDocument = async () => {
     if (!user?.id) return;
@@ -116,7 +181,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         t("updateId.permissionDenied"),
         t("updateId.cameraPermission"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -127,13 +192,15 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
       aspect: documentType === "selfie" ? [1, 1] : [4, 3],
       quality: 0.8,
       base64: true,
-      cameraType: documentType === "selfie" 
-        ? ImagePicker.CameraType.front 
-        : ImagePicker.CameraType.back,
+      cameraType:
+        documentType === "selfie"
+          ? ImagePicker.CameraType.front
+          : ImagePicker.CameraType.back,
     });
 
     if (!result.canceled && result.assets[0].base64) {
-      setSelectedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setSelectedImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
@@ -144,7 +211,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         t("updateId.permissionDenied"),
         t("updateId.galleryPermission"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -158,14 +225,23 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
     });
 
     if (!result.canceled && result.assets[0].base64) {
-      setSelectedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setSelectedImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
   const pickFromFiles = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
+        type: [
+          "image/*",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf",
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -176,14 +252,10 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         });
         const mimeType = asset.mimeType || "image/jpeg";
         setSelectedImage(`data:${mimeType};base64,${base64}`);
+        setSelectedFileName(asset.name || null);
       }
     } catch (error) {
-      showAlert(
-        t("common.error"),
-        t("updateId.fileError"),
-        undefined,
-        "error"
-      );
+      showAlert(t("common.error"), t("updateId.fileError"), undefined, "error");
     }
   };
 
@@ -193,7 +265,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         t("updateId.imageRequired"),
         t("updateId.imageRequiredMessage"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -211,20 +283,26 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
           await usersApi.uploadSelfieDocument(selectedImage);
           break;
       }
-      
-      refreshSession();
-      showAlert(
-        t("updateId.success"),
-        t("updateId.successMessage"),
-        [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
-        "success"
-      );
+
+      // Navigate back to profile
+      navigation.goBack();
+
+      // Refresh session and show success after navigation
+      setTimeout(() => {
+        refreshSession();
+        showAlert(
+          t("updateId.success"),
+          t("updateId.successMessage"),
+          undefined,
+          "success",
+        );
+      }, 200);
     } catch (error: any) {
       showAlert(
         t("common.error"),
         error.message || t("updateId.uploadError"),
         undefined,
-        "error"
+        "error",
       );
     } finally {
       setUploading(false);
@@ -238,8 +316,8 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return new Date(dateString).toLocaleDateString(locale);
   };
 
@@ -261,22 +339,63 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
         {/* Current Document (if exists) */}
         {hasCurrentDoc && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("updateId.currentId")}</Text>
+            <Text style={styles.sectionTitle}>
+              {documentType === "id"
+                ? t("updateId.currentId")
+                : documentType === "ketouba"
+                  ? t("updateId.currentKetouba")
+                  : t("updateId.currentSelfie")}
+            </Text>
             <View style={styles.currentIdCard}>
               {loadingCurrent ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={styles.loadingText}>{t("updateId.loading")}</Text>
+                  <Text style={styles.loadingText}>
+                    {t("updateId.loading")}
+                  </Text>
                 </View>
               ) : currentDocUrl ? (
-                <Image
-                  source={{ uri: currentDocUrl }}
-                  style={[
-                    styles.currentIdImage,
-                    documentType === "selfie" && styles.selfieImage,
-                  ]}
-                  resizeMode="contain"
-                />
+                <>
+                  {isPDF(currentDocUrl) ? (
+                    <View style={styles.pdfViewerContainer}>
+                      <WebView
+                        source={{
+                          uri: `https://docs.google.com/viewer?url=${encodeURIComponent(currentDocUrl)}&embedded=true`,
+                        }}
+                        style={styles.pdfWebView}
+                        startInLoadingState
+                        renderLoading={() => (
+                          <View style={styles.loadingContainer}>
+                            <ActivityIndicator
+                              size="large"
+                              color={colors.primary}
+                            />
+                            <Text style={styles.loadingText}>
+                              {t("updateId.loadingPDF")}
+                            </Text>
+                          </View>
+                        )}
+                      />
+                    </View>
+                  ) : (
+                    <Image
+                      source={{ uri: currentDocUrl }}
+                      style={[
+                        styles.currentIdImage,
+                        documentType === "selfie" && styles.selfieImage,
+                      ]}
+                      resizeMode="contain"
+                      onError={(error) => {
+                        console.log(
+                          "❌ Image load error:",
+                          error.nativeEvent.error,
+                        );
+                        // If image fails to load in a document folder, it's probably a PDF
+                        setImageLoadError(true);
+                      }}
+                    />
+                  )}
+                </>
               ) : (
                 <View style={styles.noPreview}>
                   <Text style={styles.noPreviewIcon}>{docInfo.icon}</Text>
@@ -302,17 +421,32 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
 
           {selectedImage ? (
             <View style={styles.previewCard}>
-              <Image
-                source={{ uri: selectedImage }}
-                style={[
-                  styles.previewImage,
-                  documentType === "selfie" && styles.selfieImage,
-                ]}
-                resizeMode="contain"
-              />
+              {isPDF(selectedImage) ? (
+                <View style={styles.pdfPreviewNew}>
+                  <Text style={styles.pdfIcon}>📄</Text>
+                  <Text style={styles.pdfFileName}>
+                    {selectedFileName || "document.pdf"}
+                  </Text>
+                  <Text style={styles.pdfReady}>
+                    {t("updateId.pdfReady") || "PDF ready to upload"}
+                  </Text>
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={[
+                    styles.previewImage,
+                    documentType === "selfie" && styles.selfieImage,
+                  ]}
+                  resizeMode="contain"
+                />
+              )}
               <TouchableOpacity
                 style={styles.removeBtn}
-                onPress={() => setSelectedImage(null)}
+                onPress={() => {
+                  setSelectedImage(null);
+                  setSelectedFileName(null);
+                }}
               >
                 <Text style={styles.removeBtnText}>✕</Text>
               </TouchableOpacity>
@@ -322,8 +456,8 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
               <TouchableOpacity style={styles.uploadBtn} onPress={takePhoto}>
                 <Text style={styles.uploadBtnIcon}>📷</Text>
                 <Text style={styles.uploadBtnText}>
-                  {documentType === "selfie" 
-                    ? t("documents.takeSelfie") 
+                  {documentType === "selfie"
+                    ? t("documents.takeSelfie")
                     : t("updateId.takePhoto")}
                 </Text>
               </TouchableOpacity>
@@ -332,14 +466,18 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
                 onPress={pickImage}
               >
                 <Text style={styles.uploadBtnIcon}>🖼️</Text>
-                <Text style={styles.uploadBtnTextSecondary}>{t("updateId.gallery")}</Text>
+                <Text style={styles.uploadBtnTextSecondary}>
+                  {t("updateId.gallery")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.uploadBtn, styles.uploadBtnSecondary]}
                 onPress={pickFromFiles}
               >
                 <Text style={styles.uploadBtnIcon}>📁</Text>
-                <Text style={styles.uploadBtnTextSecondary}>{t("updateId.files")}</Text>
+                <Text style={styles.uploadBtnTextSecondary}>
+                  {t("updateId.files")}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -350,9 +488,7 @@ export const UpdateIdDocumentScreen: React.FC<UpdateIdDocumentScreenProps> = ({
           <Text style={styles.infoIcon}>🔒</Text>
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>{t("updateId.securityTitle")}</Text>
-            <Text style={styles.infoText}>
-              {t("updateId.securityText")}
-            </Text>
+            <Text style={styles.infoText}>{t("updateId.securityText")}</Text>
           </View>
         </View>
 
@@ -472,6 +608,74 @@ const styles = StyleSheet.create({
   noPreviewText: {
     fontSize: 14,
     color: "#6B7280",
+  },
+  pdfViewerContainer: {
+    width: "100%",
+  },
+  pdfWebView: {
+    width: "100%",
+    height: 400,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 12,
+  },
+  pdfContainer: {
+    alignItems: "center",
+    gap: 16,
+    paddingVertical: 20,
+  },
+  pdfLabel: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: colors.text.primary,
+  },
+  pdfOpenButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  pdfOpenButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  pdfPreview: {
+    padding: 40,
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderStyle: "dashed",
+  },
+  pdfIcon: {
+    fontSize: 48,
+  },
+  pdfText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  pdfHint: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  pdfPreviewNew: {
+    padding: 40,
+    alignItems: "center",
+    gap: 12,
+    width: "100%",
+  },
+  pdfFileName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    textAlign: "center",
+  },
+  pdfReady: {
+    fontSize: 13,
+    color: "#10B981",
   },
   uploadDate: {
     fontSize: 12,

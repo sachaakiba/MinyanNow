@@ -101,7 +101,7 @@ export const PhoneAuthScreen: React.FC<PhoneAuthScreenProps> = ({
           t("common.error"),
           result.error || t("errors.generic"),
           undefined,
-          "error"
+          "error",
         );
       }
     } catch (error) {

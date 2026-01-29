@@ -23,24 +23,30 @@ export const SELFIE_DOCUMENTS_FOLDER = "minyannow/selfie-documents";
 export const uploadIdDocument = async (
   base64Image: string,
   userId: string
-): Promise<{ url: string; publicId: string }> => {
+): Promise<{ url: string; publicId: string; resourceType: string }> => {
+  // Detect if it's a PDF from the base64 data URI
+  const isPDF = base64Image.includes("application/pdf");
+  const resourceType = isPDF ? "raw" : "image";
+  
   const result = await cloudinary.uploader.upload(base64Image, {
     folder: ID_DOCUMENTS_FOLDER,
     public_id: `id_${userId}_${Date.now()}`,
-    resource_type: "image",
+    resource_type: resourceType, // Use 'raw' for PDFs, 'image' for images
     type: "authenticated", // Authenticated upload - requires signed URL to access
   });
 
   return {
     url: result.secure_url,
     publicId: result.public_id,
+    resourceType,
   };
 };
 
 // Generate a signed URL for viewing (expires in 1 hour)
-export const getSignedIdDocumentUrl = (publicId: string): string => {
+export const getSignedIdDocumentUrl = (publicId: string, resourceType: string = "image"): string => {
   return cloudinary.url(publicId, {
     type: "authenticated",
+    resource_type: resourceType, // Use the stored resource type
     sign_url: true,
     secure: true,
   });
@@ -55,17 +61,22 @@ export const deleteIdDocument = async (publicId: string): Promise<void> => {
 export const uploadKetoubaDocument = async (
   base64Image: string,
   userId: string
-): Promise<{ url: string; publicId: string }> => {
+): Promise<{ url: string; publicId: string; resourceType: string }> => {
+  // Detect if it's a PDF from the base64 data URI
+  const isPDF = base64Image.includes("application/pdf");
+  const resourceType = isPDF ? "raw" : "image";
+  
   const result = await cloudinary.uploader.upload(base64Image, {
     folder: KETOUBA_DOCUMENTS_FOLDER,
     public_id: `ketouba_${userId}_${Date.now()}`,
-    resource_type: "image",
+    resource_type: resourceType, // Use 'raw' for PDFs, 'image' for images
     type: "authenticated",
   });
 
   return {
     url: result.secure_url,
     publicId: result.public_id,
+    resourceType,
   };
 };
 
@@ -73,17 +84,22 @@ export const uploadKetoubaDocument = async (
 export const uploadSelfieDocument = async (
   base64Image: string,
   userId: string
-): Promise<{ url: string; publicId: string }> => {
+): Promise<{ url: string; publicId: string; resourceType: string }> => {
+  // Detect if it's a PDF from the base64 data URI
+  const isPDF = base64Image.includes("application/pdf");
+  const resourceType = isPDF ? "raw" : "image";
+  
   const result = await cloudinary.uploader.upload(base64Image, {
     folder: SELFIE_DOCUMENTS_FOLDER,
     public_id: `selfie_${userId}_${Date.now()}`,
-    resource_type: "image",
+    resource_type: resourceType, // Use 'raw' for PDFs, 'image' for images
     type: "authenticated",
   });
 
   return {
     url: result.secure_url,
     publicId: result.public_id,
+    resourceType,
   };
 };
 

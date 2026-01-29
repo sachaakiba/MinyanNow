@@ -36,6 +36,22 @@ export default {
 
   // Auth
   auth: {
+    welcome: {
+      appName: "MinyanNow",
+      title: "Welcome",
+      subtitle: "Find and join minyans near you",
+    },
+    tabs: {
+      phone: "Phone",
+      email: "Email",
+    },
+    switch: {
+      or: "or",
+      useEmail: "Sign in with email",
+      usePhone: "Back to phone",
+      connectByEmail: "No phone? Sign in with email.",
+      connectByEmailLink: "Sign in with email",
+    },
     phoneAuth: {
       title: "Welcome",
       appName: "MinyanNow",
@@ -49,15 +65,27 @@ export default {
       privacyLink: "Privacy Policy",
       invalidPhone: "Invalid phone number",
       sendingCode: "Sending code...",
+      countryLabel: "Country",
+      selectCountry: "Select country",
+    },
+    emailAuth: {
+      emailLabel: "Email address",
+      emailPlaceholder: "example@email.com",
+      invalidEmail: "Invalid email address",
+      continueButton: "Continue",
+      sendingCode: "Sending code...",
     },
     otp: {
       title: "Verification",
       subtitle: "Enter the code sent to",
+      subtitlePhone: "Enter the code sent to",
+      subtitleEmail: "Enter the code sent to",
       resendText: "Didn't receive the code?",
       resendLink: "Resend",
       resendCountdown: "Resend in {{seconds}}s",
       verifying: "Verifying...",
       invalidCode: "Invalid code",
+      codeResent: "Code resent successfully",
       back: "← Back",
     },
     completeProfile: {
@@ -343,6 +371,8 @@ export default {
   updateId: {
     title: "ID document",
     currentId: "Current ID document",
+    currentKetouba: "Current Ketouba",
+    currentSelfie: "Current selfie photo",
     loading: "Loading...",
     idSaved: "ID document saved",
     updatedOn: "Updated on",
@@ -365,6 +395,14 @@ export default {
     galleryPermission: "Gallery access is required",
     fileError: "Unable to read selected file",
     uploadError: "Unable to update ID document",
+    viewPDF: "View PDF",
+    tapToOpen: "Tap to open",
+    pdfReady: "PDF ready to upload",
+    pdfOpenError: "Could not open PDF",
+    pdfDocument: "PDF Document",
+    openPDF: "Open PDF",
+    loadingPDF: "Loading PDF...",
+    openInBrowser: "Open in browser",
   },
 
   // Settings

@@ -9,6 +9,8 @@ import React, {
 import {
   sendOTP,
   verifyOTP,
+  sendEmailOTP,
+  verifyEmailOTP,
   signOut,
   useSession,
   updateProfile,
@@ -63,14 +65,21 @@ interface AuthContextType {
   hasAllDocuments: boolean;
   isSuperAdmin: boolean;
   sendOTP: (
-    phoneNumber: string
+    phoneNumber: string,
   ) => Promise<{ success: boolean; error?: string }>;
   verifyOTP: (
     phoneNumber: string,
-    code: string
+    code: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  sendEmailOTP: (
+    email: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  verifyEmailOTP: (
+    email: string,
+    code: string,
   ) => Promise<{ success: boolean; error?: string }>;
   completeProfile: (
-    data: ProfileData
+    data: ProfileData,
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => void;
@@ -90,33 +99,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const sessionUser = session?.user as User | null;
 
   // Fetch full user profile when session is available
-  const fetchUserProfile = useCallback(async (isManualRefresh = false) => {
-    if (!sessionUser?.id) {
-      setUserProfile(null);
-      return;
-    }
-
-    // Only set profileLoading for initial load, not for manual refresh
-    if (!isManualRefresh) {
-      setProfileLoading(true);
-    }
-    
-    try {
-      const profile = await usersApi.getMe();
-      console.log("📱 Profile loaded:", profile);
-      setUserProfile({
-        ...sessionUser,
-        ...profile,
-      });
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      setUserProfile(sessionUser);
-    } finally {
-      if (!isManualRefresh) {
-        setProfileLoading(false);
+  const fetchUserProfile = useCallback(
+    async (isManualRefresh = false) => {
+      if (!sessionUser?.id) {
+        setUserProfile(null);
+        return;
       }
-    }
-  }, [sessionUser?.id]);
+
+      // Only set profileLoading for initial load, not for manual refresh
+      if (!isManualRefresh) {
+        setProfileLoading(true);
+      }
+
+      try {
+        const profile = await usersApi.getMe();
+        console.log("📱 Profile loaded:", profile);
+        setUserProfile({
+          ...sessionUser,
+          ...profile,
+        });
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setUserProfile(sessionUser);
+      } finally {
+        if (!isManualRefresh) {
+          setProfileLoading(false);
+        }
+      }
+    },
+    [sessionUser?.id],
+  );
 
   // Charger le profil quand la session change
   useEffect(() => {
@@ -135,16 +147,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   // Only show loading if we have a session but profile is still loading
   // Don't show loading if user is not authenticated (to avoid flickering on login screen)
-  const isLoadingState = sessionUser?.id 
-    ? (isPending || profileLoading || isStillLoadingProfile)
+  const isLoadingState = sessionUser?.id
+    ? isPending || profileLoading || isStillLoadingProfile
     : false;
 
   const isProfileComplete = !!userProfile?.profileCompleted;
   const hasIdDocument = !!userProfile?.idDocumentUrl;
   const hasKetoubaDocument = !!userProfile?.ketoubaDocumentUrl;
   const hasSelfieDocument = !!userProfile?.selfieDocumentUrl;
-  const hasAllDocuments = hasIdDocument && hasKetoubaDocument && hasSelfieDocument;
-  const isSuperAdmin = userProfile?.role === "SUPER_ADMIN" || sessionUser?.role === "SUPER_ADMIN";
+  const hasAllDocuments =
+    hasIdDocument && hasKetoubaDocument && hasSelfieDocument;
+  const isSuperAdmin =
+    userProfile?.role === "SUPER_ADMIN" || sessionUser?.role === "SUPER_ADMIN";
 
   console.log("🔐 Auth state:", {
     isAuthenticated: !!sessionUser,
@@ -197,6 +211,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const handleSendEmailOTP = async (email: string) => {
+    try {
+      const result = await sendEmailOTP({ email, type: "sign-in" });
+      if (result.error) {
+        return { success: false, error: result.error.message };
+      }
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Erreur lors de l'envoi du code",
+      };
+    }
+  };
+
+  const handleVerifyEmailOTP = async (email: string, code: string) => {
+    try {
+      const result = await verifyEmailOTP({ email, otp: code });
+      if (result.error) {
+        return { success: false, error: result.error.message };
+      }
+      await refetch();
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Code invalide" };
+    }
+  };
+
   const handleCompleteProfile = async (data: ProfileData) => {
     try {
       const result = await updateProfile(data);
@@ -243,6 +285,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         isSuperAdmin,
         sendOTP: handleSendOTP,
         verifyOTP: handleVerifyOTP,
+        sendEmailOTP: handleSendEmailOTP,
+        verifyEmailOTP: handleVerifyEmailOTP,
         completeProfile: handleCompleteProfile,
         signOut: handleSignOut,
         refreshSession,

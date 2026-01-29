@@ -51,31 +51,22 @@ model User {
   profileCompleted  Boolean   @default(false) // Profil complété
 
   // Vérification d'identité - Pièce d'identité
-  idDocumentUrl        String? // URL Cloudinary de la pièce d'identité
-  idDocumentId         String? // ID public Cloudinary pour suppression
-  idUploadedAt         DateTime? // Date d'upload de la pièce d'identité
-  idVerificationStatus DocumentVerificationStatus @default(PENDING) // Statut de vérification
-  idVerifiedAt         DateTime? // Date de vérification par superAdmin
-  idVerifiedBy         String? // ID du superAdmin qui a vérifié
-  idRejectionReason    String? // Raison du rejet (si rejeté)
+  idDocumentUrl          String? // URL Cloudinary de la pièce d'identité
+  idDocumentId           String? // ID public Cloudinary pour suppression
+  idDocumentResourceType String?   @default("image") // Type de ressource Cloudinary (image ou raw pour PDF)
+  idUploadedAt           DateTime? // Date d'upload de la pièce d'identité
 
   // Vérification d'identité - Ketouba (certificat de mariage)
-  ketoubaDocumentUrl        String? // URL Cloudinary de la Ketouba
-  ketoubaDocumentId         String? // ID public Cloudinary pour suppression
-  ketoubaUploadedAt         DateTime? // Date d'upload de la Ketouba
-  ketoubaVerificationStatus DocumentVerificationStatus @default(PENDING) // Statut de vérification
-  ketoubaVerifiedAt         DateTime? // Date de vérification par superAdmin
-  ketoubaVerifiedBy         String? // ID du superAdmin qui a vérifié
-  ketoubaRejectionReason    String? // Raison du rejet (si rejeté)
+  ketoubaDocumentUrl          String? // URL Cloudinary de la Ketouba
+  ketoubaDocumentId           String? // ID public Cloudinary pour suppression
+  ketoubaDocumentResourceType String?   @default("image") // Type de ressource Cloudinary (image ou raw pour PDF)
+  ketoubaUploadedAt           DateTime? // Date d'upload de la Ketouba
 
   // Vérification d'identité - Selfie (photo de la personne)
-  selfieDocumentUrl        String? // URL Cloudinary du selfie
-  selfieDocumentId         String? // ID public Cloudinary pour suppression
-  selfieUploadedAt         DateTime? // Date d'upload du selfie
-  selfieVerificationStatus DocumentVerificationStatus @default(PENDING) // Statut de vérification
-  selfieVerifiedAt         DateTime? // Date de vérification par superAdmin
-  selfieVerifiedBy         String? // ID du superAdmin qui a vérifié
-  selfieRejectionReason    String? // Raison du rejet (si rejeté)
+  selfieDocumentUrl          String? // URL Cloudinary du selfie
+  selfieDocumentId           String? // ID public Cloudinary pour suppression
+  selfieDocumentResourceType String?   @default("image") // Type de ressource Cloudinary (image ou raw pour PDF)
+  selfieUploadedAt           DateTime? // Date d'upload du selfie
 
   // Préférences de notifications
   notificationsEnabled Boolean   @default(true) // Master toggle
