@@ -55,7 +55,8 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       if (asset.base64) {
-        setSelectedImage(`data:image/jpeg;base64,${asset.base64}`);
+        const mimeType = asset.mimeType || "image/jpeg";
+        setSelectedImage(`data:${mimeType};base64,${asset.base64}`);
       }
     }
   };
@@ -80,7 +81,8 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       if (asset.base64) {
-        setSelectedImage(`data:image/jpeg;base64,${asset.base64}`);
+        const mimeType = asset.mimeType || "image/jpeg";
+        setSelectedImage(`data:${mimeType};base64,${asset.base64}`);
       }
     }
   };
@@ -90,7 +92,15 @@ export const IDUploadModal: React.FC<IDUploadModalProps> = ({
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
+        type: [
+          "image/*",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf",
+        ],
         copyToCacheDirectory: true,
       });
 

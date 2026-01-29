@@ -31,7 +31,7 @@ export const UploadIdScreen: React.FC = () => {
         t("updateId.permissionDenied"),
         t("updateId.galleryPermission"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -56,7 +56,7 @@ export const UploadIdScreen: React.FC = () => {
         t("updateId.permissionDenied"),
         t("updateId.cameraPermission"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -76,7 +76,15 @@ export const UploadIdScreen: React.FC = () => {
   const pickFromFiles = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
+        type: [
+          "image/*",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf",
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -99,7 +107,7 @@ export const UploadIdScreen: React.FC = () => {
         t("updateId.imageRequired"),
         t("updateId.imageRequiredMessage"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -113,7 +121,7 @@ export const UploadIdScreen: React.FC = () => {
         t("common.error"),
         error.message || t("updateId.uploadError"),
         undefined,
-        "error"
+        "error",
       );
     } finally {
       setUploading(false);

@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Map, CalendarDays } from "lucide-react-native";
-import { PhoneAuthScreen } from "../screens/PhoneAuthScreen";
+import { AuthScreen } from "../screens/AuthScreen";
 import { OTPVerificationScreen } from "../screens/OTPVerificationScreen";
 import { CompleteProfileScreen } from "../screens/CompleteProfileScreen";
 import { UploadIdScreen } from "../screens/UploadIdScreen";
@@ -128,6 +128,12 @@ export const AppNavigator: React.FC = () => {
     useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
+  // Remember if user has ever had all documents to prevent navigation stack changes
+  const hasEverHadAllDocuments = React.useRef(hasAllDocuments);
+  if (hasAllDocuments && !hasEverHadAllDocuments.current) {
+    hasEverHadAllDocuments.current = true;
+  }
+
   // Show splash screen on first load
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
@@ -152,7 +158,7 @@ export const AppNavigator: React.FC = () => {
         {!isAuthenticated ? (
           // Non connecté: écrans d'authentification
           <>
-            <Stack.Screen name="PhoneAuth" component={PhoneAuthScreen} />
+            <Stack.Screen name="Auth" component={AuthScreen} />
             <Stack.Screen
               name="OTPVerification"
               component={OTPVerificationScreen}
@@ -174,10 +180,18 @@ export const AppNavigator: React.FC = () => {
               component={CompleteProfileScreen}
             />
           </>
-        ) : !hasAllDocuments ? (
+        ) : !hasAllDocuments && !hasEverHadAllDocuments.current ? (
           // Connecté, profil complet mais documents manquants (ID, Ketouba, Selfie)
+          // Only show this screen if user has NEVER had all documents
           <>
-            <Stack.Screen name="UploadDocuments" component={UploadDocumentsScreen} />
+            <Stack.Screen
+              name="UploadDocuments"
+              component={UploadDocumentsScreen}
+            />
+            <Stack.Screen
+              name="UpdateIdDocument"
+              component={UpdateIdDocumentScreen}
+            />
           </>
         ) : (
           // Connecté, profil complet et pièce d'identité: app principale avec tabs

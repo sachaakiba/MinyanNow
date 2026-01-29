@@ -9,6 +9,8 @@ import React, {
 import {
   sendOTP,
   verifyOTP,
+  sendEmailOTP,
+  verifyEmailOTP,
   signOut,
   useSession,
   updateProfile,
@@ -53,14 +55,21 @@ interface AuthContextType {
   hasSelfieDocument: boolean;
   hasAllDocuments: boolean;
   sendOTP: (
-    phoneNumber: string
+    phoneNumber: string,
   ) => Promise<{ success: boolean; error?: string }>;
   verifyOTP: (
     phoneNumber: string,
-    code: string
+    code: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  sendEmailOTP: (
+    email: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  verifyEmailOTP: (
+    email: string,
+    code: string,
   ) => Promise<{ success: boolean; error?: string }>;
   completeProfile: (
-    data: ProfileData
+    data: ProfileData,
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => void;
@@ -119,7 +128,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const hasIdDocument = !!userProfile?.idDocumentUrl;
   const hasKetoubaDocument = !!userProfile?.ketoubaDocumentUrl;
   const hasSelfieDocument = !!userProfile?.selfieDocumentUrl;
-  const hasAllDocuments = hasIdDocument && hasKetoubaDocument && hasSelfieDocument;
+  const hasAllDocuments =
+    hasIdDocument && hasKetoubaDocument && hasSelfieDocument;
 
   console.log("🔐 Auth state:", {
     isAuthenticated: !!sessionUser,
@@ -169,6 +179,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const handleSendEmailOTP = async (email: string) => {
+    try {
+      const result = await sendEmailOTP({ email, type: "sign-in" });
+      if (result.error) {
+        return { success: false, error: result.error.message };
+      }
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Erreur lors de l'envoi du code",
+      };
+    }
+  };
+
+  const handleVerifyEmailOTP = async (email: string, code: string) => {
+    try {
+      const result = await verifyEmailOTP({ email, otp: code });
+      if (result.error) {
+        return { success: false, error: result.error.message };
+      }
+      await refetch();
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || "Code invalide" };
+    }
+  };
+
   const handleCompleteProfile = async (data: ProfileData) => {
     try {
       const result = await updateProfile(data);
@@ -209,6 +247,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         hasAllDocuments,
         sendOTP: handleSendOTP,
         verifyOTP: handleVerifyOTP,
+        sendEmailOTP: handleSendEmailOTP,
+        verifyEmailOTP: handleVerifyEmailOTP,
         completeProfile: handleCompleteProfile,
         signOut: handleSignOut,
         refreshSession,

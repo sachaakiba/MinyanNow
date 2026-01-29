@@ -182,7 +182,7 @@ router.post("/id-document", userGuard, async (req, res) => {
     }
 
     // Upload new ID document
-    const { url, publicId } = await uploadIdDocument(image, authReq.user.id);
+    const { url, publicId, resourceType } = await uploadIdDocument(image, authReq.user.id);
 
     // Update user with new ID document info
     const user = await prisma.user.update({
@@ -190,6 +190,7 @@ router.post("/id-document", userGuard, async (req, res) => {
       data: {
         idDocumentUrl: url,
         idDocumentId: publicId,
+        idDocumentResourceType: resourceType,
         idUploadedAt: new Date(),
       },
       select: {
@@ -232,7 +233,7 @@ router.post("/ketouba-document", userGuard, async (req, res) => {
     }
 
     // Upload new Ketouba document
-    const { url, publicId } = await uploadKetoubaDocument(image, authReq.user.id);
+    const { url, publicId, resourceType } = await uploadKetoubaDocument(image, authReq.user.id);
 
     // Update user with new Ketouba document info
     const user = await prisma.user.update({
@@ -240,6 +241,7 @@ router.post("/ketouba-document", userGuard, async (req, res) => {
       data: {
         ketoubaDocumentUrl: url,
         ketoubaDocumentId: publicId,
+        ketoubaDocumentResourceType: resourceType,
         ketoubaUploadedAt: new Date(),
       },
       select: {
@@ -282,7 +284,7 @@ router.post("/selfie-document", userGuard, async (req, res) => {
     }
 
     // Upload new Selfie document
-    const { url, publicId } = await uploadSelfieDocument(image, authReq.user.id);
+    const { url, publicId, resourceType } = await uploadSelfieDocument(image, authReq.user.id);
 
     // Update user with new Selfie document info
     const user = await prisma.user.update({
@@ -290,6 +292,7 @@ router.post("/selfie-document", userGuard, async (req, res) => {
       data: {
         selfieDocumentUrl: url,
         selfieDocumentId: publicId,
+        selfieDocumentResourceType: resourceType,
         selfieUploadedAt: new Date(),
       },
       select: {
@@ -412,14 +415,14 @@ router.get("/:userId/id-document", userGuard, async (req, res) => {
     if (userId === authReq.user.id) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { idDocumentId: true, idDocumentUrl: true },
+        select: { idDocumentId: true, idDocumentResourceType: true, idDocumentUrl: true },
       });
 
       if (!user?.idDocumentId) {
         return res.status(404).json({ error: "No ID document found" });
       }
 
-      const signedUrl = getSignedIdDocumentUrl(user.idDocumentId);
+      const signedUrl = getSignedIdDocumentUrl(user.idDocumentId, user.idDocumentResourceType || "image");
       return res.json({ url: signedUrl });
     }
 
@@ -443,7 +446,7 @@ router.get("/:userId/id-document", userGuard, async (req, res) => {
     // Get the user's ID document
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { idDocumentId: true },
+      select: { idDocumentId: true, idDocumentResourceType: true },
     });
 
     if (!user?.idDocumentId) {
@@ -451,7 +454,7 @@ router.get("/:userId/id-document", userGuard, async (req, res) => {
     }
 
     // Generate signed URL
-    const signedUrl = getSignedIdDocumentUrl(user.idDocumentId);
+    const signedUrl = getSignedIdDocumentUrl(user.idDocumentId, user.idDocumentResourceType || "image");
     res.json({ url: signedUrl });
   } catch (error) {
     console.error("Error fetching ID document:", error);
@@ -490,10 +493,13 @@ router.get("/:userId/documents", userGuard, async (req, res) => {
       where: { id: userId },
       select: {
         idDocumentId: true,
+        idDocumentResourceType: true,
         idUploadedAt: true,
         ketoubaDocumentId: true,
+        ketoubaDocumentResourceType: true,
         ketoubaUploadedAt: true,
         selfieDocumentId: true,
+        selfieDocumentResourceType: true,
         selfieUploadedAt: true,
       },
     });
@@ -506,19 +512,19 @@ router.get("/:userId/documents", userGuard, async (req, res) => {
     const documents = {
       idDocument: user.idDocumentId
         ? {
-          url: getSignedIdDocumentUrl(user.idDocumentId),
+          url: getSignedIdDocumentUrl(user.idDocumentId, user.idDocumentResourceType || "image"),
           uploadedAt: user.idUploadedAt,
         }
         : null,
       ketoubaDocument: user.ketoubaDocumentId
         ? {
-          url: getSignedIdDocumentUrl(user.ketoubaDocumentId),
+          url: getSignedIdDocumentUrl(user.ketoubaDocumentId, user.ketoubaDocumentResourceType || "image"),
           uploadedAt: user.ketoubaUploadedAt,
         }
         : null,
       selfieDocument: user.selfieDocumentId
         ? {
-          url: getSignedIdDocumentUrl(user.selfieDocumentId),
+          url: getSignedIdDocumentUrl(user.selfieDocumentId, user.selfieDocumentResourceType || "image"),
           uploadedAt: user.selfieUploadedAt,
         }
         : null,

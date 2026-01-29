@@ -31,10 +31,20 @@ export const UploadDocumentsScreen: React.FC = () => {
   const { user, refreshSession } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
 
-  const [documents, setDocuments] = useState<Record<DocumentType, DocumentState>>({
+  const [documents, setDocuments] = useState<
+    Record<DocumentType, DocumentState>
+  >({
     id: { image: null, uploading: false, uploaded: !!user?.idDocumentUrl },
-    ketouba: { image: null, uploading: false, uploaded: !!user?.ketoubaDocumentUrl },
-    selfie: { image: null, uploading: false, uploaded: !!user?.selfieDocumentUrl },
+    ketouba: {
+      image: null,
+      uploading: false,
+      uploaded: !!user?.ketoubaDocumentUrl,
+    },
+    selfie: {
+      image: null,
+      uploading: false,
+      uploaded: !!user?.selfieDocumentUrl,
+    },
   });
 
   const [activeDocType, setActiveDocType] = useState<DocumentType | null>(null);
@@ -64,7 +74,9 @@ export const UploadDocumentsScreen: React.FC = () => {
   };
 
   const allDocumentsUploaded =
-    documents.id.uploaded && documents.ketouba.uploaded && documents.selfie.uploaded;
+    documents.id.uploaded &&
+    documents.ketouba.uploaded &&
+    documents.selfie.uploaded;
 
   const pickImage = async (type: DocumentType) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -73,7 +85,7 @@ export const UploadDocumentsScreen: React.FC = () => {
         t("updateId.permissionDenied"),
         t("updateId.galleryPermission"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -87,11 +99,12 @@ export const UploadDocumentsScreen: React.FC = () => {
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
       setDocuments((prev) => ({
         ...prev,
         [type]: {
           ...prev[type],
-          image: `data:image/jpeg;base64,${result.assets[0].base64}`,
+          image: `data:${mimeType};base64,${result.assets[0].base64}`,
         },
       }));
     }
@@ -105,7 +118,7 @@ export const UploadDocumentsScreen: React.FC = () => {
         t("updateId.permissionDenied"),
         t("updateId.cameraPermission"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -115,15 +128,19 @@ export const UploadDocumentsScreen: React.FC = () => {
       aspect: type === "selfie" ? [1, 1] : [3, 4],
       quality: 0.8,
       base64: true,
-      cameraType: type === "selfie" ? ImagePicker.CameraType.front : ImagePicker.CameraType.back,
+      cameraType:
+        type === "selfie"
+          ? ImagePicker.CameraType.front
+          : ImagePicker.CameraType.back,
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
       setDocuments((prev) => ({
         ...prev,
         [type]: {
           ...prev[type],
-          image: `data:image/jpeg;base64,${result.assets[0].base64}`,
+          image: `data:${mimeType};base64,${result.assets[0].base64}`,
         },
       }));
     }
@@ -133,7 +150,15 @@ export const UploadDocumentsScreen: React.FC = () => {
   const pickFromFiles = async (type: DocumentType) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
+        type: [
+          "image/*",
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "application/pdf",
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -191,7 +216,7 @@ export const UploadDocumentsScreen: React.FC = () => {
         t("common.error"),
         error.message || t("updateId.uploadError"),
         undefined,
-        "error"
+        "error",
       );
       setDocuments((prev) => ({
         ...prev,
@@ -250,7 +275,9 @@ export const UploadDocumentsScreen: React.FC = () => {
                 }))
               }
             >
-              <Text style={styles.changeImageBtnText}>{t("documents.change")}</Text>
+              <Text style={styles.changeImageBtnText}>
+                {t("documents.change")}
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -267,7 +294,10 @@ export const UploadDocumentsScreen: React.FC = () => {
 
         {doc.image && !doc.uploaded && (
           <TouchableOpacity
-            style={[styles.uploadBtn, doc.uploading && styles.uploadBtnDisabled]}
+            style={[
+              styles.uploadBtn,
+              doc.uploading && styles.uploadBtnDisabled,
+            ]}
             onPress={() => uploadDocument(type)}
             disabled={doc.uploading}
           >
@@ -344,7 +374,9 @@ export const UploadDocumentsScreen: React.FC = () => {
         {allDocumentsUploaded && (
           <View style={styles.completionMessage}>
             <Text style={styles.completionIcon}>🎉</Text>
-            <Text style={styles.completionText}>{t("documents.allUploaded")}</Text>
+            <Text style={styles.completionText}>
+              {t("documents.allUploaded")}
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -372,7 +404,9 @@ export const UploadDocumentsScreen: React.FC = () => {
               onPress={() => activeDocType && takePhoto(activeDocType)}
             >
               <Text style={styles.modalOptionIcon}>📷</Text>
-              <Text style={styles.modalOptionText}>{t("documents.takePhoto")}</Text>
+              <Text style={styles.modalOptionText}>
+                {t("documents.takePhoto")}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -380,7 +414,9 @@ export const UploadDocumentsScreen: React.FC = () => {
               onPress={() => activeDocType && pickImage(activeDocType)}
             >
               <Text style={styles.modalOptionIcon}>🖼️</Text>
-              <Text style={styles.modalOptionText}>{t("documents.gallery")}</Text>
+              <Text style={styles.modalOptionText}>
+                {t("documents.gallery")}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity

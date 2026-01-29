@@ -39,8 +39,8 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
   route,
 }) => {
   const { t } = useTranslation();
-  const { phoneNumber } = route.params;
-  const { verifyOTP, sendOTP } = useAuth();
+  const { authMethod, identifier } = route.params;
+  const { verifyOTP, sendOTP, verifyEmailOTP, sendEmailOTP } = useAuth();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
@@ -132,7 +132,9 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
 
     setLoading(true);
     try {
-      const result = await verifyOTP(phoneNumber, code);
+      const result = authMethod === "phone"
+        ? await verifyOTP(identifier, code)
+        : await verifyEmailOTP(identifier, code);
 
       if (result.success) {
         // La navigation vers Home sera automatique via AuthContext
@@ -154,13 +156,15 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
 
     setResendLoading(true);
     try {
-      const result = await sendOTP(phoneNumber);
+      const result = authMethod === "phone"
+        ? await sendOTP(identifier)
+        : await sendEmailOTP(identifier);
 
       if (result.success) {
         setResendCountdown(60);
         showAlert(
           t("common.success"),
-          t("auth.otp.resendLink"),
+          t("auth.otp.codeResent"),
           undefined,
           "success"
         );
@@ -210,10 +214,12 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
         <View style={styles.header}>
           <Text style={styles.title}>{t("auth.otp.title")}</Text>
           <Text style={styles.subtitle}>
-            {t("auth.otp.subtitle")}
+            {authMethod === "phone"
+              ? t("auth.otp.subtitlePhone")
+              : t("auth.otp.subtitleEmail")}
             {"\n"}
             <Text style={styles.phoneNumber}>
-              {formatPhoneDisplay(phoneNumber)}
+              {authMethod === "phone" ? formatPhoneDisplay(identifier) : identifier}
             </Text>
           </Text>
         </View>

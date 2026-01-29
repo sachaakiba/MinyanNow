@@ -127,7 +127,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      setIdDocumentImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setIdDocumentImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
@@ -153,7 +154,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      setIdDocumentImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setIdDocumentImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
@@ -162,7 +164,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
+        type: ["image/*", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
         copyToCacheDirectory: true,
       });
 
@@ -208,7 +210,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      setKetoubaImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setKetoubaImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
@@ -234,7 +237,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      setKetoubaImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setKetoubaImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
@@ -243,7 +247,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
+        type: ["image/*", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
         copyToCacheDirectory: true,
       });
 
@@ -289,7 +293,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      setSelfieImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setSelfieImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
@@ -315,7 +320,8 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      setSelfieImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mimeType = result.assets[0].mimeType || "image/jpeg";
+      setSelfieImage(`data:${mimeType};base64,${result.assets[0].base64}`);
     }
   };
 
@@ -324,7 +330,7 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
+        type: ["image/*", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
         copyToCacheDirectory: true,
       });
 

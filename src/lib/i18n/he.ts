@@ -36,6 +36,22 @@ export default {
 
   // Auth
   auth: {
+    welcome: {
+      appName: "MinyanNow",
+      title: "ברוכים הבאים",
+      subtitle: "מצאו והצטרפו למניינים בקרבתכם",
+    },
+    tabs: {
+      phone: "טלפון",
+      email: "אימייל",
+    },
+    switch: {
+      or: "או",
+      useEmail: "התחברו עם אימייל",
+      usePhone: "חזרה לטלפון",
+      connectByEmail: "אין טלפון? התחברו עם אימייל.",
+      connectByEmailLink: "התחברו עם אימייל",
+    },
     phoneAuth: {
       title: "ברוכים הבאים",
       appName: "MinyanNow",
@@ -49,15 +65,27 @@ export default {
       privacyLink: "מדיניות הפרטיות",
       invalidPhone: "מספר טלפון לא תקין",
       sendingCode: "שולח קוד...",
+      countryLabel: "מדינה",
+      selectCountry: "בחר מדינה",
+    },
+    emailAuth: {
+      emailLabel: "כתובת אימייל",
+      emailPlaceholder: "example@email.com",
+      invalidEmail: "כתובת אימייל לא תקינה",
+      continueButton: "המשך",
+      sendingCode: "שולח קוד...",
     },
     otp: {
       title: "אימות",
       subtitle: "הזינו את הקוד שנשלח ל",
+      subtitlePhone: "הזינו את הקוד שנשלח ל",
+      subtitleEmail: "הזינו את הקוד שנשלח ל",
       resendText: "לא קיבלתם את הקוד?",
       resendLink: "שלח שוב",
       resendCountdown: "שלח שוב בעוד {{seconds}} שניות",
       verifying: "מאמת...",
       invalidCode: "קוד לא תקין",
+      codeResent: "הקוד נשלח מחדש בהצלחה",
       back: "← חזרה",
     },
     completeProfile: {
@@ -304,6 +332,8 @@ export default {
   updateId: {
     title: "תעודה מזהה",
     currentId: "תעודה מזהה נוכחית",
+    currentKetouba: "כתובה נוכחית",
+    currentSelfie: "תמונת סלפי נוכחית",
     loading: "טוען...",
     idSaved: "תעודה מזהה נשמרה",
     updatedOn: "עודכן ב-",
@@ -326,6 +356,14 @@ export default {
     galleryPermission: "נדרשת גישה לגלריה",
     fileError: "לא ניתן לקרוא את הקובץ שנבחר",
     uploadError: "לא ניתן לעדכן את התעודה המזהה",
+    viewPDF: "הצג PDF",
+    tapToOpen: "הקש לפתיחה",
+    pdfReady: "PDF מוכן להעלאה",
+    pdfOpenError: "לא ניתן לפתוח את ה-PDF",
+    pdfDocument: "מסמך PDF",
+    openPDF: "פתח PDF",
+    loadingPDF: "טוען PDF...",
+    openInBrowser: "פתח בדפדפן",
   },
 
   // Settings

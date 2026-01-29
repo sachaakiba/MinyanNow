@@ -35,19 +35,22 @@ model User {
   profileCompleted  Boolean   @default(false) // Profil complété
 
   // Vérification d'identité - Pièce d'identité
-  idDocumentUrl String? // URL Cloudinary de la pièce d'identité
-  idDocumentId  String? // ID public Cloudinary pour suppression
-  idUploadedAt  DateTime? // Date d'upload de la pièce d'identité
+  idDocumentUrl          String? // URL Cloudinary de la pièce d'identité
+  idDocumentId           String? // ID public Cloudinary pour suppression
+  idDocumentResourceType String?   @default("image") // Type de ressource Cloudinary (image ou raw pour PDF)
+  idUploadedAt           DateTime? // Date d'upload de la pièce d'identité
 
   // Vérification d'identité - Ketouba (certificat de mariage)
-  ketoubaDocumentUrl String? // URL Cloudinary de la Ketouba
-  ketoubaDocumentId  String? // ID public Cloudinary pour suppression
-  ketoubaUploadedAt  DateTime? // Date d'upload de la Ketouba
+  ketoubaDocumentUrl          String? // URL Cloudinary de la Ketouba
+  ketoubaDocumentId           String? // ID public Cloudinary pour suppression
+  ketoubaDocumentResourceType String?   @default("image") // Type de ressource Cloudinary (image ou raw pour PDF)
+  ketoubaUploadedAt           DateTime? // Date d'upload de la Ketouba
 
   // Vérification d'identité - Selfie (photo de la personne)
-  selfieDocumentUrl String? // URL Cloudinary du selfie
-  selfieDocumentId  String? // ID public Cloudinary pour suppression
-  selfieUploadedAt  DateTime? // Date d'upload du selfie
+  selfieDocumentUrl          String? // URL Cloudinary du selfie
+  selfieDocumentId           String? // ID public Cloudinary pour suppression
+  selfieDocumentResourceType String?   @default("image") // Type de ressource Cloudinary (image ou raw pour PDF)
+  selfieUploadedAt           DateTime? // Date d'upload du selfie
 
   // Préférences de notifications
   notificationsEnabled Boolean   @default(true) // Master toggle

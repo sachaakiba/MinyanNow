@@ -1,6 +1,9 @@
 export type RootStackParamList = {
-  PhoneAuth: undefined;
-  OTPVerification: { phoneNumber: string };
+  Auth: undefined;
+  OTPVerification: {
+    authMethod: 'phone' | 'email';
+    identifier: string;
+  };
   CompleteProfile: undefined;
   UploadId: undefined;
   UploadDocuments: undefined;

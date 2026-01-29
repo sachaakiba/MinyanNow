@@ -6,7 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import * as WebBrowser from "expo-web-browser";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
@@ -25,8 +26,8 @@ export const ProfileScreen: React.FC = () => {
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return new Date(dateString).toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
@@ -161,7 +162,13 @@ export const ProfileScreen: React.FC = () => {
           {/* ID Document Card */}
           <View style={styles.verificationCard}>
             <View style={styles.verificationHeader}>
-              <View style={[styles.verificationIconContainer, user?.idDocumentUrl && styles.verificationIconContainerVerified]}>
+              <View
+                style={[
+                  styles.verificationIconContainer,
+                  user?.idDocumentUrl &&
+                    styles.verificationIconContainerVerified,
+                ]}
+              >
                 <Text style={styles.verificationIcon}>🪪</Text>
               </View>
               <View style={styles.verificationContent}>
@@ -190,15 +197,17 @@ export const ProfileScreen: React.FC = () => {
                     i18n.language === "he"
                       ? "he-IL"
                       : i18n.language === "en"
-                      ? "en-US"
-                      : "fr-FR"
+                        ? "en-US"
+                        : "fr-FR",
                   ),
                 })}
               </Text>
             )}
             <TouchableOpacity
               style={styles.updateIdButton}
-              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "id" })}
+              onPress={() =>
+                navigation.navigate("UpdateIdDocument", { documentType: "id" })
+              }
             >
               <Text style={styles.updateIdButtonText}>
                 {user?.idDocumentUrl
@@ -211,7 +220,13 @@ export const ProfileScreen: React.FC = () => {
           {/* Ketouba Document Card */}
           <View style={styles.verificationCard}>
             <View style={styles.verificationHeader}>
-              <View style={[styles.verificationIconContainer, user?.ketoubaDocumentUrl && styles.verificationIconContainerVerified]}>
+              <View
+                style={[
+                  styles.verificationIconContainer,
+                  user?.ketoubaDocumentUrl &&
+                    styles.verificationIconContainerVerified,
+                ]}
+              >
                 <Text style={styles.verificationIcon}>💒</Text>
               </View>
               <View style={styles.verificationContent}>
@@ -240,15 +255,19 @@ export const ProfileScreen: React.FC = () => {
                     i18n.language === "he"
                       ? "he-IL"
                       : i18n.language === "en"
-                      ? "en-US"
-                      : "fr-FR"
+                        ? "en-US"
+                        : "fr-FR",
                   ),
                 })}
               </Text>
             )}
             <TouchableOpacity
               style={styles.updateIdButton}
-              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "ketouba" })}
+              onPress={() =>
+                navigation.navigate("UpdateIdDocument", {
+                  documentType: "ketouba",
+                })
+              }
             >
               <Text style={styles.updateIdButtonText}>
                 {user?.ketoubaDocumentUrl
@@ -261,7 +280,13 @@ export const ProfileScreen: React.FC = () => {
           {/* Selfie Document Card */}
           <View style={styles.verificationCard}>
             <View style={styles.verificationHeader}>
-              <View style={[styles.verificationIconContainer, user?.selfieDocumentUrl && styles.verificationIconContainerVerified]}>
+              <View
+                style={[
+                  styles.verificationIconContainer,
+                  user?.selfieDocumentUrl &&
+                    styles.verificationIconContainerVerified,
+                ]}
+              >
                 <Text style={styles.verificationIcon}>🤳</Text>
               </View>
               <View style={styles.verificationContent}>
@@ -290,15 +315,19 @@ export const ProfileScreen: React.FC = () => {
                     i18n.language === "he"
                       ? "he-IL"
                       : i18n.language === "en"
-                      ? "en-US"
-                      : "fr-FR"
+                        ? "en-US"
+                        : "fr-FR",
                   ),
                 })}
               </Text>
             )}
             <TouchableOpacity
               style={styles.updateIdButton}
-              onPress={() => navigation.navigate("UpdateIdDocument", { documentType: "selfie" })}
+              onPress={() =>
+                navigation.navigate("UpdateIdDocument", {
+                  documentType: "selfie",
+                })
+              }
             >
               <Text style={styles.updateIdButtonText}>
                 {user?.selfieDocumentUrl
@@ -533,6 +562,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     marginTop: 12,
+  },
+  viewPdfButton: {
+    backgroundColor: colors.primaryLight,
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  viewPdfButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.primary,
   },
   updateIdButton: {
     backgroundColor: "#F3F4F6",
