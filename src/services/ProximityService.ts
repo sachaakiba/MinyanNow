@@ -148,6 +148,9 @@ class ProximityService {
     longitude: number
   ): Promise<void> {
     try {
+      console.log(`📍 Checking nearby events at [${latitude}, ${longitude}]`);
+      console.log(`🔍 Search radius: ${this.config.radius}m`);
+
       // Update user location on server
       await usersApi.updateLocation(latitude, longitude);
 
@@ -163,6 +166,8 @@ class ProximityService {
         radius: this.config.radius / 1000, // Convert to km for API
       });
 
+      console.log(`📅 Found ${events.length} events in API response`);
+
       // Filter events happening today that haven't started yet
       const now = new Date();
       const upcomingEvents = events.filter((event) => {
@@ -170,9 +175,12 @@ class ProximityService {
         return eventDate >= now && eventDate < tomorrow;
       });
 
+      console.log(`⏰ Found ${upcomingEvents.length} upcoming events today`);
+
       // Check proximity and send notifications
       for (const event of upcomingEvents) {
         if (this.wasAlreadyNotified(event.id)) {
+          console.log(`⏭️  Event ${event.id} already notified, skipping`);
           continue;
         }
 
@@ -183,13 +191,22 @@ class ProximityService {
           event.longitude
         );
 
+        console.log(`📏 Event "${event.title}" is ${Math.round(distance)}m away`);
+
         if (distance <= this.config.radius) {
+          console.log(`✅ Event within radius! Sending notification...`);
           await this.sendProximityNotification(event, distance);
           await this.markAsNotified(event);
+        } else {
+          console.log(`❌ Event outside radius (${Math.round(distance)}m > ${this.config.radius}m)`);
         }
       }
+
+      if (upcomingEvents.length === 0) {
+        console.log(`ℹ️  No upcoming events found today within ${this.config.radius}m`);
+      }
     } catch (error) {
-      console.error("Error checking nearby events:", error);
+      console.error("❌ Error checking nearby events:", error);
     }
   }
 
@@ -292,6 +309,15 @@ class ProximityService {
    */
   async checkNow(): Promise<void> {
     try {
+      // TODO: Remove this hardcoded position after fixing location permissions
+      // For now, using a test position (adjust to match your test event location)
+      const testLatitude = 48.893241797111024;
+      const testLongitude = 2.254294894555421;
+
+      console.log("⚠️  Using hardcoded test position for development");
+      await this.checkNearbyEvents(testLatitude, testLongitude);
+
+      /* Original code - uncomment when permissions are fixed:
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
@@ -299,6 +325,7 @@ class ProximityService {
         location.coords.latitude,
         location.coords.longitude
       );
+      */
     } catch (error) {
       console.error("Error during manual proximity check:", error);
     }

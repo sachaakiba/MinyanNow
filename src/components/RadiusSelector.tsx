@@ -10,7 +10,7 @@ interface RadiusSelectorProps {
   step?: number;
 }
 
-const RADIUS_OPTIONS = [100, 250, 500, 750, 1000, 1500, 2000];
+const RADIUS_OPTIONS = [100, 250, 500, 750, 1000, 1500, 2000, 5000];
 
 export const RadiusSelector: React.FC<RadiusSelectorProps> = ({
   value,
