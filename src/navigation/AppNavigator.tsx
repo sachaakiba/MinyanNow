@@ -4,11 +4,10 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Map, CalendarDays } from "lucide-react-native";
 import { AuthScreen } from "../screens/AuthScreen";
+import { Map, CalendarDays, Shield } from "lucide-react-native";
 import { OTPVerificationScreen } from "../screens/OTPVerificationScreen";
 import { CompleteProfileScreen } from "../screens/CompleteProfileScreen";
-import { UploadIdScreen } from "../screens/UploadIdScreen";
 import { UploadDocumentsScreen } from "../screens/UploadDocumentsScreen";
 import { MapScreen } from "../screens/MapScreen";
 import { CreateEventScreen } from "../screens/CreateEventScreen";
@@ -23,6 +22,7 @@ import { TermsOfServiceScreen } from "../screens/TermsOfServiceScreen";
 import { PrivacyPolicyScreen } from "../screens/PrivacyPolicyScreen";
 import { HelpCenterScreen } from "../screens/HelpCenterScreen";
 import { ContactUsScreen } from "../screens/ContactUsScreen";
+import { AdminDashboardScreen } from "../screens/AdminDashboardScreen";
 import { SplashScreen } from "../components/SplashScreen";
 import { RootStackParamList, TabParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
@@ -59,7 +59,7 @@ const ProfileTabIcon = ({
 };
 
 const MainTabs = () => {
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const insets = useSafeAreaInsets();
 
   return (
@@ -107,6 +107,23 @@ const MainTabs = () => {
           ),
         }}
       />
+      {isSuperAdmin && (
+        <Tab.Screen
+          name="AdminDashboard"
+          component={AdminDashboardScreen}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <View style={styles.tabItem}>
+                <Shield
+                  size={26}
+                  color={focused ? colors.primary : colors.text.tertiary}
+                  strokeWidth={focused ? 2.5 : 2}
+                />
+              </View>
+            ),
+          }}
+        />
+      )}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -129,10 +146,20 @@ export const AppNavigator: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
 
   // Remember if user has ever had all documents to prevent navigation stack changes
-  const hasEverHadAllDocuments = React.useRef(hasAllDocuments);
-  if (hasAllDocuments && !hasEverHadAllDocuments.current) {
-    hasEverHadAllDocuments.current = true;
-  }
+  const [hasEverHadAllDocuments, setHasEverHadAllDocuments] = useState(false);
+
+  // Update if user now has all documents
+  React.useEffect(() => {
+    if (hasAllDocuments && !hasEverHadAllDocuments) {
+      console.log("✅ User now has all documents, remembering this state");
+      setHasEverHadAllDocuments(true);
+    }
+  }, [
+    hasAllDocuments,
+    hasEverHadAllDocuments,
+    isProfileComplete,
+    isAuthenticated,
+  ]);
 
   // Show splash screen on first load
   if (showSplash) {
@@ -180,7 +207,7 @@ export const AppNavigator: React.FC = () => {
               component={CompleteProfileScreen}
             />
           </>
-        ) : !hasAllDocuments && !hasEverHadAllDocuments.current ? (
+        ) : !hasAllDocuments && !hasEverHadAllDocuments ? (
           // Connecté, profil complet mais documents manquants (ID, Ketouba, Selfie)
           // Only show this screen if user has NEVER had all documents
           <>

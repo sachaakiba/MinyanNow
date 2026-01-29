@@ -18,3 +18,4 @@ export { TermsOfServiceScreen } from "./TermsOfServiceScreen";
 export { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 export { HelpCenterScreen } from "./HelpCenterScreen";
 export { ContactUsScreen } from "./ContactUsScreen";
+export { AdminDashboardScreen } from "./AdminDashboardScreen";

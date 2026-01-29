@@ -17,12 +17,15 @@ import {
 } from "../lib/auth-client";
 import { usersApi } from "../lib/api";
 
+type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 interface User {
   id: string;
   email: string;
   name: string | null;
   phoneNumber?: string | null;
   phoneNumberVerified?: boolean;
+  role?: "USER" | "SUPER_ADMIN";
   firstName?: string | null;
   lastName?: string | null;
   hebrewName?: string | null;
@@ -31,10 +34,16 @@ interface User {
   profileCompleted?: boolean;
   idDocumentUrl?: string | null;
   idUploadedAt?: string | null;
+  idVerificationStatus?: VerificationStatus;
+  idRejectionReason?: string | null;
   ketoubaDocumentUrl?: string | null;
   ketoubaUploadedAt?: string | null;
+  ketoubaVerificationStatus?: VerificationStatus;
+  ketoubaRejectionReason?: string | null;
   selfieDocumentUrl?: string | null;
   selfieUploadedAt?: string | null;
+  selfieVerificationStatus?: VerificationStatus;
+  selfieRejectionReason?: string | null;
 }
 
 interface ProfileData {
@@ -54,6 +63,7 @@ interface AuthContextType {
   hasKetoubaDocument: boolean;
   hasSelfieDocument: boolean;
   hasAllDocuments: boolean;
+  isSuperAdmin: boolean;
   sendOTP: (
     phoneNumber: string,
   ) => Promise<{ success: boolean; error?: string }>;
@@ -73,6 +83,7 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,31 +94,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const { data: session, isPending, refetch } = useSession();
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const sessionUser = session?.user as User | null;
 
   // Fetch full user profile when session is available
-  const fetchUserProfile = useCallback(async () => {
-    if (!sessionUser?.id) {
-      setUserProfile(null);
-      return;
-    }
+  const fetchUserProfile = useCallback(
+    async (isManualRefresh = false) => {
+      if (!sessionUser?.id) {
+        setUserProfile(null);
+        return;
+      }
 
-    setProfileLoading(true);
-    try {
-      const profile = await usersApi.getMe();
-      console.log("📱 Profile loaded:", profile);
-      setUserProfile({
-        ...sessionUser,
-        ...profile,
-      });
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      setUserProfile(sessionUser);
-    } finally {
-      setProfileLoading(false);
-    }
-  }, [sessionUser?.id]);
+      // Only set profileLoading for initial load, not for manual refresh
+      if (!isManualRefresh) {
+        setProfileLoading(true);
+      }
+
+      try {
+        const profile = await usersApi.getMe();
+        console.log("📱 Profile loaded:", profile);
+        setUserProfile({
+          ...sessionUser,
+          ...profile,
+        });
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setUserProfile(sessionUser);
+      } finally {
+        if (!isManualRefresh) {
+          setProfileLoading(false);
+        }
+      }
+    },
+    [sessionUser?.id],
+  );
 
   // Charger le profil quand la session change
   useEffect(() => {
@@ -124,12 +145,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   // Si on a un sessionUser mais pas encore de userProfile, on est en chargement
   const isStillLoadingProfile = !!sessionUser?.id && !userProfile;
 
+  // Only show loading if we have a session but profile is still loading
+  // Don't show loading if user is not authenticated (to avoid flickering on login screen)
+  const isLoadingState = sessionUser?.id
+    ? isPending || profileLoading || isStillLoadingProfile
+    : false;
+
   const isProfileComplete = !!userProfile?.profileCompleted;
   const hasIdDocument = !!userProfile?.idDocumentUrl;
   const hasKetoubaDocument = !!userProfile?.ketoubaDocumentUrl;
   const hasSelfieDocument = !!userProfile?.selfieDocumentUrl;
   const hasAllDocuments =
     hasIdDocument && hasKetoubaDocument && hasSelfieDocument;
+  const isSuperAdmin =
+    userProfile?.role === "SUPER_ADMIN" || sessionUser?.role === "SUPER_ADMIN";
 
   console.log("🔐 Auth state:", {
     isAuthenticated: !!sessionUser,
@@ -141,9 +170,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     hasKetoubaDocument,
     hasSelfieDocument,
     hasAllDocuments,
+    isSuperAdmin,
+    userRole: userProfile?.role || sessionUser?.role,
     userProfile: userProfile
       ? {
           id: userProfile.id,
+          role: userProfile.role,
           profileCompleted: userProfile.profileCompleted,
           idDocumentUrl: !!userProfile.idDocumentUrl,
           ketoubaDocumentUrl: !!userProfile.ketoubaDocumentUrl,
@@ -231,20 +263,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const refreshSession = () => {
     refetch();
-    fetchUserProfile();
+    fetchUserProfile(false);
+  };
+
+  const refreshProfile = async () => {
+    // Use isManualRefresh=true to avoid affecting isLoading state
+    await fetchUserProfile(true);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading: isPending || profileLoading || isStillLoadingProfile,
+        isLoading: isLoadingState,
         isAuthenticated: !!sessionUser,
         isProfileComplete,
         hasIdDocument,
         hasKetoubaDocument,
         hasSelfieDocument,
         hasAllDocuments,
+        isSuperAdmin,
         sendOTP: handleSendOTP,
         verifyOTP: handleVerifyOTP,
         sendEmailOTP: handleSendEmailOTP,
@@ -252,6 +290,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         completeProfile: handleCompleteProfile,
         signOut: handleSignOut,
         refreshSession,
+        refreshProfile,
       }}
     >
       {children}

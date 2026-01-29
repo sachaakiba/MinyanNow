@@ -1,13 +1,14 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import { RootStackParamList } from "../types/navigation";
@@ -18,7 +19,17 @@ export const ProfileScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshProfile();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshProfile]);
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return t("profile.notProvided");
@@ -48,7 +59,18 @@ export const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
@@ -66,7 +88,9 @@ export const ProfileScreen: React.FC = () => {
           {user?.hebrewName && (
             <Text style={styles.hebrewName}>{user.hebrewName}</Text>
           )}
-          <Text style={styles.phoneNumber}>{user?.phoneNumber}</Text>
+          <Text style={styles.phoneNumber}>
+            {user?.phoneNumber || user?.email}
+          </Text>
         </View>
 
         {/* Info Cards */}
@@ -547,7 +571,7 @@ const styles = StyleSheet.create({
     color: "#166534",
   },
   pendingBadge: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#F3F4F6",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -556,26 +580,12 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#92400E",
+    color: "#6B7280",
   },
   verificationDate: {
     fontSize: 12,
     color: "#9CA3AF",
     marginTop: 12,
-  },
-  viewPdfButton: {
-    backgroundColor: colors.primaryLight,
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  viewPdfButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.primary,
   },
   updateIdButton: {
     backgroundColor: "#F3F4F6",

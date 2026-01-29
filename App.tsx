@@ -12,16 +12,24 @@ export default function App() {
 
   useEffect(() => {
     // Initialise la langue sauvegardée
-    initializeLanguage().then(() => {
-      setIsI18nReady(true);
-    });
+    initializeLanguage()
+      .then(() => {
+        setIsI18nReady(true);
+      })
+      .catch((error) => {
+        console.error("Error initializing i18n:", error);
+        // Continue even if i18n initialization fails
+        setIsI18nReady(true);
+      });
   }, []);
 
   if (!isI18nReady) {
     return (
       <SplashScreen
-        onFinish={function (): void {
-          throw new Error("Function not implemented.");
+        onFinish={() => {
+          // This callback is called by SplashScreen after 2.5s
+          // But we actually wait for i18n to be ready, so this is just a no-op
+          // The real transition happens when isI18nReady becomes true
         }}
       />
     );

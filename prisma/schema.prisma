@@ -10,6 +10,19 @@ datasource db {
   provider = "postgresql"
 }
 
+// Statut de vérification des documents par un superAdmin
+enum DocumentVerificationStatus {
+  PENDING // En attente de vérification
+  APPROVED // Approuvé par un superAdmin
+  REJECTED // Rejeté par un superAdmin
+}
+
+// Rôle utilisateur
+enum UserRole {
+  USER // Utilisateur standard
+  SUPER_ADMIN // Peut valider les documents
+}
+
 // Better Auth models
 model User {
   id                  String   @id @default(cuid())
@@ -23,6 +36,9 @@ model User {
   language            String   @default("fr") // Langue préférée (fr, en, he)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  // Rôle utilisateur (USER par défaut, SUPER_ADMIN pour valider les documents)
+  role UserRole @default(USER)
 
   // Informations de profil
   firstName         String? // Prénom

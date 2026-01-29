@@ -20,12 +20,14 @@ export type RootStackParamList = {
   HelpCenter: undefined;
   ContactUs: undefined;
   MyParticipations: undefined;
+  AdminDashboard: undefined;
 };
 
 export type TabParamList = {
   Home: undefined;
   MyEvents: undefined;
   Profile: undefined;
+  AdminDashboard: undefined;
 };
 
 declare global {
