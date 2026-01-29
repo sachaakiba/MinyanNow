@@ -63,7 +63,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
           value={formatPhone(value)}
           onChangeText={handleChange}
           keyboardType="phone-pad"
-          maxLength={country === "FR" ? 13 : 14} // Accounting for formatting characters
+          maxLength={14} // FR: 10 digits + 4 spaces = 14, US: (555) 123-4567 = 14
         />
       </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
