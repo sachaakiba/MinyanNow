@@ -89,6 +89,15 @@ router.get("/", async (req, res) => {
       );
     }
 
+    // Filter out events with expired deadlines
+    const now = new Date();
+    filteredEvents = filteredEvents.filter((event) => {
+      if (!event.deadlineHours) return true; // No deadline = always active
+      const eventDate = new Date(event.date);
+      const deadlineDate = new Date(eventDate.getTime() - event.deadlineHours * 60 * 60 * 1000);
+      return deadlineDate > now; // Only show if deadline hasn't passed
+    });
+
     // Filter by radius if coordinates provided
     if (lat && lng && radius) {
       const userLat = parseFloat(lat as string);
@@ -181,6 +190,7 @@ router.post("/", userGuard, async (req, res) => {
       type,
       date,
       endDate,
+      deadlineHours,
       address,
       city,
       latitude,
@@ -205,6 +215,7 @@ router.post("/", userGuard, async (req, res) => {
         type,
         date: new Date(date),
         endDate: endDate ? new Date(endDate) : null,
+        deadlineHours: deadlineHours ? parseInt(deadlineHours) : null,
         address,
         city,
         latitude: parseFloat(latitude),
@@ -254,6 +265,7 @@ router.put("/:id", userGuard, async (req, res) => {
       type,
       date,
       endDate,
+      deadlineHours,
       address,
       city,
       latitude,
@@ -269,6 +281,7 @@ router.put("/:id", userGuard, async (req, res) => {
         ...(type && { type }),
         ...(date && { date: new Date(date) }),
         ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
+        ...(deadlineHours !== undefined && { deadlineHours: deadlineHours ? parseInt(deadlineHours) : null }),
         ...(address && { address }),
         ...(city && { city }),
         ...(latitude && { latitude: parseFloat(latitude) }),

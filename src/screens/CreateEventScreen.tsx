@@ -31,7 +31,7 @@ const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 // Debug: log the API key (remove in production)
 console.log(
   "Google Maps API Key:",
-  GOOGLE_MAPS_API_KEY ? "Present" : "Missing"
+  GOOGLE_MAPS_API_KEY ? "Present" : "Missing",
 );
 
 type CreateEventScreenNavigationProp = NativeStackNavigationProp<
@@ -61,6 +61,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   const [type, setType] = useState<EventType>("SHEVA_BERAKHOT");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
+  const [selectedEndTime, setSelectedEndTime] = useState<Date>(new Date());
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
@@ -75,6 +76,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
   // Picker visibility states
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
 
   const googlePlacesRef = useRef<any>(null);
@@ -93,7 +95,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         t("events.create.maxReached"),
         t("events.create.maxReachedMessage"),
         undefined,
-        "warning"
+        "warning",
       );
       return;
     }
@@ -110,8 +112,8 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleDateString(locale, {
       weekday: "long",
       day: "numeric",
@@ -125,8 +127,8 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
@@ -151,6 +153,15 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
     }
   };
 
+  const onEndTimeChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") {
+      setShowEndTimePicker(false);
+    }
+    if (date) {
+      setSelectedEndTime(date);
+    }
+  };
+
   const handleCreate = async () => {
     // Check if all documents are uploaded
     if (!hasAllDocuments) {
@@ -159,9 +170,12 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         t("documents.missingDocumentsMessage"),
         [
           { text: t("common.cancel"), style: "cancel" },
-          { text: t("documents.goToDocuments"), onPress: () => navigation.goBack() },
+          {
+            text: t("documents.goToDocuments"),
+            onPress: () => navigation.goBack(),
+          },
         ],
-        "warning"
+        "warning",
       );
       return;
     }
@@ -177,24 +191,31 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         t("common.error"),
         t("events.create.fillRequired"),
         undefined,
-        "error"
+        "error",
       );
       return;
     }
 
     setLoading(true);
     try {
-      // Combine date and time
+      // Combine date and time for start
       const dateTime = new Date(selectedDate);
       dateTime.setHours(selectedTime.getHours());
       dateTime.setMinutes(selectedTime.getMinutes());
       dateTime.setSeconds(0);
+
+      // Prepare end date/time (mandatory)
+      const endDateTime = new Date(selectedDate);
+      endDateTime.setHours(selectedEndTime.getHours());
+      endDateTime.setMinutes(selectedEndTime.getMinutes());
+      endDateTime.setSeconds(0);
 
       await eventsApi.create({
         title,
         description: description || undefined,
         type,
         date: dateTime.toISOString(),
+        endDate: endDateTime.toISOString(),
         address,
         city,
         latitude,
@@ -207,14 +228,14 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         t("common.success"),
         t("events.create.success"),
         [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
-        "success"
+        "success",
       );
     } catch (error: any) {
       showAlert(
         t("common.error"),
         error.message || t("events.create.error"),
         undefined,
-        "error"
+        "error",
       );
     } finally {
       setLoading(false);
@@ -335,6 +356,59 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
         mode="time"
         display="default"
         onChange={onTimeChange}
+        is24Hour={true}
+      />
+    );
+  };
+
+  const renderEndTimePicker = () => {
+    if (!showEndTimePicker) return null;
+
+    // iOS
+    if (Platform.OS === "ios") {
+      return (
+        <Modal visible={showEndTimePicker} transparent animationType="slide">
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowEndTimePicker(false)}
+          >
+            <TouchableOpacity style={styles.modalContent} activeOpacity={1}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={() => setShowEndTimePicker(false)}>
+                  <Text style={styles.modalCancel}>{t("common.cancel")}</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>
+                  {t("events.create.endTime")}
+                </Text>
+                <TouchableOpacity onPress={() => setShowEndTimePicker(false)}>
+                  <Text style={styles.modalDone}>{t("common.ok")}</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={selectedEndTime || selectedTime}
+                mode="time"
+                display="spinner"
+                onChange={(event, date) => {
+                  if (date) setSelectedEndTime(date);
+                }}
+                locale="fr-FR"
+                style={styles.iosTimePicker}
+                themeVariant="light"
+              />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      );
+    }
+
+    // Android
+    return (
+      <DateTimePicker
+        value={selectedEndTime || selectedTime}
+        mode="time"
+        display="default"
+        onChange={onEndTimeChange}
         is24Hour={true}
       />
     );
@@ -505,15 +579,35 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
               <Text style={styles.pickerValue}>{formatDate(selectedDate)}</Text>
             </View>
           </TouchableOpacity>
+        </View>
 
+        {/* Start & End Time Pickers */}
+        <View style={styles.row}>
           <TouchableOpacity
             style={[styles.pickerButton, styles.halfInput]}
             onPress={() => setShowTimePicker(true)}
           >
             <Text style={styles.pickerIcon}>🕐</Text>
             <View style={styles.pickerTextContainer}>
-              <Text style={styles.pickerLabel}>{t("events.create.time")}</Text>
+              <Text style={styles.pickerLabel}>
+                {t("events.create.startTime")}
+              </Text>
               <Text style={styles.pickerValue}>{formatTime(selectedTime)}</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.pickerButton, styles.halfInput]}
+            onPress={() => setShowEndTimePicker(true)}
+          >
+            <Text style={styles.pickerIcon}>🕐</Text>
+            <View style={styles.pickerTextContainer}>
+              <Text style={styles.pickerLabel}>
+                {t("events.create.endTime")}
+              </Text>
+              <Text style={styles.pickerValue}>
+                {formatTime(selectedEndTime)}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -679,6 +773,7 @@ export const CreateEventScreen: React.FC<CreateEventScreenProps> = ({
 
       {renderDatePicker()}
       {renderTimePicker()}
+      {renderEndTimePicker()}
       {renderAddressModal()}
 
       {/* Alert Modal */}

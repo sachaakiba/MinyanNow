@@ -53,7 +53,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   const slideAnim = useRef(new Animated.Value(400)).current;
 
   const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
+    null,
   );
   const [events, setEvents] = useState<Event[]>([]);
   const [myRequests, setMyRequests] = useState<EventRequest[]>([]);
@@ -80,7 +80,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       loadLocationAndEvents();
-    }, [])
+    }, []),
   );
 
   // Center map on user location when it's available
@@ -93,7 +93,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
         },
-        1000
+        1000,
       );
     }
   }, [location]);
@@ -164,7 +164,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         latitudeDelta: 0.015,
         longitudeDelta: 0.015,
       },
-      300
+      300,
     );
   };
 

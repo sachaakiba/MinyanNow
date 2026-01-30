@@ -42,6 +42,7 @@ export interface Event {
   type: EventType;
   date: string;
   endDate: string | null;
+  deadlineHours: number | null;
   address: string;
   city: string;
   latitude: number;
@@ -76,6 +77,7 @@ export interface CreateEventData {
   type: EventType;
   date: string;
   endDate?: string;
+  deadlineHours?: number;
   address: string;
   city: string;
   latitude: number;

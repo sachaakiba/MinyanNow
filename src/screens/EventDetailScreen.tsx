@@ -15,6 +15,9 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { RootStackParamList } from "../types/navigation";
 
 import {
@@ -66,9 +69,14 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
     number | null
   >(null);
 
+  // Pour modifier les heures
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [tempStartTime, setTempStartTime] = useState<Date | null>(null);
+  const [tempEndTime, setTempEndTime] = useState<Date | null>(null);
+
   // Alert modal state
   const { alertState, showAlert, hideAlert } = useAlert();
-
 
   // ID Viewer modal state
   const [showIdViewer, setShowIdViewer] = useState(false);
@@ -81,7 +89,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   const openIdViewer = (
     userId: string,
     userName: string,
-    requestId: string
+    requestId: string,
   ) => {
     setViewingIdUser({ id: userId, name: userName, requestId });
     setShowIdViewer(true);
@@ -98,14 +106,14 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         t("common.success"),
         t("events.detail.participantAccepted"),
         undefined,
-        "success"
+        "success",
       );
     } catch (error: any) {
       showAlert(
         t("common.error"),
         error.message || t("events.detail.acceptError"),
         undefined,
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -123,14 +131,14 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         t("common.success"),
         t("events.detail.requestRejected"),
         undefined,
-        "info"
+        "info",
       );
     } catch (error: any) {
       showAlert(
         t("common.error"),
         error.message || t("events.detail.rejectError"),
         undefined,
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -154,7 +162,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         t("common.error"),
         t("events.detail.loadError"),
         [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
-        "error"
+        "error",
       );
     } finally {
       setLoading(false);
@@ -171,9 +179,12 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         t("documents.missingDocumentsMessage"),
         [
           { text: t("common.cancel"), style: "cancel" },
-          { text: t("documents.goToDocuments"), onPress: () => navigation.goBack() },
+          {
+            text: t("documents.goToDocuments"),
+            onPress: () => navigation.goBack(),
+          },
         ],
-        "warning"
+        "warning",
       );
       return;
     }
@@ -185,7 +196,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         t("common.success"),
         t("events.detail.requestSent"),
         undefined,
-        "success"
+        "success",
       );
       loadEvent();
     } catch (error: any) {
@@ -214,7 +225,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 t("common.success"),
                 t("events.detail.requestCancelled"),
                 undefined,
-                "success"
+                "success",
               );
               loadEvent();
             } catch (error: any) {
@@ -225,7 +236,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           },
         },
       ],
-      "confirm"
+      "confirm",
     );
   };
 
@@ -255,7 +266,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
 
   const handleRemoveAcceptedParticipant = async (
     requestId: string,
-    name: string
+    name: string,
   ) => {
     showAlert(
       t("events.detail.removeParticipant"),
@@ -275,7 +286,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 t("common.error"),
                 error.message || t("events.detail.rejectError"),
                 undefined,
-                "error"
+                "error",
               );
             } finally {
               setActionLoading(false);
@@ -283,13 +294,13 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           },
         },
       ],
-      "confirm"
+      "confirm",
     );
   };
 
   const handleRemoveInitialParticipant = async (
     index: number,
-    name: string
+    name: string,
   ) => {
     if (!event) return;
 
@@ -305,7 +316,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
             try {
               const updatedEvent = await eventsApi.removeInitialParticipant(
                 event.id,
-                index
+                index,
               );
               setEvent(updatedEvent);
             } catch (error: any) {
@@ -313,13 +324,13 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 t("common.error"),
                 error.message || t("events.detail.rejectError"),
                 undefined,
-                "error"
+                "error",
               );
             }
           },
         },
       ],
-      "confirm"
+      "confirm",
     );
   };
 
@@ -345,13 +356,13 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         updatedEvent = await eventsApi.updateInitialParticipant(
           event.id,
           editingParticipantIndex,
-          participantName.trim()
+          participantName.trim(),
         );
       } else {
         // Ajouter un nouveau participant
         updatedEvent = await eventsApi.addInitialParticipant(
           event.id,
-          participantName.trim()
+          participantName.trim(),
         );
       }
       setEvent(updatedEvent);
@@ -363,8 +374,87 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         t("common.error"),
         error.message || t("events.detail.saveParticipantError"),
         undefined,
-        "error"
+        "error",
       );
+    }
+  };
+
+  const handleUpdateStartTime = async (newTime: Date) => {
+    if (!event) return;
+
+    try {
+      setActionLoading(true);
+      const eventDate = new Date(event.date);
+      eventDate.setHours(newTime.getHours());
+      eventDate.setMinutes(newTime.getMinutes());
+      eventDate.setSeconds(0);
+
+      const updatedEvent = await eventsApi.update(event.id, {
+        date: eventDate.toISOString(),
+      });
+      setEvent({ ...event, ...updatedEvent });
+      setShowStartTimePicker(false);
+      setTempStartTime(null);
+    } catch (error: any) {
+      showAlert(
+        t("common.error"),
+        error.message || t("common.error"),
+        undefined,
+        "error",
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateEndTime = async (newTime: Date) => {
+    if (!event) return;
+
+    try {
+      setActionLoading(true);
+      const eventDate = new Date(event.date);
+      const endDate = new Date(eventDate);
+      endDate.setHours(newTime.getHours());
+      endDate.setMinutes(newTime.getMinutes());
+      endDate.setSeconds(0);
+
+      const updatedEvent = await eventsApi.update(event.id, {
+        endDate: endDate.toISOString(),
+      });
+      setEvent({ ...event, ...updatedEvent });
+      setShowEndTimePicker(false);
+      setTempEndTime(null);
+    } catch (error: any) {
+      showAlert(
+        t("common.error"),
+        error.message || t("common.error"),
+        undefined,
+        "error",
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const onStartTimeChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") {
+      setShowStartTimePicker(false);
+      if (date) {
+        handleUpdateStartTime(date);
+      }
+    } else if (date) {
+      setTempStartTime(date);
+    }
+  };
+
+  const onEndTimeChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") {
+      setShowEndTimePicker(false);
+      if (date) {
+        handleUpdateEndTime(date);
+      }
+    } else if (date) {
+      setTempEndTime(date);
     }
   };
 
@@ -386,7 +476,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 t("common.success"),
                 t("events.detail.eventDeleted"),
                 [{ text: t("common.ok"), onPress: () => navigation.goBack() }],
-                "success"
+                "success",
               );
             } catch (error: any) {
               showAlert(t("common.error"), error.message, undefined, "error");
@@ -394,7 +484,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           },
         },
       ],
-      "confirm"
+      "confirm",
     );
   };
 
@@ -406,7 +496,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         t("common.error"),
         t("events.detail.errorOpenWaze"),
         undefined,
-        "error"
+        "error",
       );
     });
   };
@@ -425,7 +515,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         } else {
           // Fallback vers la version web
           Linking.openURL(
-            `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`
+            `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`,
           );
         }
       });
@@ -438,8 +528,8 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleDateString(locale, {
       weekday: "short",
       day: "numeric",
@@ -453,8 +543,8 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
@@ -477,7 +567,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
   const progress = event.currentCount / event.maxParticipants;
   const pendingRequests = event.requests.filter((r) => r.status === "PENDING");
   const acceptedRequests = event.requests.filter(
-    (r) => r.status === "ACCEPTED"
+    (r) => r.status === "ACCEPTED",
   );
 
   return (
@@ -491,7 +581,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           >
             <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
-  {/* Delete button moved to bottom of screen */}
+          {/* Delete button moved to bottom of screen */}
         </View>
 
         {/* Event Icon */}
@@ -559,8 +649,56 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
               <Text style={styles.detailIcon}>🕐</Text>
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>{t("events.detail.time")}</Text>
-              <Text style={styles.detailValue}>{formatTime(event.date)}</Text>
+              <Text style={styles.detailLabel}>
+                {t("events.detail.startTime")}
+              </Text>
+              <View style={styles.timeRowContainer}>
+                <Text style={styles.detailValue}>{formatTime(event.date)}</Text>
+                {isOrganizer && (
+                  <TouchableOpacity
+                    style={styles.timeEditBtn}
+                    onPress={() => {
+                      setTempStartTime(new Date(event.date));
+                      setShowStartTimePicker(true);
+                    }}
+                  >
+                    <Text style={styles.timeEditBtnText}>✎</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.detailItem}>
+            <View style={styles.detailIconContainer}>
+              <Text style={styles.detailIcon}>⏰</Text>
+            </View>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>
+                {t("events.detail.endTime")}
+              </Text>
+              <View style={styles.timeRowContainer}>
+                <Text style={styles.detailValue}>
+                  {event.endDate ? formatTime(event.endDate) : "-"}
+                </Text>
+                {isOrganizer && (
+                  <TouchableOpacity
+                    style={styles.timeEditBtn}
+                    onPress={() => {
+                      setTempEndTime(
+                        event.endDate
+                          ? new Date(event.endDate)
+                          : new Date(event.date),
+                      );
+                      setShowEndTimePicker(true);
+                    }}
+                  >
+                    <Text style={styles.timeEditBtnText}>✎</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
 
@@ -588,19 +726,25 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                 </>
               )}
             </View>
-{(isOrganizer || myRequest?.status === "ACCEPTED") && (
+            {(isOrganizer || myRequest?.status === "ACCEPTED") && (
               <View style={styles.navigationButtons}>
                 <TouchableOpacity
                   style={styles.navigationButton}
                   onPress={openInWaze}
                 >
-                  <Image source={wazeLogo} style={styles.navigationButtonIcon} />
+                  <Image
+                    source={wazeLogo}
+                    style={styles.navigationButtonIcon}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.navigationButton}
                   onPress={openInGoogleMaps}
                 >
-                  <Image source={googleMapsLogo} style={styles.navigationButtonIcon} />
+                  <Image
+                    source={googleMapsLogo}
+                    style={styles.navigationButtonIcon}
+                  />
                 </TouchableOpacity>
               </View>
             )}
@@ -713,7 +857,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                       onPress={() =>
                         handleRemoveAcceptedParticipant(
                           request.id,
-                          request.user.name || request.user.email
+                          request.user.name || request.user.email,
                         )
                       }
                     >
@@ -762,23 +906,23 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                     myRequest.status === "ACCEPTED"
                       ? styles.statusAccepted
                       : myRequest.status === "PENDING"
-                      ? styles.statusPending
-                      : styles.statusRejected,
+                        ? styles.statusPending
+                        : styles.statusRejected,
                   ]}
                 >
                   <Text style={styles.statusIcon}>
                     {myRequest.status === "ACCEPTED"
                       ? "✓"
                       : myRequest.status === "PENDING"
-                      ? "⏳"
-                      : "✕"}
+                        ? "⏳"
+                        : "✕"}
                   </Text>
                   <Text style={styles.statusText}>
                     {myRequest.status === "ACCEPTED"
                       ? t("events.detail.youParticipate")
                       : myRequest.status === "PENDING"
-                      ? t("events.detail.pendingRequest")
-                      : t("events.detail.rejectedRequest")}
+                        ? t("events.detail.pendingRequest")
+                        : t("events.detail.rejectedRequest")}
                   </Text>
                 </View>
                 {myRequest.status !== "REJECTED" && (
@@ -837,7 +981,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
                   openIdViewer(
                     request.userId,
                     request.user.name || request.user.email,
-                    request.id
+                    request.id,
                   )
                 }
               >
@@ -889,7 +1033,7 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
           </View>
         )}
 
-{/* Delete Event Button for organizer */}
+        {/* Delete Event Button for organizer */}
         {isOrganizer && (
           <TouchableOpacity
             style={styles.deleteEventButton}
@@ -959,6 +1103,141 @@ export const EventDetailScreen: React.FC<EventDetailScreenProps> = ({
         </View>
       </Modal>
 
+      {/* Start Time Picker */}
+      {showStartTimePicker && (
+        <>
+          {Platform.OS === "ios" ? (
+            <Modal
+              visible={showStartTimePicker}
+              transparent
+              animationType="slide"
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowStartTimePicker(false)}
+              >
+                <TouchableOpacity
+                  style={styles.timePickerModal}
+                  activeOpacity={1}
+                >
+                  <View style={styles.timePickerHeader}>
+                    <TouchableOpacity
+                      onPress={() => setShowStartTimePicker(false)}
+                    >
+                      <Text style={styles.timePickerCancel}>
+                        {t("common.cancel")}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={styles.timePickerTitle}>
+                      {t("events.detail.editStart")}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (tempStartTime) {
+                          handleUpdateStartTime(tempStartTime);
+                        }
+                      }}
+                    >
+                      <Text style={styles.timePickerDone}>
+                        {t("common.ok")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={tempStartTime || new Date(event?.date || new Date())}
+                    mode="time"
+                    display="spinner"
+                    onChange={onStartTimeChange}
+                    locale="fr-FR"
+                    style={styles.iosTimePicker}
+                    themeVariant="light"
+                  />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </Modal>
+          ) : (
+            <DateTimePicker
+              value={tempStartTime || new Date(event?.date || new Date())}
+              mode="time"
+              display="default"
+              onChange={onStartTimeChange}
+              is24Hour={true}
+            />
+          )}
+        </>
+      )}
+
+      {/* End Time Picker */}
+      {showEndTimePicker && (
+        <>
+          {Platform.OS === "ios" ? (
+            <Modal
+              visible={showEndTimePicker}
+              transparent
+              animationType="slide"
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowEndTimePicker(false)}
+              >
+                <TouchableOpacity
+                  style={styles.timePickerModal}
+                  activeOpacity={1}
+                >
+                  <View style={styles.timePickerHeader}>
+                    <TouchableOpacity
+                      onPress={() => setShowEndTimePicker(false)}
+                    >
+                      <Text style={styles.timePickerCancel}>
+                        {t("common.cancel")}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={styles.timePickerTitle}>
+                      {t("events.detail.editEnd")}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (tempEndTime) {
+                          handleUpdateEndTime(tempEndTime);
+                        }
+                      }}
+                    >
+                      <Text style={styles.timePickerDone}>
+                        {t("common.ok")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={
+                      tempEndTime ||
+                      new Date(event?.endDate || event?.date || new Date())
+                    }
+                    mode="time"
+                    display="spinner"
+                    onChange={onEndTimeChange}
+                    locale="fr-FR"
+                    style={styles.iosTimePicker}
+                    themeVariant="light"
+                  />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </Modal>
+          ) : (
+            <DateTimePicker
+              value={
+                tempEndTime ||
+                new Date(event?.endDate || event?.date || new Date())
+              }
+              mode="time"
+              display="default"
+              onChange={onEndTimeChange}
+              is24Hour={true}
+            />
+          )}
+        </>
+      )}
 
       {/* Alert Modal */}
       <AlertModal
@@ -1593,5 +1872,61 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  timeRowContainer: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+  },
+  timeEditBtn: {
+    width: 32,
+    height: 32,
+    backgroundColor: colors.primaryLight,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginLeft: 12,
+  },
+  timeEditBtnText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: "600" as const,
+  },
+  timePickerModal: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+    width: "100%",
+    position: "absolute" as const,
+    bottom: 0,
+  },
+  timePickerHeader: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
+  },
+  timePickerTitle: {
+    fontSize: 17,
+    fontWeight: "600" as const,
+    color: colors.text.primary,
+  },
+  timePickerCancel: {
+    fontSize: 17,
+    color: colors.error,
+  },
+  timePickerDone: {
+    fontSize: 17,
+    fontWeight: "600" as const,
+    color: colors.primary,
+  },
+  iosTimePicker: {
+    height: 200,
   },
 });

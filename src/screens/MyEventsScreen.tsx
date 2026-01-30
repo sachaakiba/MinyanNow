@@ -53,7 +53,7 @@ export const MyEventsScreen: React.FC = () => {
   const openIdViewer = (
     userId: string,
     userName: string,
-    requestId: string
+    requestId: string,
   ) => {
     setViewingIdUser({ id: userId, name: userName, requestId });
     setShowIdViewer(true);
@@ -62,7 +62,7 @@ export const MyEventsScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [])
+    }, []),
   );
 
   const loadData = async (isRefresh = false) => {
@@ -87,11 +87,11 @@ export const MyEventsScreen: React.FC = () => {
           } catch {
             return { event, requests: [] };
           }
-        })
+        }),
       );
 
       setPendingRequestsForMyEvents(
-        pendingData.filter((d) => d.requests.length > 0)
+        pendingData.filter((d) => d.requests.length > 0),
       );
     } catch (error) {
       console.error("Error loading events data:", error);
@@ -117,14 +117,14 @@ export const MyEventsScreen: React.FC = () => {
         t("common.success"),
         t("events.detail.participantAccepted"),
         undefined,
-        "success"
+        "success",
       );
     } catch (error: any) {
       showAlert(
         t("common.error"),
         error.message || t("events.detail.acceptError"),
         undefined,
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -142,14 +142,14 @@ export const MyEventsScreen: React.FC = () => {
         t("common.success"),
         t("events.detail.requestRejected"),
         undefined,
-        "info"
+        "info",
       );
     } catch (error: any) {
       showAlert(
         t("common.error"),
         error.message || t("events.detail.rejectError"),
         undefined,
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -162,8 +162,8 @@ export const MyEventsScreen: React.FC = () => {
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleDateString(locale, {
       weekday: "short",
       day: "numeric",
@@ -177,8 +177,8 @@ export const MyEventsScreen: React.FC = () => {
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
@@ -187,14 +187,14 @@ export const MyEventsScreen: React.FC = () => {
 
   const totalPendingCount = pendingRequestsForMyEvents.reduce(
     (acc, item) => acc + item.requests.length,
-    0
+    0,
   );
 
   const confirmedParticipations = myRequests.filter(
-    (r) => r.status === "ACCEPTED"
+    (r) => r.status === "ACCEPTED",
   );
   const pendingParticipations = myRequests.filter(
-    (r) => r.status === "PENDING"
+    (r) => r.status === "PENDING",
   );
 
   return (
@@ -381,7 +381,8 @@ export const MyEventsScreen: React.FC = () => {
                       </View>
                       <View style={styles.eventCardFooter}>
                         <Text style={styles.eventDate}>
-                          📅 {formatDate(event.date)} à {formatTime(event.date)}
+                          📅 {formatDate(event.date)} • {formatTime(event.date)}
+                          {event.endDate && ` - ${formatTime(event.endDate)}`}
                         </Text>
                         {(event._count?.requests || 0) > 0 && (
                           <View style={styles.pendingBadge}>
@@ -442,7 +443,7 @@ export const MyEventsScreen: React.FC = () => {
                             openIdViewer(
                               request.userId,
                               request.user.name || request.user.email,
-                              request.id
+                              request.id,
                             )
                           }
                         >
@@ -519,9 +520,7 @@ export const MyEventsScreen: React.FC = () => {
                               </Text>
                               <Text style={styles.participationDate}>
                                 {request.event
-                                  ? `${formatDate(
-                                      request.event.date
-                                    )} à ${formatTime(request.event.date)}`
+                                  ? `${formatDate(request.event.date)} • ${formatTime(request.event.date)}${request.event.endDate ? ` - ${formatTime(request.event.endDate)}` : ""}`
                                   : "Date inconnue"}
                               </Text>
                             </View>
@@ -570,9 +569,7 @@ export const MyEventsScreen: React.FC = () => {
                               </Text>
                               <Text style={styles.participationDate}>
                                 {request.event
-                                  ? `${formatDate(
-                                      request.event.date
-                                    )} à ${formatTime(request.event.date)}`
+                                  ? `${formatDate(request.event.date)} • ${formatTime(request.event.date)}${request.event.endDate ? ` - ${formatTime(request.event.endDate)}` : ""}`
                                   : t("events.myEvents.unknownDate")}
                               </Text>
                             </View>

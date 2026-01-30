@@ -36,8 +36,8 @@ export const EventCard: React.FC<EventCardProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleDateString(locale, {
       weekday: "short",
       day: "numeric",
@@ -51,8 +51,8 @@ export const EventCard: React.FC<EventCardProps> = ({
       i18n.language === "he"
         ? "he-IL"
         : i18n.language === "en"
-        ? "en-US"
-        : "fr-FR";
+          ? "en-US"
+          : "fr-FR";
     return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
@@ -99,7 +99,10 @@ export const EventCard: React.FC<EventCardProps> = ({
         <View style={styles.infoDivider} />
         <View style={styles.infoItem}>
           <Text style={styles.infoIcon}>🕐</Text>
-          <Text style={styles.infoValue}>{formatTime(event.date)}</Text>
+          <Text style={styles.infoValue}>
+            {formatTime(event.date)}
+            {event.endDate && ` - ${formatTime(event.endDate)}`}
+          </Text>
         </View>
         <View style={styles.infoDivider} />
         <View style={styles.infoItem}>

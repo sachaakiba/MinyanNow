@@ -156,12 +156,13 @@ enum EventRequestStatus {
 }
 
 model Event {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  type        EventType
-  date        DateTime
-  endDate     DateTime?
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  type          EventType
+  date          DateTime
+  endDate       DateTime?
+  deadlineHours Int? // Nombre d'heures avant l'événement pour la date limite d'inscription (ex: 1 = 1h avant)
 
   // Location
   address   String

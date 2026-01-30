@@ -341,41 +341,6 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
     }
   };
 
-  const pickSelfieFromFiles = async () => {
-    setErrors((prev) => ({ ...prev, selfie: "" }));
-
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          "image/*",
-          "image/jpeg",
-          "image/png",
-          "image/webp",
-          "image/heic",
-          "image/heif",
-          "application/pdf",
-        ],
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-          encoding: "base64",
-        });
-        const mimeType = asset.mimeType || "image/jpeg";
-        setSelfieImage(`data:${mimeType};base64,${base64}`);
-      }
-    } catch (err: any) {
-      showAlert(
-        t("common.error"),
-        t("auth.completeProfile.fileError"),
-        undefined,
-        "error",
-      );
-    }
-  };
-
   const handleDateChange = (selectedDate: Date) => {
     setDateOfBirth(selectedDate);
     setErrors((prev) => ({ ...prev, dateOfBirth: "" }));
@@ -751,43 +716,17 @@ export const CompleteProfileScreen: React.FC<CompleteProfileScreenProps> = ({
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.idUploadButtonsContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.idUploadBtn,
-                    errors.selfie && styles.idUploadBtnError,
-                  ]}
-                  onPress={takeSelfiePhoto}
-                >
-                  <Text style={styles.idUploadBtnText}>
-                    {t("auth.completeProfile.takeSelfie")}
-                  </Text>
-                </TouchableOpacity>
-                <View style={styles.idUploadButtonsRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.idUploadBtnSecondary,
-                      errors.selfie && styles.idUploadBtnError,
-                    ]}
-                    onPress={pickSelfie}
-                  >
-                    <Text style={styles.idUploadBtnTextSecondary}>
-                      {t("auth.completeProfile.gallery")}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.idUploadBtnSecondary,
-                      errors.selfie && styles.idUploadBtnError,
-                    ]}
-                    onPress={pickSelfieFromFiles}
-                  >
-                    <Text style={styles.idUploadBtnTextSecondary}>
-                      {t("auth.completeProfile.files")}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              <TouchableOpacity
+                style={[
+                  styles.idUploadBtn,
+                  errors.selfie && styles.idUploadBtnError,
+                ]}
+                onPress={takeSelfiePhoto}
+              >
+                <Text style={styles.idUploadBtnText}>
+                  {t("auth.completeProfile.takeSelfie")}
+                </Text>
+              </TouchableOpacity>
             )}
             {errors.selfie && (
               <Text style={styles.errorText}>{errors.selfie}</Text>
