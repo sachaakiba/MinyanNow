@@ -72,47 +72,48 @@ export const auth = betterAuth({
         },
       },
     }),
-    emailOTP({
-      sendVerificationOTP: async ({ email, otp, type }) => {
-        // In development mode, only log to console
-        if (process.env.NODE_ENV === "local") {
-          console.log(`\n${"=".repeat(50)}`);
-          console.log(`📧 [DEV MODE] Email OTP for ${email}: ${otp}`);
-          console.log(`Type: ${type}`);
-          console.log(`${"=".repeat(50)}\n`);
-          return;
-        }
+    // TEMPORARILY COMMENTED FOR APPLE REVIEW - Email/Password instead of OTP
+    // emailOTP({
+    //   sendVerificationOTP: async ({ email, otp, type }) => {
+    //     // In development mode, only log to console
+    //     if (process.env.NODE_ENV === "local") {
+    //       console.log(`\n${"=".repeat(50)}`);
+    //       console.log(`📧 [DEV MODE] Email OTP for ${email}: ${otp}`);
+    //       console.log(`Type: ${type}`);
+    //       console.log(`${"=".repeat(50)}\n`);
+    //       return;
+    //     }
 
-        // In production: Send via Resend
-        if (resendClient) {
-          try {
-            await resendClient.emails.send({
-              from: 'onboarding@resend.dev',
-              to: "tyqva0527@gmail.com",
-              // to: process.env.NODE_ENV === "local" ? 'tyqva0527@gmail.com' : email,
-              subject: "Votre code MinyanNow",
-              text: `Votre code de vérification: ${otp}`,
-              html: `<p>Votre code de vérification: <strong>${otp}</strong></p>`,
-            });
-            console.log(`✅ Email sent successfully to ${email}`);
-          } catch (error) {
-            console.error(`❌ Failed to send email to ${email}:`, error);
-            throw new Error("Failed to send OTP via email");
-          }
-        } else {
-          console.error(
-            "❌ Resend not configured in production - cannot send email!"
-          );
-          throw new Error("Email service not configured");
-        }
-      },
-      otpLength: 6,
-      expiresIn: 300, // 5 minutes
-      disableSignUp: false, // Allow auto-signup on email verification
-    }),
+    //     // In production: Send via Resend
+    //     if (resendClient) {
+    //       try {
+    //         await resendClient.emails.send({
+    //           from: 'onboarding@resend.dev',
+    //           to: "tyqva0527@gmail.com",
+    //           // to: process.env.NODE_ENV === "local" ? 'tyqva0527@gmail.com' : email,
+    //           subject: "Votre code MinyanNow",
+    //           text: `Votre code de vérification: ${otp}`,
+    //           html: `<p>Votre code de vérification: <strong>${otp}</strong></p>`,
+    //         });
+    //         console.log(`✅ Email sent successfully to ${email}`);
+    //       } catch (error) {
+    //         console.error(`❌ Failed to send email to ${email}:`, error);
+    //         throw new Error("Failed to send OTP via email");
+    //       }
+    //     } else {
+    //       console.error(
+    //         "❌ Resend not configured in production - cannot send email!"
+    //       );
+    //       throw new Error("Email service not configured");
+    //     }
+    //   },
+    //   otpLength: 6,
+    //   expiresIn: 300, // 5 minutes
+    //   disableSignUp: false, // Allow auto-signup on email verification
+    // }),
   ],
   emailAndPassword: {
-    enabled: false, // Désactivé car on utilise uniquement le téléphone
+    enabled: true, // Activé temporairement pour Apple Review (au lieu d'OTP)
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
