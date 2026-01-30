@@ -14,7 +14,6 @@ import {
   signOut,
   useSession,
   updateProfile,
-  authClient,
 } from "../lib/auth-client";
 import { usersApi } from "../lib/api";
 
@@ -78,15 +77,6 @@ interface AuthContextType {
   verifyEmailOTP: (
     email: string,
     code: string,
-  ) => Promise<{ success: boolean; error?: string }>;
-  // TEMPORARY: Email/Password for Apple Review
-  signInWithPassword: (
-    email: string,
-    password: string,
-  ) => Promise<{ success: boolean; error?: string }>;
-  signUpWithPassword: (
-    email: string,
-    password: string,
   ) => Promise<{ success: boolean; error?: string }>;
   completeProfile: (
     data: ProfileData,
@@ -249,43 +239,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // TEMPORARY: Email/Password for Apple Review
-  const handleSignInWithPassword = async (email: string, password: string) => {
-    try {
-      const result = await authClient.signIn.email({ email, password });
-      if (result.error) {
-        return { success: false, error: result.error.message };
-      }
-      await refetch();
-      return { success: true };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Erreur lors de la connexion",
-      };
-    }
-  };
-
-  const handleSignUpWithPassword = async (email: string, password: string) => {
-    try {
-      const result = await authClient.signUp.email({
-        email,
-        password,
-        name: email.split("@")[0],
-      });
-      if (result.error) {
-        return { success: false, error: result.error.message };
-      }
-      await refetch();
-      return { success: true };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Erreur lors de l'inscription",
-      };
-    }
-  };
-
   const handleCompleteProfile = async (data: ProfileData) => {
     try {
       const result = await updateProfile(data);
@@ -334,8 +287,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         verifyOTP: handleVerifyOTP,
         sendEmailOTP: handleSendEmailOTP,
         verifyEmailOTP: handleVerifyEmailOTP,
-        signInWithPassword: handleSignInWithPassword,
-        signUpWithPassword: handleSignUpWithPassword,
         completeProfile: handleCompleteProfile,
         signOut: handleSignOut,
         refreshSession,
