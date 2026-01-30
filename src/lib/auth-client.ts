@@ -24,9 +24,6 @@ export const authClient = createAuthClient({
 
 export const { signOut, useSession } = authClient;
 
-// Export authClient for direct access to signIn/signUp methods
-export { authClient as default };
-
 // Phone number authentication methods
 export const sendOTP = authClient.phoneNumber.sendOtp;
 export const verifyOTP = authClient.phoneNumber.verify;

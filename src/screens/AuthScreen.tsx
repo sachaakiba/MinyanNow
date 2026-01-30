@@ -35,7 +35,7 @@ interface AuthScreenProps {
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
-  const { sendOTP, signInWithPassword, signUpWithPassword } = useAuth();
+  const { sendOTP, sendEmailOTP } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
 
   const [authMode, setAuthMode] = useState<AuthMethod>("phone");
@@ -46,8 +46,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
 
   // Email state
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false); // Toggle between sign-in and sign-up
 
   // Shared state
   const [loading, setLoading] = useState(false);
@@ -121,22 +119,18 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleEmailAuth = async () => {
+  const handleSendEmailOTP = async () => {
     if (!validateEmail()) return;
-
-    if (!password || password.length < 6) {
-      setError(t("auth.emailAuth.invalidPassword"));
-      return;
-    }
 
     setLoading(true);
     try {
-      const result = isSignUp
-        ? await signUpWithPassword(email, password)
-        : await signInWithPassword(email, password);
+      const result = await sendEmailOTP(email);
 
       if (result.success) {
-        // User is now authenticated, navigation will be handled by AppNavigator
+        navigation.navigate("OTPVerification", {
+          authMethod: "email",
+          identifier: email,
+        });
       } else {
         showAlert(
           t("common.error"),
@@ -239,49 +233,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
                 autoCapitalize="none"
                 error={error || undefined}
               />
-              <View style={styles.spacer} />
-              <Input
-                label={t("auth.emailAuth.passwordLabel")}
-                placeholder={t("auth.emailAuth.passwordPlaceholder")}
-                value={password}
-                onChangeText={(value) => {
-                  setPassword(value);
-                  setError(null);
-                }}
-                secureTextEntry
-                autoCapitalize="none"
-                error={error || undefined}
-              />
               <Button
                 title={
                   loading
-                    ? t("common.loading")
-                    : isSignUp
-                      ? t("auth.emailAuth.signUpButton")
-                      : t("auth.emailAuth.signInButton")
+                    ? t("auth.emailAuth.sendingCode")
+                    : t("auth.emailAuth.continueButton")
                 }
-                onPress={handleEmailAuth}
+                onPress={handleSendEmailOTP}
                 loading={loading}
                 style={styles.button}
               />
-              <View style={styles.toggleAuthMode}>
-                <Text style={styles.toggleAuthModeText}>
-                  {isSignUp
-                    ? t("auth.emailAuth.alreadyHaveAccount")
-                    : t("auth.emailAuth.noAccount")}{" "}
-                  <Text
-                    style={styles.toggleAuthModeLink}
-                    onPress={() => {
-                      setIsSignUp(!isSignUp);
-                      setError(null);
-                    }}
-                  >
-                    {isSignUp
-                      ? t("auth.emailAuth.signInLink")
-                      : t("auth.emailAuth.signUpLink")}
-                  </Text>
-                </Text>
-              </View>
             </>
           )}
         </View>
@@ -400,18 +361,5 @@ const styles = StyleSheet.create({
   infoLink: {
     color: colors.primary,
     fontWeight: "500",
-  },
-  toggleAuthMode: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  toggleAuthModeText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    textAlign: "center",
-  },
-  toggleAuthModeLink: {
-    color: colors.primary,
-    fontWeight: "600",
   },
 });
