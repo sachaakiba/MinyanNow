@@ -71,9 +71,18 @@ export default {
     emailAuth: {
       emailLabel: "Email address",
       emailPlaceholder: "example@email.com",
+      passwordLabel: "Password",
+      passwordPlaceholder: "Minimum 6 characters",
       invalidEmail: "Invalid email address",
+      invalidPassword: "Password must be at least 6 characters",
       continueButton: "Continue",
       sendingCode: "Sending code...",
+      signInButton: "Sign in",
+      signUpButton: "Sign up",
+      noAccount: "Don't have an account?",
+      signUpLink: "Sign up",
+      alreadyHaveAccount: "Already have an account?",
+      signInLink: "Sign in",
     },
     otp: {
       title: "Verification",

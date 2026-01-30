@@ -71,9 +71,18 @@ export default {
     emailAuth: {
       emailLabel: "כתובת אימייל",
       emailPlaceholder: "example@email.com",
+      passwordLabel: "סיסמה",
+      passwordPlaceholder: "לפחות 6 תווים",
       invalidEmail: "כתובת אימייל לא תקינה",
+      invalidPassword: "הסיסמה חייבת להכיל לפחות 6 תווים",
       continueButton: "המשך",
       sendingCode: "שולח קוד...",
+      signInButton: "התחבר",
+      signUpButton: "הירשם",
+      noAccount: "אין לך חשבון?",
+      signUpLink: "הירשם",
+      alreadyHaveAccount: "כבר יש לך חשבון?",
+      signInLink: "התחבר",
     },
     otp: {
       title: "אימות",
