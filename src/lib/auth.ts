@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { expo } from "@better-auth/expo";
-import { phoneNumber, emailOTP } from "better-auth/plugins";
+import { phoneNumber /* , emailOTP */ } from "better-auth/plugins";
 import twilio from "twilio";
-import { Resend } from "resend";
+// import { Resend } from "resend"; // EMAIL AUTH DISABLED
 import prisma from "./prisma";
 
 // Initialize Twilio client (only if credentials are configured)
@@ -12,10 +12,10 @@ const twilioClient =
     ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
     : null;
 
-// Initialize Resend client for email OTP
-const resendClient = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// EMAIL AUTH DISABLED - Resend client for email OTP
+// const resendClient = process.env.RESEND_API_KEY
+//   ? new Resend(process.env.RESEND_API_KEY)
+//   : null;
 
 // Test phone numbers for Apple Review - Fixed OTP: 123456
 // These numbers will use a fixed OTP code instead of sending real SMS
@@ -113,43 +113,44 @@ export const auth = betterAuth({
         },
       },
     }),
-    emailOTP({
-      sendVerificationOTP: async ({ email, otp, type }) => {
-        // In development mode, only log to console
-        if (process.env.NODE_ENV === "local") {
-          console.log(`\n${"=".repeat(50)}`);
-          console.log(`📧 [DEV MODE] Email OTP for ${email}: ${otp}`);
-          console.log(`Type: ${type}`);
-          console.log(`${"=".repeat(50)}\n`);
-          return;
-        }
-
-        // In production: Send via Resend
-        if (resendClient) {
-          try {
-            await resendClient.emails.send({
-              from: 'onboarding@resend.dev',
-              to: email,
-              subject: "Votre code MinyanNow",
-              text: `Votre code de vérification: ${otp}`,
-              html: `<p>Votre code de vérification: <strong>${otp}</strong></p>`,
-            });
-            console.log(`✅ Email sent successfully to ${email}`);
-          } catch (error) {
-            console.error(`❌ Failed to send email to ${email}:`, error);
-            throw new Error("Failed to send OTP via email");
-          }
-        } else {
-          console.error(
-            "❌ Resend not configured in production - cannot send email!"
-          );
-          throw new Error("Email service not configured");
-        }
-      },
-      otpLength: 6,
-      expiresIn: 300, // 5 minutes
-      disableSignUp: false, // Allow auto-signup on email verification
-    }),
+    // EMAIL AUTH DISABLED - Uncomment to re-enable email OTP login
+    // emailOTP({
+    //   sendVerificationOTP: async ({ email, otp, type }) => {
+    //     // In development mode, only log to console
+    //     if (process.env.NODE_ENV === "local") {
+    //       console.log(`\n${"=".repeat(50)}`);
+    //       console.log(`📧 [DEV MODE] Email OTP for ${email}: ${otp}`);
+    //       console.log(`Type: ${type}`);
+    //       console.log(`${"=".repeat(50)}\n`);
+    //       return;
+    //     }
+    //
+    //     // In production: Send via Resend
+    //     if (resendClient) {
+    //       try {
+    //         await resendClient.emails.send({
+    //           from: 'onboarding@resend.dev',
+    //           to: email,
+    //           subject: "Votre code MinyanNow",
+    //           text: `Votre code de vérification: ${otp}`,
+    //           html: `<p>Votre code de vérification: <strong>${otp}</strong></p>`,
+    //         });
+    //         console.log(`✅ Email sent successfully to ${email}`);
+    //       } catch (error) {
+    //         console.error(`❌ Failed to send email to ${email}:`, error);
+    //         throw new Error("Failed to send OTP via email");
+    //       }
+    //     } else {
+    //       console.error(
+    //         "❌ Resend not configured in production - cannot send email!"
+    //       );
+    //       throw new Error("Email service not configured");
+    //     }
+    //   },
+    //   otpLength: 6,
+    //   expiresIn: 300, // 5 minutes
+    //   disableSignUp: false, // Allow auto-signup on email verification
+    // }),
   ],
   emailAndPassword: {
     enabled: false, // Désactivé - on utilise uniquement OTP
