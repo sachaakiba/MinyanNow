@@ -7,6 +7,7 @@ export type RootStackParamList = {
   CompleteProfile: undefined;
   UploadId: undefined;
   UploadDocuments: undefined;
+  Onboarding: undefined;
   MainTabs: undefined;
   CreateEvent: undefined;
   EditEvent: { eventId: string };

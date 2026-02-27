@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   NavigationContainer,
   createNavigationContainerRef,
@@ -26,6 +27,7 @@ import { PrivacyPolicyScreen } from "../screens/PrivacyPolicyScreen";
 import { HelpCenterScreen } from "../screens/HelpCenterScreen";
 import { ContactUsScreen } from "../screens/ContactUsScreen";
 import { AdminDashboardScreen } from "../screens/AdminDashboardScreen";
+import { OnboardingScreen, ONBOARDING_KEY } from "../screens/OnboardingScreen";
 import { SplashScreen } from "../components/SplashScreen";
 import { RootStackParamList, TabParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
@@ -164,9 +166,18 @@ export const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, isProfileComplete, hasAllDocuments } =
     useAuth();
   const [showSplash, setShowSplash] = useState(true);
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(
+    null
+  );
 
   // Remember if user has ever had all documents to prevent navigation stack changes
   const [hasEverHadAllDocuments, setHasEverHadAllDocuments] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDING_KEY).then((value) => {
+      setOnboardingComplete(value === "true");
+    });
+  }, []);
 
   // Update if user now has all documents
   React.useEffect(() => {
@@ -186,7 +197,7 @@ export const AppNavigator: React.FC = () => {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
-  if (isLoading) {
+  if (isLoading || onboardingComplete === null) {
     return (
       <View style={styles.loading}>
         <SplashScreen onFinish={() => {}} />
@@ -239,6 +250,12 @@ export const AppNavigator: React.FC = () => {
               name="UpdateIdDocument"
               component={UpdateIdDocumentScreen}
             />
+          </>
+        ) : !onboardingComplete ? (
+          // First time: show onboarding slides
+          <>
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="MainTabs" component={MainTabs} />
           </>
         ) : (
           // Connecté, profil complet et pièce d'identité: app principale avec tabs

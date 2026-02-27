@@ -721,6 +721,44 @@ export default {
   },
 
   // Days and Months
+  onboarding: {
+    skip: "Passer",
+    next: "Suivant",
+    start: "C'est parti !",
+    slides: {
+      welcome: {
+        title: "Bienvenue sur MinyanNow",
+        subtitle: "Votre communauté, au bout des doigts",
+        description:
+          "Trouvez et rejoignez des minyans près de chez vous en quelques secondes. Plus jamais un minyan ne tombera à l'eau.",
+      },
+      map: {
+        title: "Trouvez en un coup d'oeil",
+        subtitle: "Une carte interactive en temps réel",
+        description:
+          "Tous les événements autour de vous apparaissent sur la carte. Sheva Berakhot, Brit Mila, Mincha, Arvit... tout est là.",
+      },
+      join: {
+        title: "Rejoignez en toute confiance",
+        subtitle: "Un système de participation sécurisé",
+        description:
+          "Demandez à participer, l'organisateur vérifie votre identité et vous accepte. Simple, rapide et fiable.",
+      },
+      notify: {
+        title: "Ne ratez plus rien",
+        subtitle: "Des alertes intelligentes",
+        description:
+          "Recevez une notification quand un minyan se forme près de vous, même si vous ne cherchiez pas. La proximité fait le reste.",
+      },
+      ready: {
+        title: "Vous êtes prêt",
+        subtitle: "Votre premier minyan vous attend",
+        description:
+          "Explorez la carte, créez un événement ou rejoignez-en un. La communauté compte sur vous.",
+      },
+    },
+  },
+
   calendar: {
     days: {
       sunday: "Dimanche",

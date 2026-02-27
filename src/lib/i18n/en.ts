@@ -721,6 +721,44 @@ export default {
   },
 
   // Days and Months
+  onboarding: {
+    skip: "Skip",
+    next: "Next",
+    start: "Let's go!",
+    slides: {
+      welcome: {
+        title: "Welcome to MinyanNow",
+        subtitle: "Your community, at your fingertips",
+        description:
+          "Find and join minyans near you in seconds. Never let a minyan fall through again.",
+      },
+      map: {
+        title: "Find at a glance",
+        subtitle: "A real-time interactive map",
+        description:
+          "All events around you appear on the map. Sheva Berakhot, Brit Mila, Mincha, Arvit... everything is right here.",
+      },
+      join: {
+        title: "Join with confidence",
+        subtitle: "A secure participation system",
+        description:
+          "Request to join, the organizer verifies your identity and accepts you. Simple, fast and reliable.",
+      },
+      notify: {
+        title: "Never miss a thing",
+        subtitle: "Smart notifications",
+        description:
+          "Get notified when a minyan forms near you, even if you weren't looking. Proximity does the rest.",
+      },
+      ready: {
+        title: "You're all set",
+        subtitle: "Your first minyan awaits",
+        description:
+          "Explore the map, create an event or join one. The community is counting on you.",
+      },
+    },
+  },
+
   calendar: {
     days: {
       sunday: "Sunday",
