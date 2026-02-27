@@ -65,6 +65,7 @@ export default {
       andText: "and our",
       privacyLink: "Privacy Policy",
       invalidPhone: "Invalid phone number",
+      missingCountryCode: "Number must start with a country code (e.g. +33)",
       sendingCode: "Sending code...",
       countryLabel: "Country",
       selectCountry: "Select country",

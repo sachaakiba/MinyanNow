@@ -54,6 +54,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
       return false;
     }
 
+    if (!cleaned.startsWith("+")) {
+      setError(t("auth.phoneAuth.missingCountryCode"));
+      return false;
+    }
+
     return true;
   };
 

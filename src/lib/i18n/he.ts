@@ -65,6 +65,7 @@ export default {
       andText: "ול",
       privacyLink: "מדיניות הפרטיות",
       invalidPhone: "מספר טלפון לא תקין",
+      missingCountryCode: "המספר חייב להתחיל עם קידומת מדינה (לדוגמה: 972+)",
       sendingCode: "שולח קוד...",
       countryLabel: "מדינה",
       selectCountry: "בחר מדינה",
