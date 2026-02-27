@@ -21,12 +21,14 @@ import {
   EVENT_TYPE_ICONS,
   EVENT_TYPE_LABELS,
 } from "../lib/api";
+import { usePendingRequests } from "../context/PendingRequestsContext";
 import { colors } from "../lib/colors";
 
 type TabType = "events" | "pending" | "participations";
 
 export const MyEventsScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { refreshPendingCount } = usePendingRequests();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [myEvents, setMyEvents] = useState<Event[]>([]);
@@ -98,6 +100,7 @@ export const MyEventsScreen: React.FC = () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+      refreshPendingCount();
     }
   };
 

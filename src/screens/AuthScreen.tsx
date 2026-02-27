@@ -31,7 +31,7 @@ interface AuthScreenProps {
 }
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { sendOTP } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
 
@@ -46,16 +46,28 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const toInternational = (phone: string): string => {
+    const cleaned = phone.replace(/[\s\-()]/g, "");
+    if (cleaned.startsWith("+")) return cleaned;
+
+    const lang = i18n.language;
+    if (lang === "fr" && cleaned.startsWith("0")) {
+      return `+33${cleaned.substring(1)}`;
+    }
+    if (lang === "he" && cleaned.startsWith("0")) {
+      return `+972${cleaned.substring(1)}`;
+    }
+    if (lang === "en") {
+      return `+1${cleaned}`;
+    }
+    return `+${cleaned}`;
+  };
+
   const validatePhone = () => {
     const cleaned = phoneNumber.replace(/\s/g, "");
 
     if (!cleaned) {
       setError(t("auth.phoneAuth.invalidPhone"));
-      return false;
-    }
-
-    if (!cleaned.startsWith("+")) {
-      setError(t("auth.phoneAuth.missingCountryCode"));
       return false;
     }
 
@@ -84,7 +96,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      const internationalPhone = phoneNumber.replace(/\s/g, "");
+      const internationalPhone = toInternational(phoneNumber);
       const result = await sendOTP(internationalPhone);
 
       if (result.success) {

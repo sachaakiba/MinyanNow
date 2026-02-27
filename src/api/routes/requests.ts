@@ -365,6 +365,21 @@ router.delete("/:requestId", userGuard, async (req, res) => {
 
     const request = await prisma.eventRequest.findUnique({
       where: { id: requestId },
+      include: {
+        user: { select: { name: true, email: true } },
+        event: {
+          include: {
+            organizer: {
+              select: {
+                id: true,
+                pushToken: true,
+                notificationsEnabled: true,
+                notifyNewRequests: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!request) {
@@ -380,6 +395,20 @@ router.delete("/:requestId", userGuard, async (req, res) => {
     await prisma.eventRequest.delete({
       where: { id: requestId },
     });
+
+    // Notify the organizer that a participant left
+    const organizer = request.event.organizer;
+    if (organizer.notificationsEnabled && organizer.notifyNewRequests && organizer.pushToken) {
+      const participantName = request.user.name || request.user.email;
+      const notification = NotificationTemplates.participantLeft(
+        participantName,
+        request.event.title,
+      );
+      await sendPushNotification(organizer.pushToken, {
+        ...notification,
+        data: { type: "participant_left", eventId: request.event.id },
+      });
+    }
 
     res.json({ success: true, message: "Request cancelled" });
   } catch (error) {

@@ -105,6 +105,11 @@ export const NotificationTemplates = {
     body: `Votre demande pour "${eventTitle}" n'a pas été retenue`,
   }),
 
+  participantLeft: (participantName: string, eventTitle: string) => ({
+    title: "Participant parti 👋",
+    body: `${participantName} a annulé sa participation à "${eventTitle}"`,
+  }),
+
   // Pour tous les participants
   eventUpdated: (eventTitle: string) => ({
     title: "Événement modifié 📝",

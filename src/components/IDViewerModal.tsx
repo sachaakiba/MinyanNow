@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Dimensions,
   ScrollView,
+  SafeAreaView,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { usersApi, UserDocuments } from "../lib/api";
@@ -27,7 +28,7 @@ interface IDViewerModalProps {
 
 type DocumentTab = "id" | "ketouba" | "selfie";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const IDViewerModal: React.FC<IDViewerModalProps> = ({
   visible,
@@ -44,7 +45,9 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [documents, setDocuments] = useState<UserDocuments | null>(null);
   const [activeTab, setActiveTab] = useState<DocumentTab>("id");
-  const [viewedDocs, setViewedDocs] = useState<Set<DocumentTab>>(new Set(["id"]));
+  const [viewedDocs, setViewedDocs] = useState<Set<DocumentTab>>(
+    new Set(["id"])
+  );
 
   useEffect(() => {
     if (visible && userId) {
@@ -78,7 +81,6 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
     onClose();
   };
 
-  // Check if all available documents have been viewed
   const allDocumentsViewed = () => {
     const availableDocs: DocumentTab[] = [];
     if (documents?.idDocument) availableDocs.push("id");
@@ -87,7 +89,6 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
     return availableDocs.every((doc) => viewedDocs.has(doc));
   };
 
-  // Count available documents
   const getAvailableDocsCount = () => {
     let count = 0;
     if (documents?.idDocument) count++;
@@ -146,15 +147,16 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
 
   const currentDoc = getCurrentDocument();
   const availableTabs: DocumentTab[] = ["id", "ketouba", "selfie"];
+  const hasActions = requestId && onAccept && onReject && !loading && !error;
 
   return (
     <Modal
       visible={visible}
-      animationType="fade"
-      transparent
+      animationType="slide"
+      presentationStyle="fullScreen"
       onRequestClose={handleClose}
     >
-      <View style={styles.overlay}>
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
@@ -174,7 +176,7 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
                 const available = isTabAvailable(tab);
                 const isActive = activeTab === tab;
                 const isViewed = viewedDocs.has(tab);
-                
+
                 return (
                   <TouchableOpacity
                     key={tab}
@@ -212,22 +214,27 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
             </View>
           )}
 
-          {/* Content */}
-          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+          {/* Scrollable Content — takes all available space */}
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+          >
             {loading ? (
-              <View style={styles.loadingContainer}>
+              <View style={styles.centeredPlaceholder}>
                 <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={styles.loadingText}>{t("idViewer.loading")}</Text>
               </View>
             ) : error ? (
-              <View style={styles.errorContainer}>
+              <View style={styles.centeredPlaceholder}>
                 <Text style={styles.errorIcon}>⚠️</Text>
                 <Text style={styles.errorText}>{error}</Text>
                 <TouchableOpacity
                   style={styles.retryBtn}
                   onPress={loadDocuments}
                 >
-                  <Text style={styles.retryBtnText}>{t("idViewer.retry")}</Text>
+                  <Text style={styles.retryBtnText}>
+                    {t("idViewer.retry")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : currentDoc ? (
@@ -237,126 +244,131 @@ export const IDViewerModal: React.FC<IDViewerModalProps> = ({
                 resizeMode="contain"
               />
             ) : (
-              <View style={styles.noDocContainer}>
+              <View style={styles.centeredPlaceholder}>
                 <Text style={styles.noDocIcon}>📄</Text>
-                <Text style={styles.noDocText}>{t("idViewer.noDocument")}</Text>
+                <Text style={styles.noDocText}>
+                  {t("idViewer.noDocument")}
+                </Text>
               </View>
             )}
           </ScrollView>
 
-          {/* Verification Status */}
-          {!loading && !error && documents && requestId && (
-            <View style={styles.verificationStatus}>
-              <Text style={styles.verificationIcon}>
-                {allDocumentsViewed() ? "✅" : "⚠️"}
-              </Text>
-              <Text style={styles.verificationText}>
-                {allDocumentsViewed()
-                  ? t("idViewer.allDocumentsViewed")
-                  : t("idViewer.viewAllDocuments", { count: getAvailableDocsCount() })}
+          {/* Bottom fixed section */}
+          <View style={styles.bottomSection}>
+            {/* Verification Status */}
+            {!loading && !error && documents && requestId && (
+              <View style={styles.verificationStatus}>
+                <Text style={styles.verificationIcon}>
+                  {allDocumentsViewed() ? "✅" : "⚠️"}
+                </Text>
+                <Text style={styles.verificationText}>
+                  {allDocumentsViewed()
+                    ? t("idViewer.allDocumentsViewed")
+                    : t("idViewer.viewAllDocuments", {
+                        count: getAvailableDocsCount(),
+                      })}
+                </Text>
+              </View>
+            )}
+
+            {/* Security Notice */}
+            <View style={styles.securityNotice}>
+              <Text style={styles.securityIcon}>🔒</Text>
+              <Text style={styles.securityText}>
+                {t("idViewer.securityNotice")}
               </Text>
             </View>
-          )}
 
-          {/* Security Notice */}
-          <View style={styles.securityNotice}>
-            <Text style={styles.securityIcon}>🔒</Text>
-            <Text style={styles.securityText}>
-              {t("idViewer.securityNotice")}
-            </Text>
+            {/* Action Buttons */}
+            {hasActions && (
+              <View style={styles.actionButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.rejectButton,
+                    actionLoading && styles.buttonDisabled,
+                  ]}
+                  onPress={() => onReject(requestId)}
+                  disabled={actionLoading}
+                >
+                  <Text style={styles.rejectButtonText}>
+                    {t("idViewer.reject")}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.acceptButton,
+                    actionLoading && styles.buttonDisabled,
+                    !allDocumentsViewed() && styles.acceptButtonWarning,
+                  ]}
+                  onPress={() => onAccept(requestId)}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.acceptButtonText}>
+                      {t("idViewer.accept")}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
-
-          {/* Action Buttons */}
-          {requestId && onAccept && onReject && !loading && !error && (
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={[
-                  styles.rejectButton,
-                  actionLoading && styles.buttonDisabled,
-                ]}
-                onPress={() => onReject(requestId)}
-                disabled={actionLoading}
-              >
-                <Text style={styles.rejectButtonText}>
-                  {t("idViewer.reject")}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.acceptButton,
-                  actionLoading && styles.buttonDisabled,
-                  !allDocumentsViewed() && styles.acceptButtonWarning,
-                ]}
-                onPress={() => onAccept(requestId)}
-                disabled={actionLoading}
-              >
-                <Text style={styles.acceptButtonText}>
-                  {actionLoading ? "..." : t("idViewer.accept")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
+    backgroundColor: colors.background.primary,
   },
   container: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    width: "100%",
-    maxWidth: 400,
-    maxHeight: "90%",
-    overflow: "hidden",
+    flex: 1,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.border.medium,
   },
   headerInfo: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.text.primary,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
+    fontSize: 15,
+    color: colors.text.secondary,
     marginTop: 2,
   },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#F3F4F6",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.background.tertiary,
     justifyContent: "center",
     alignItems: "center",
   },
   closeBtnText: {
-    fontSize: 16,
-    color: "#6B7280",
+    fontSize: 18,
+    color: colors.text.secondary,
   },
   tabsContainer: {
     flexDirection: "row",
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.border.medium,
   },
   tab: {
     flex: 1,
@@ -365,7 +377,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 8,
     borderRadius: 12,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.background.secondary,
     position: "relative",
   },
   tabActive: {
@@ -374,81 +386,74 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   tabDisabled: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.background.tertiary,
     opacity: 0.5,
   },
   tabIcon: {
-    fontSize: 20,
+    fontSize: 22,
     marginBottom: 4,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
-    color: "#6B7280",
+    color: colors.text.secondary,
     textAlign: "center",
   },
   tabLabelActive: {
     color: colors.primary,
   },
   tabLabelDisabled: {
-    color: "#9CA3AF",
+    color: colors.text.tertiary,
   },
   viewedBadge: {
     position: "absolute",
     top: 4,
     right: 4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#10B981",
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.success,
     justifyContent: "center",
     alignItems: "center",
   },
   viewedBadgeText: {
     fontSize: 10,
-    color: "#FFFFFF",
+    color: colors.text.inverse,
     fontWeight: "700",
   },
   unavailableBadge: {
     position: "absolute",
     top: 4,
     right: 4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#D1D5DB",
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.border.dark,
     justifyContent: "center",
     alignItems: "center",
   },
   unavailableBadgeText: {
     fontSize: 10,
-    color: "#6B7280",
+    color: colors.text.secondary,
     fontWeight: "700",
   },
   content: {
     flex: 1,
-    minHeight: 250,
-    maxHeight: 350,
   },
   contentContainer: {
     padding: 20,
+    flexGrow: 1,
   },
-  loadingContainer: {
+  centeredPlaceholder: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    minHeight: 250,
+    minHeight: 200,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: "#6B7280",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: 250,
+    color: colors.text.secondary,
   },
   errorIcon: {
     fontSize: 48,
@@ -456,7 +461,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 15,
-    color: "#DC2626",
+    color: colors.error,
     textAlign: "center",
     marginBottom: 16,
   },
@@ -469,13 +474,7 @@ const styles = StyleSheet.create({
   retryBtnText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  noDocContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: 250,
+    color: colors.text.inverse,
   },
   noDocIcon: {
     fontSize: 48,
@@ -484,23 +483,26 @@ const styles = StyleSheet.create({
   },
   noDocText: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.text.tertiary,
     textAlign: "center",
   },
   idImage: {
     width: "100%",
-    height: SCREEN_WIDTH * 0.7,
+    height: SCREEN_HEIGHT * 0.45,
     borderRadius: 12,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.background.tertiary,
+  },
+  bottomSection: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border.medium,
   },
   verificationStatus: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    backgroundColor: "#FFFBEB",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: colors.warningLight,
     gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
   },
   verificationIcon: {
     fontSize: 16,
@@ -513,54 +515,54 @@ const styles = StyleSheet.create({
   },
   securityNotice: {
     flexDirection: "row",
-    backgroundColor: "#F0FDF4",
-    padding: 16,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    backgroundColor: colors.successLight,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 10,
   },
   securityIcon: {
-    fontSize: 16,
+    fontSize: 14,
   },
   securityText: {
     flex: 1,
     fontSize: 12,
-    color: "#166534",
+    color: colors.successDark,
     lineHeight: 18,
   },
   actionButtons: {
     flexDirection: "row",
     padding: 16,
     gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    backgroundColor: colors.background.primary,
   },
   rejectButton: {
     flex: 1,
-    backgroundColor: "#FEE2E2",
-    paddingVertical: 14,
-    borderRadius: 12,
+    backgroundColor: colors.errorLight,
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: "center",
+    justifyContent: "center",
   },
   rejectButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#DC2626",
+    fontWeight: "700",
+    color: colors.error,
   },
   acceptButton: {
     flex: 1,
-    backgroundColor: "#10B981",
-    paddingVertical: 14,
-    borderRadius: 12,
+    backgroundColor: colors.success,
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: "center",
+    justifyContent: "center",
   },
   acceptButtonWarning: {
-    backgroundColor: "#F59E0B",
+    backgroundColor: colors.warning,
   },
   acceptButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontWeight: "700",
+    color: colors.text.inverse,
   },
   buttonDisabled: {
     opacity: 0.5,

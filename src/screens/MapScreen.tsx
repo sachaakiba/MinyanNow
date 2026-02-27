@@ -32,6 +32,7 @@ import { EventCarousel } from "../components/EventCarousel";
 import { EventListView } from "../components/EventListView";
 import { clusterEvents, getGridSizeForZoom, Cluster } from "../lib/clustering";
 import { useAuth } from "../context/AuthContext";
+import { AlertModal, useAlert } from "../components";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { colors } from "../lib/colors";
@@ -51,7 +52,8 @@ interface MapScreenProps {
 
 export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
+  const { alertState, showAlert, hideAlert } = useAlert();
   const mapRef = useRef<MapView>(null);
   const slideAnim = useRef(new Animated.Value(400)).current;
 
@@ -206,6 +208,49 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
     setViewMode((prev) => (prev === "map" ? "list" : "map"));
   };
 
+  const handleQuickCreate = async () => {
+    if (!location) {
+      showAlert(t("common.error"), t("map.loadError"), undefined, "error");
+      return;
+    }
+    try {
+      const types = [
+        "MINCHA",
+        "SHEVA_BERAKHOT",
+        "BRIT_MILA",
+        "OTHER",
+      ] as const;
+      const type = types[Math.floor(Math.random() * types.length)];
+      const date = new Date();
+      date.setMinutes(date.getMinutes() + 30);
+
+      const event = await eventsApi.create({
+        title: `Test ${type.replace("_", " ")}`,
+        type,
+        date: date.toISOString(),
+        address: "Test address",
+        city: "Test",
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        maxParticipants: 10,
+      });
+      showAlert(
+        t("common.success"),
+        `Event created: ${event.title}`,
+        undefined,
+        "success"
+      );
+      loadLocationAndEvents();
+    } catch (error: any) {
+      showAlert(
+        t("common.error"),
+        error.message || "Quick create failed",
+        undefined,
+        "error"
+      );
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -353,6 +398,16 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
+      {/* Floating Quick Create Button (super admin only) */}
+      {isSuperAdmin && (
+        <TouchableOpacity
+          style={styles.floatingQuickCreateButton}
+          onPress={handleQuickCreate}
+        >
+          <Text style={styles.floatingQuickCreateButtonText}>⚡</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Floating Create Button */}
       <TouchableOpacity
         style={styles.floatingCreateButton}
@@ -360,6 +415,16 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
       >
         <Text style={styles.floatingCreateButtonText}>＋</Text>
       </TouchableOpacity>
+
+      {/* Alert Modal */}
+      <AlertModal
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        buttons={alertState.buttons}
+        onClose={hideAlert}
+      />
     </View>
   );
 };
@@ -470,6 +535,25 @@ const styles = StyleSheet.create({
   },
   refreshButtonText: {
     fontSize: 20,
+  },
+  floatingQuickCreateButton: {
+    position: "absolute",
+    bottom: 150,
+    right: 14,
+    width: 48,
+    height: 48,
+    backgroundColor: colors.warning,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  floatingQuickCreateButtonText: {
+    fontSize: 22,
   },
   floatingCreateButton: {
     position: "absolute",

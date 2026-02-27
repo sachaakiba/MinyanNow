@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,10 +29,13 @@ import { AdminDashboardScreen } from "../screens/AdminDashboardScreen";
 import { SplashScreen } from "../components/SplashScreen";
 import { RootStackParamList, TabParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
+import { usePendingRequests } from "../context/PendingRequestsContext";
 import { colors } from "../lib/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
+
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 // Profile Avatar Tab Component
 const ProfileTabIcon = ({
@@ -60,7 +66,12 @@ const ProfileTabIcon = ({
 
 const MainTabs = () => {
   const { user, isSuperAdmin } = useAuth();
+  const { pendingCount, refreshPendingCount } = usePendingRequests();
   const insets = useSafeAreaInsets();
+
+  React.useEffect(() => {
+    refreshPendingCount();
+  }, [refreshPendingCount]);
 
   return (
     <Tab.Navigator
@@ -98,11 +109,20 @@ const MainTabs = () => {
         options={{
           tabBarIcon: ({ focused }) => (
             <View style={styles.tabItem}>
-              <CalendarDays
-                size={26}
-                color={focused ? colors.primary : colors.text.tertiary}
-                strokeWidth={focused ? 2.5 : 2}
-              />
+              <View>
+                <CalendarDays
+                  size={26}
+                  color={focused ? colors.primary : colors.text.tertiary}
+                  strokeWidth={focused ? 2.5 : 2}
+                />
+                {pendingCount > 0 && (
+                  <View style={styles.pendingDot}>
+                    <Text style={styles.pendingDotText}>
+                      {pendingCount > 9 ? "9+" : pendingCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           ),
         }}
@@ -175,7 +195,7 @@ export const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -288,6 +308,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: colors.text.secondary,
+  },
+  pendingDot: {
+    position: "absolute",
+    top: -4,
+    right: -8,
+    backgroundColor: colors.error,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: colors.background.primary,
+  },
+  pendingDotText: {
+    color: colors.text.inverse,
+    fontSize: 10,
+    fontWeight: "700",
   },
   profileAvatarTextFocused: {
     color: colors.text.inverse,

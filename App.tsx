@@ -4,6 +4,7 @@ import { I18nextProvider } from "react-i18next";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 import { AuthProvider } from "./src/context/AuthContext";
 import { NotificationProvider } from "./src/components/NotificationProvider";
+import { PendingRequestsProvider } from "./src/context/PendingRequestsContext";
 import i18n, { initializeLanguage } from "./src/lib/i18n";
 import { SplashScreen } from "./src/components/SplashScreen";
 
@@ -38,10 +39,12 @@ export default function App() {
   return (
     <I18nextProvider i18n={i18n}>
       <AuthProvider>
-        <NotificationProvider>
-          <StatusBar style="dark" />
-          <AppNavigator />
-        </NotificationProvider>
+        <PendingRequestsProvider>
+          <NotificationProvider>
+            <StatusBar style="dark" />
+            <AppNavigator />
+          </NotificationProvider>
+        </PendingRequestsProvider>
       </AuthProvider>
     </I18nextProvider>
   );

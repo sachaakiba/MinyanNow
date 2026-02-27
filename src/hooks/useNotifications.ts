@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { authClient } from "../lib/auth-client";
 import { usersApi } from "../lib/api";
 import { proximityService } from "../services/ProximityService";
+import { navigationRef } from "../navigation/AppNavigator";
 import { colors } from "../lib/colors";
 
 // Configure how notifications are handled when the app is in the foreground
@@ -133,10 +134,49 @@ export function useNotifications() {
     }
   };
 
+  const pendingEventId = useRef<string | null>(null);
+
+  const navigateToEvent = useCallback((eventId: string) => {
+    if (navigationRef.isReady()) {
+      navigationRef.navigate("EventDetail", { eventId });
+      pendingEventId.current = null;
+    } else {
+      pendingEventId.current = eventId;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!pendingEventId.current) return;
+    const interval = setInterval(() => {
+      if (navigationRef.isReady() && pendingEventId.current) {
+        navigationRef.navigate("EventDetail", {
+          eventId: pendingEventId.current,
+        });
+        pendingEventId.current = null;
+        clearInterval(interval);
+      }
+    }, 300);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) {
+        const eventId = response.notification.request.content.data
+          ?.eventId as string | undefined;
+        if (eventId) {
+          navigateToEvent(eventId);
+        }
+      }
+    });
+  }, [navigateToEvent]);
+
   const handleNotificationResponse = (data: Record<string, unknown>) => {
-    // This will be handled by the navigation system
-    // The data contains eventId, type, etc.
     console.log("Handle notification response:", data);
+    const eventId = data.eventId as string | undefined;
+    if (eventId) {
+      navigateToEvent(eventId);
+    }
   };
 
   // Refresh proximity settings (call this after changing settings)
