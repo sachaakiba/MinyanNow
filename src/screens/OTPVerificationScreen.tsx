@@ -40,7 +40,9 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
 }) => {
   const { t } = useTranslation();
   const { authMethod, identifier } = route.params;
-  const { verifyOTP, sendOTP, verifyEmailOTP, sendEmailOTP } = useAuth();
+  const { verifyOTP, sendOTP } = useAuth();
+  // EMAIL AUTH DISABLED
+  // const { verifyEmailOTP, sendEmailOTP } = useAuth();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
@@ -132,9 +134,8 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
 
     setLoading(true);
     try {
-      const result = authMethod === "phone"
-        ? await verifyOTP(identifier, code)
-        : await verifyEmailOTP(identifier, code);
+      // EMAIL AUTH DISABLED - only phone verification active
+      const result = await verifyOTP(identifier, code);
 
       if (result.success) {
         // La navigation vers Home sera automatique via AuthContext
@@ -156,9 +157,8 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
 
     setResendLoading(true);
     try {
-      const result = authMethod === "phone"
-        ? await sendOTP(identifier)
-        : await sendEmailOTP(identifier);
+      // EMAIL AUTH DISABLED - only phone resend active
+      const result = await sendOTP(identifier);
 
       if (result.success) {
         setResendCountdown(60);

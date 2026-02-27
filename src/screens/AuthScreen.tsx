@@ -6,23 +6,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import {
-  Input,
+  // Input, // EMAIL AUTH DISABLED - uncomment if re-enabling email login
   Button,
   AlertModal,
   useAlert,
   LanguageSelector,
 } from "../components";
-import { CountrySelector } from "../components/CountrySelector";
 import { PhoneInput } from "../components/PhoneInput";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors";
-import { AuthMethod, CountryCode, PHONE_COUNTRIES } from "../types/auth";
 
 type AuthScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -35,37 +32,24 @@ interface AuthScreenProps {
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
-  const { sendOTP, sendEmailOTP } = useAuth();
+  const { sendOTP } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
 
-  const [authMode, setAuthMode] = useState<AuthMethod>("phone");
-
   // Phone state
-  const [country, setCountry] = useState<CountryCode>("FR");
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  // Email state
-  const [email, setEmail] = useState("");
+  // EMAIL AUTH DISABLED - Uncomment to re-enable email login
+  // const [authMode, setAuthMode] = useState<AuthMethod>("phone");
+  // const [email, setEmail] = useState("");
 
   // Shared state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const validatePhone = () => {
-    const digits = phoneNumber.replace(/\D/g, "");
-    const config = PHONE_COUNTRIES[country];
+    const cleaned = phoneNumber.replace(/\s/g, "");
 
-    if (!digits) {
-      setError(t("auth.phoneAuth.invalidPhone"));
-      return false;
-    }
-
-    if (digits.length !== config.length) {
-      setError(t("auth.phoneAuth.invalidPhone"));
-      return false;
-    }
-
-    if (config.startsWith && !digits.startsWith(config.startsWith)) {
+    if (!cleaned) {
       setError(t("auth.phoneAuth.invalidPhone"));
       return false;
     }
@@ -73,30 +57,29 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
     return true;
   };
 
-  const validateEmail = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!email || !emailRegex.test(email)) {
-      setError(t("auth.emailAuth.invalidEmail"));
-      return false;
-    }
-
-    if (email.endsWith("@phone.minyannow.app")) {
-      setError(t("auth.emailAuth.invalidEmail"));
-      return false;
-    }
-
-    return true;
-  };
+  // EMAIL AUTH DISABLED - Uncomment to re-enable email login
+  // const validateEmail = () => {
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //
+  //   if (!email || !emailRegex.test(email)) {
+  //     setError(t("auth.emailAuth.invalidEmail"));
+  //     return false;
+  //   }
+  //
+  //   if (email.endsWith("@phone.minyannow.app")) {
+  //     setError(t("auth.emailAuth.invalidEmail"));
+  //     return false;
+  //   }
+  //
+  //   return true;
+  // };
 
   const handleSendPhoneOTP = async () => {
     if (!validatePhone()) return;
 
     setLoading(true);
     try {
-      const digits = phoneNumber.replace(/\D/g, "");
-      const internationalPhone =
-        PHONE_COUNTRIES[country].toInternational(digits);
+      const internationalPhone = phoneNumber.replace(/\s/g, "");
       const result = await sendOTP(internationalPhone);
 
       if (result.success) {
@@ -119,37 +102,38 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleSendEmailOTP = async () => {
-    if (!validateEmail()) return;
+  // EMAIL AUTH DISABLED - Uncomment to re-enable email login
+  // const handleSendEmailOTP = async () => {
+  //   if (!validateEmail()) return;
+  //
+  //   setLoading(true);
+  //   try {
+  //     const result = await sendEmailOTP(email);
+  //
+  //     if (result.success) {
+  //       navigation.navigate("OTPVerification", {
+  //         authMethod: "email",
+  //         identifier: email,
+  //       });
+  //     } else {
+  //       showAlert(
+  //         t("common.error"),
+  //         result.error || t("errors.generic"),
+  //         undefined,
+  //         "error",
+  //       );
+  //     }
+  //   } catch (err) {
+  //     showAlert(t("common.error"), t("errors.generic"), undefined, "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-    setLoading(true);
-    try {
-      const result = await sendEmailOTP(email);
-
-      if (result.success) {
-        navigation.navigate("OTPVerification", {
-          authMethod: "email",
-          identifier: email,
-        });
-      } else {
-        showAlert(
-          t("common.error"),
-          result.error || t("errors.generic"),
-          undefined,
-          "error",
-        );
-      }
-    } catch (err) {
-      showAlert(t("common.error"), t("errors.generic"), undefined, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const switchMode = () => {
-    setError(null);
-    setAuthMode(authMode === "phone" ? "email" : "phone");
-  };
+  // const switchMode = () => {
+  //   setError(null);
+  //   setAuthMode(authMode === "phone" ? "email" : "phone");
+  // };
 
   return (
     <KeyboardAvoidingView
@@ -173,78 +157,37 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
           <Text style={styles.subtitle}>{t("auth.welcome.subtitle")}</Text>
         </View>
 
-        {/* Form — phone first, clean layout */}
+        {/* Form — phone only */}
         <View style={styles.form}>
-          {authMode === "phone" ? (
-            <>
-              <CountrySelector value={country} onChange={setCountry} />
-              <View style={styles.spacer} />
-              <PhoneInput
-                country={country}
-                value={phoneNumber}
-                onChange={(value) => {
-                  setPhoneNumber(value);
-                  setError(null);
-                }}
-                error={error || undefined}
-                label={t("auth.phoneAuth.phoneLabel")}
-              />
-              <Button
-                title={
-                  loading
-                    ? t("auth.phoneAuth.sendingCode")
-                    : t("auth.phoneAuth.continueButton")
-                }
-                onPress={handleSendPhoneOTP}
-                loading={loading}
-                style={styles.button}
-              />
-              {/* Email option: subtle line below main CTA */}
-              <View style={styles.emailOption}>
-                <Text style={styles.emailOptionText}>
-                  {t("auth.switch.connectByEmail")}{" "}
-                  <Text style={styles.emailOptionLink} onPress={switchMode}>
-                    {t("auth.switch.connectByEmailLink")}
-                  </Text>
-                </Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <TouchableOpacity
-                onPress={switchMode}
-                style={styles.backToPhone}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.backToPhoneText}>
-                  ← {t("auth.switch.usePhone")}
-                </Text>
-              </TouchableOpacity>
-              <View style={styles.spacer} />
-              <Input
-                label={t("auth.emailAuth.emailLabel")}
-                placeholder={t("auth.emailAuth.emailPlaceholder")}
-                value={email}
-                onChangeText={(value) => {
-                  setEmail(value);
-                  setError(null);
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                error={error || undefined}
-              />
-              <Button
-                title={
-                  loading
-                    ? t("auth.emailAuth.sendingCode")
-                    : t("auth.emailAuth.continueButton")
-                }
-                onPress={handleSendEmailOTP}
-                loading={loading}
-                style={styles.button}
-              />
-            </>
-          )}
+          <PhoneInput
+            value={phoneNumber}
+            onChange={(value) => {
+              setPhoneNumber(value);
+              setError(null);
+            }}
+            error={error || undefined}
+            label={t("auth.phoneAuth.phoneLabel")}
+            placeholder={t("auth.phoneAuth.phonePlaceholder")}
+          />
+          <Button
+            title={
+              loading
+                ? t("auth.phoneAuth.sendingCode")
+                : t("auth.phoneAuth.continueButton")
+            }
+            onPress={handleSendPhoneOTP}
+            loading={loading}
+            style={styles.button}
+          />
+          {/* EMAIL AUTH DISABLED - Uncomment to re-enable email login option */}
+          {/* <View style={styles.emailOption}>
+            <Text style={styles.emailOptionText}>
+              {t("auth.switch.connectByEmail")}{" "}
+              <Text style={styles.emailOptionLink} onPress={switchMode}>
+                {t("auth.switch.connectByEmailLink")}
+              </Text>
+            </Text>
+          </View> */}
         </View>
 
         {/* Footer */}
@@ -319,36 +262,34 @@ const styles = StyleSheet.create({
   form: {
     marginBottom: 24,
   },
-  spacer: {
-    height: 16,
-  },
   button: {
     marginTop: 8,
   },
-  emailOption: {
-    marginTop: 28,
-    alignItems: "center",
-  },
-  emailOptionText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  emailOptionLink: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  backToPhone: {
-    alignSelf: "flex-start",
-    paddingVertical: 4,
-    paddingRight: 8,
-  },
-  backToPhoneText: {
-    fontSize: 15,
-    color: colors.primary,
-    fontWeight: "600",
-  },
+  // EMAIL AUTH DISABLED - Uncomment to re-enable email login styles
+  // emailOption: {
+  //   marginTop: 28,
+  //   alignItems: "center",
+  // },
+  // emailOptionText: {
+  //   fontSize: 14,
+  //   color: colors.text.secondary,
+  //   textAlign: "center",
+  //   lineHeight: 22,
+  // },
+  // emailOptionLink: {
+  //   color: colors.primary,
+  //   fontWeight: "600",
+  // },
+  // backToPhone: {
+  //   alignSelf: "flex-start",
+  //   paddingVertical: 4,
+  //   paddingRight: 8,
+  // },
+  // backToPhoneText: {
+  //   fontSize: 15,
+  //   color: colors.primary,
+  //   fontWeight: "600",
+  // },
   info: {
     marginTop: "auto",
   },

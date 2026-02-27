@@ -33,12 +33,19 @@ router.post("/:eventId", userGuard, async (req, res) => {
       });
     }
 
-    // Check if event exists with organizer info
+    // Check if event exists with organizer info (including notification preferences)
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: {
         organizer: {
-          select: { id: true, name: true, email: true, pushToken: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            pushToken: true,
+            notificationsEnabled: true,
+            notifyNewRequests: true,
+          },
         },
       },
     });
@@ -102,21 +109,25 @@ router.post("/:eventId", userGuard, async (req, res) => {
       organizerPushToken: event.organizer.pushToken ? "Present" : "Missing",
     });
 
-    // 🔔 Send notification to organizer
-    const participantName = request.user.name || request.user.email;
-    const notification = NotificationTemplates.newRequest(
-      participantName,
-      event.title
-    );
+    // 🔔 Send notification to organizer (only if they have notifications enabled)
+    if (event.organizer.notificationsEnabled && event.organizer.notifyNewRequests) {
+      const participantName = request.user.name || request.user.email;
+      const notification = NotificationTemplates.newRequest(
+        participantName,
+        event.title
+      );
 
-    if (event.organizer.pushToken) {
-      console.log("📱 Sending push notification to organizer...");
-      await sendPushNotification(event.organizer.pushToken, {
-        ...notification,
-        data: { type: "new_request", eventId: event.id, requestId: request.id },
-      });
+      if (event.organizer.pushToken) {
+        console.log("📱 Sending push notification to organizer...");
+        await sendPushNotification(event.organizer.pushToken, {
+          ...notification,
+          data: { type: "new_request", eventId: event.id, requestId: request.id },
+        });
+      } else {
+        console.log("⚠️ No push token for organizer, skipping notification");
+      }
     } else {
-      console.log("⚠️ No push token for organizer, skipping notification");
+      console.log("🔕 Organizer has new request notifications disabled, skipping");
     }
 
     res.status(201).json(request);
@@ -200,7 +211,14 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
       include: {
         event: true,
         user: {
-          select: { id: true, name: true, email: true, pushToken: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            pushToken: true,
+            notificationsEnabled: true,
+            notifyRequestStatus: true,
+          },
         },
       },
     });
@@ -234,14 +252,18 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
       },
     });
 
-    // 🔔 Send notification to participant
-    const notification = NotificationTemplates.requestAccepted(
-      request.event.title
-    );
-    await sendPushNotification(request.user.pushToken, {
-      ...notification,
-      data: { type: "request_accepted", eventId: request.eventId },
-    });
+    // 🔔 Send notification to participant (only if they have notifications enabled)
+    if (request.user.notificationsEnabled && request.user.notifyRequestStatus) {
+      const notification = NotificationTemplates.requestAccepted(
+        request.event.title
+      );
+      await sendPushNotification(request.user.pushToken, {
+        ...notification,
+        data: { type: "request_accepted", eventId: request.eventId },
+      });
+    } else {
+      console.log("🔕 Participant has request status notifications disabled, skipping");
+    }
 
     // Calculate current count (initial participants + accepted requests)
     const newAcceptedCount = acceptedCount + 1;
@@ -252,15 +274,17 @@ router.put("/:requestId/accept", userGuard, async (req, res) => {
     if (currentCount >= request.event.maxParticipants) {
       const organizer = await prisma.user.findUnique({
         where: { id: request.event.organizerId },
-        select: { pushToken: true },
+        select: { pushToken: true, notificationsEnabled: true },
       });
-      const fullNotification = NotificationTemplates.eventFull(
-        request.event.title
-      );
-      await sendPushNotification(organizer?.pushToken, {
-        ...fullNotification,
-        data: { type: "event_full", eventId: request.eventId },
-      });
+      if (organizer?.notificationsEnabled) {
+        const fullNotification = NotificationTemplates.eventFull(
+          request.event.title
+        );
+        await sendPushNotification(organizer.pushToken, {
+          ...fullNotification,
+          data: { type: "event_full", eventId: request.eventId },
+        });
+      }
     }
 
     res.json(updatedRequest);
@@ -281,7 +305,14 @@ router.put("/:requestId/reject", userGuard, async (req, res) => {
       include: {
         event: true,
         user: {
-          select: { id: true, name: true, email: true, pushToken: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            pushToken: true,
+            notificationsEnabled: true,
+            notifyRequestStatus: true,
+          },
         },
       },
     });
@@ -306,14 +337,18 @@ router.put("/:requestId/reject", userGuard, async (req, res) => {
       },
     });
 
-    // 🔔 Send notification to participant
-    const notification = NotificationTemplates.requestRejected(
-      request.event.title
-    );
-    await sendPushNotification(request.user.pushToken, {
-      ...notification,
-      data: { type: "request_rejected", eventId: request.eventId },
-    });
+    // 🔔 Send notification to participant (only if they have notifications enabled)
+    if (request.user.notificationsEnabled && request.user.notifyRequestStatus) {
+      const notification = NotificationTemplates.requestRejected(
+        request.event.title
+      );
+      await sendPushNotification(request.user.pushToken, {
+        ...notification,
+        data: { type: "request_rejected", eventId: request.eventId },
+      });
+    } else {
+      console.log("🔕 Participant has request status notifications disabled, skipping");
+    }
 
     res.json(updatedRequest);
   } catch (error) {

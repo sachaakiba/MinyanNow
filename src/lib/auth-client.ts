@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import { expoClient } from "@better-auth/expo/client";
-import { phoneNumberClient, emailOTPClient } from "better-auth/client/plugins";
+import { phoneNumberClient /* , emailOTPClient */ } from "better-auth/client/plugins"; // EMAIL AUTH DISABLED
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 
@@ -18,7 +18,7 @@ export const authClient = createAuthClient({
       storage: SecureStore,
     }),
     phoneNumberClient(),
-    emailOTPClient(),
+    // emailOTPClient(), // EMAIL AUTH DISABLED
   ],
 });
 
@@ -28,9 +28,9 @@ export const { signOut, useSession } = authClient;
 export const sendOTP = authClient.phoneNumber.sendOtp;
 export const verifyOTP = authClient.phoneNumber.verify;
 
-// Email OTP authentication methods
-export const sendEmailOTP = authClient.emailOtp.sendVerificationOtp;
-export const verifyEmailOTP = authClient.signIn.emailOtp;
+// EMAIL AUTH DISABLED - Uncomment to re-enable email OTP login
+// export const sendEmailOTP = authClient.emailOtp.sendVerificationOtp;
+// export const verifyEmailOTP = authClient.signIn.emailOtp;
 
 // Profile update - utilise $fetch pour l'authentification automatique
 interface ProfileData {

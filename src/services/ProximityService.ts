@@ -1,7 +1,7 @@
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { eventsApi, usersApi, Event, EVENT_TYPE_LABELS } from "../lib/api";
+import { eventsApi, usersApi, requestsApi, Event, EVENT_TYPE_LABELS } from "../lib/api";
 
 const NOTIFIED_EVENTS_KEY = "notified_proximity_events";
 const LOCATION_UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -142,6 +142,8 @@ class ProximityService {
 
   /**
    * Check for nearby events and send notifications
+   * Only notifies about events the user is NOT the organizer of
+   * and has NOT already requested to join.
    */
   private async checkNearbyEvents(
     latitude: number,
@@ -154,28 +156,50 @@ class ProximityService {
       // Update user location on server
       await usersApi.updateLocation(latitude, longitude);
 
-      // Get today's events
+      // Fetch nearby events, user's own events, and user's requests in parallel
+      const [events, myEvents, myRequests] = await Promise.all([
+        eventsApi.getAll({
+          lat: latitude,
+          lng: longitude,
+          radius: this.config.radius / 1000, // Convert to km for API
+        }),
+        eventsApi.getMyEvents().catch(() => [] as Event[]),
+        requestsApi.getMyRequests().catch(() => []),
+      ]);
+
+      console.log(`📅 Found ${events.length} events in API response`);
+
+      // Build sets of event IDs to exclude:
+      // 1. Events organized by the current user
+      const myEventIds = new Set(myEvents.map((e) => e.id));
+      // 2. Events the user has already requested to join (any status)
+      const myRequestedEventIds = new Set(myRequests.map((r) => r.eventId));
+
+      // Filter events: today, upcoming, not own, not already requested
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-
-      const events = await eventsApi.getAll({
-        lat: latitude,
-        lng: longitude,
-        radius: this.config.radius / 1000, // Convert to km for API
-      });
-
-      console.log(`📅 Found ${events.length} events in API response`);
-
-      // Filter events happening today that haven't started yet
       const now = new Date();
+
       const upcomingEvents = events.filter((event) => {
         const eventDate = new Date(event.date);
-        return eventDate >= now && eventDate < tomorrow;
+        // Must be upcoming today
+        if (eventDate < now || eventDate >= tomorrow) return false;
+        // Must NOT be organized by the current user
+        if (myEventIds.has(event.id)) {
+          console.log(`⏭️  Event "${event.title}" is my own event, skipping`);
+          return false;
+        }
+        // Must NOT be already requested
+        if (myRequestedEventIds.has(event.id)) {
+          console.log(`⏭️  Event "${event.title}" already requested, skipping`);
+          return false;
+        }
+        return true;
       });
 
-      console.log(`⏰ Found ${upcomingEvents.length} upcoming events today`);
+      console.log(`⏰ Found ${upcomingEvents.length} eligible upcoming events today`);
 
       // Check proximity and send notifications
       for (const event of upcomingEvents) {
@@ -203,7 +227,7 @@ class ProximityService {
       }
 
       if (upcomingEvents.length === 0) {
-        console.log(`ℹ️  No upcoming events found today within ${this.config.radius}m`);
+        console.log(`ℹ️  No eligible upcoming events found today within ${this.config.radius}m`);
       }
     } catch (error) {
       console.error("❌ Error checking nearby events:", error);
@@ -305,19 +329,10 @@ class ProximityService {
   }
 
   /**
-   * Manually trigger a proximity check (useful for testing)
+   * Manually trigger a proximity check
    */
   async checkNow(): Promise<void> {
     try {
-      // TODO: Remove this hardcoded position after fixing location permissions
-      // For now, using a test position (adjust to match your test event location)
-      const testLatitude = 48.893241797111024;
-      const testLongitude = 2.254294894555421;
-
-      console.log("⚠️  Using hardcoded test position for development");
-      await this.checkNearbyEvents(testLatitude, testLongitude);
-
-      /* Original code - uncomment when permissions are fixed:
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
@@ -325,7 +340,6 @@ class ProximityService {
         location.coords.latitude,
         location.coords.longitude
       );
-      */
     } catch (error) {
       console.error("Error during manual proximity check:", error);
     }

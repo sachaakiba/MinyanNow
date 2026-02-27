@@ -6,6 +6,7 @@ import eventsRouter from "./routes/events";
 import requestsRouter from "./routes/requests";
 import usersRouter from "./routes/users";
 import adminRouter from "./routes/admin";
+import { startEventReminderScheduler } from "./services/eventReminders";
 import "dotenv/config";
 import prisma from "../lib/prisma";
 
@@ -37,6 +38,9 @@ async function startServer() {
       console.log(`📅 Events API: ${apiUrl}/api/events`);
       console.log(`🙋 Requests API: ${apiUrl}/api/requests`);
       console.log(`💚 Health check: ${apiUrl}/health`);
+
+      // Start the event reminder scheduler (1h before reminders)
+      startEventReminderScheduler();
     });
 
     server.on('error', (error: any) => {

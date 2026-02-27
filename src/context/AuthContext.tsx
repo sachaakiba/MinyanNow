@@ -9,8 +9,8 @@ import React, {
 import {
   sendOTP,
   verifyOTP,
-  sendEmailOTP,
-  verifyEmailOTP,
+  // sendEmailOTP, // EMAIL AUTH DISABLED
+  // verifyEmailOTP, // EMAIL AUTH DISABLED
   signOut,
   useSession,
   updateProfile,
@@ -71,13 +71,14 @@ interface AuthContextType {
     phoneNumber: string,
     code: string,
   ) => Promise<{ success: boolean; error?: string }>;
-  sendEmailOTP: (
-    email: string,
-  ) => Promise<{ success: boolean; error?: string }>;
-  verifyEmailOTP: (
-    email: string,
-    code: string,
-  ) => Promise<{ success: boolean; error?: string }>;
+  // EMAIL AUTH DISABLED
+  // sendEmailOTP: (
+  //   email: string,
+  // ) => Promise<{ success: boolean; error?: string }>;
+  // verifyEmailOTP: (
+  //   email: string,
+  //   code: string,
+  // ) => Promise<{ success: boolean; error?: string }>;
   completeProfile: (
     data: ProfileData,
   ) => Promise<{ success: boolean; error?: string }>;
@@ -211,33 +212,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const handleSendEmailOTP = async (email: string) => {
-    try {
-      const result = await sendEmailOTP({ email, type: "sign-in" });
-      if (result.error) {
-        return { success: false, error: result.error.message };
-      }
-      return { success: true };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Erreur lors de l'envoi du code",
-      };
-    }
-  };
+  // EMAIL AUTH DISABLED - Uncomment to re-enable email OTP login
+  // const handleSendEmailOTP = async (email: string) => {
+  //   try {
+  //     const result = await sendEmailOTP({ email, type: "sign-in" });
+  //     if (result.error) {
+  //       return { success: false, error: result.error.message };
+  //     }
+  //     return { success: true };
+  //   } catch (error: any) {
+  //     return {
+  //       success: false,
+  //       error: error.message || "Erreur lors de l'envoi du code",
+  //     };
+  //   }
+  // };
 
-  const handleVerifyEmailOTP = async (email: string, code: string) => {
-    try {
-      const result = await verifyEmailOTP({ email, otp: code });
-      if (result.error) {
-        return { success: false, error: result.error.message };
-      }
-      await refetch();
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message || "Code invalide" };
-    }
-  };
+  // const handleVerifyEmailOTP = async (email: string, code: string) => {
+  //   try {
+  //     const result = await verifyEmailOTP({ email, otp: code });
+  //     if (result.error) {
+  //       return { success: false, error: result.error.message };
+  //     }
+  //     await refetch();
+  //     return { success: true };
+  //   } catch (error: any) {
+  //     return { success: false, error: error.message || "Code invalide" };
+  //   }
+  // };
 
   const handleCompleteProfile = async (data: ProfileData) => {
     try {
@@ -285,8 +287,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         isSuperAdmin,
         sendOTP: handleSendOTP,
         verifyOTP: handleVerifyOTP,
-        sendEmailOTP: handleSendEmailOTP,
-        verifyEmailOTP: handleVerifyEmailOTP,
+        // sendEmailOTP: handleSendEmailOTP, // EMAIL AUTH DISABLED
+        // verifyEmailOTP: handleVerifyEmailOTP, // EMAIL AUTH DISABLED
         completeProfile: handleCompleteProfile,
         signOut: handleSignOut,
         refreshSession,

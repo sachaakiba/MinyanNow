@@ -41,17 +41,18 @@ export default {
       title: "Welcome",
       subtitle: "Find and join minyans near you",
     },
-    tabs: {
-      phone: "Phone",
-      email: "Email",
-    },
-    switch: {
-      or: "or",
-      useEmail: "Sign in with email",
-      usePhone: "Back to phone",
-      connectByEmail: "No phone? Sign in with email.",
-      connectByEmailLink: "Sign in with email",
-    },
+    // EMAIL AUTH DISABLED - Uncomment to re-enable
+    // tabs: {
+    //   phone: "Phone",
+    //   email: "Email",
+    // },
+    // switch: {
+    //   or: "or",
+    //   useEmail: "Sign in with email",
+    //   usePhone: "Back to phone",
+    //   connectByEmail: "No phone? Sign in with email.",
+    //   connectByEmailLink: "Sign in with email",
+    // },
     phoneAuth: {
       title: "Welcome",
       appName: "MinyanNow",
@@ -68,22 +69,23 @@ export default {
       countryLabel: "Country",
       selectCountry: "Select country",
     },
-    emailAuth: {
-      emailLabel: "Email address",
-      emailPlaceholder: "example@email.com",
-      passwordLabel: "Password",
-      passwordPlaceholder: "Minimum 6 characters",
-      invalidEmail: "Invalid email address",
-      invalidPassword: "Password must be at least 6 characters",
-      continueButton: "Continue",
-      sendingCode: "Sending code...",
-      signInButton: "Sign in",
-      signUpButton: "Sign up",
-      noAccount: "Don't have an account?",
-      signUpLink: "Sign up",
-      alreadyHaveAccount: "Already have an account?",
-      signInLink: "Sign in",
-    },
+    // EMAIL AUTH DISABLED - Uncomment to re-enable
+    // emailAuth: {
+    //   emailLabel: "Email address",
+    //   emailPlaceholder: "example@email.com",
+    //   passwordLabel: "Password",
+    //   passwordPlaceholder: "Minimum 6 characters",
+    //   invalidEmail: "Invalid email address",
+    //   invalidPassword: "Password must be at least 6 characters",
+    //   continueButton: "Continue",
+    //   sendingCode: "Sending code...",
+    //   signInButton: "Sign in",
+    //   signUpButton: "Sign up",
+    //   noAccount: "Don't have an account?",
+    //   signUpLink: "Sign up",
+    //   alreadyHaveAccount: "Already have an account?",
+    //   signInLink: "Sign in",
+    // },
     otp: {
       title: "Verification",
       subtitle: "Enter the code sent to",
@@ -170,6 +172,8 @@ export default {
     locationDenied: "Location permission denied",
     loadError: "Error loading",
     retry: "Retry",
+    listEmpty: "No upcoming events",
+    listEmptySubtitle: "There are no events planned yet. Create the first one!",
   },
 
   // Events

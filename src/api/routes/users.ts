@@ -21,12 +21,24 @@ router.post("/push-token", userGuard, async (req, res) => {
       return res.status(400).json({ error: "Push token is required" });
     }
 
+    // IMPORTANT: Clear this push token from ALL other users first.
+    // This prevents the case where user A logs in on a device, then user B
+    // logs in on the same device — both would have the same token,
+    // causing user B to receive user A's notifications.
+    await prisma.user.updateMany({
+      where: {
+        pushToken: pushToken,
+        id: { not: authReq.user.id },
+      },
+      data: { pushToken: null },
+    });
+
     await prisma.user.update({
       where: { id: authReq.user.id },
       data: { pushToken },
     });
 
-    console.log(`Push token updated for user ${authReq.user.id}`);
+    console.log(`Push token updated for user ${authReq.user.id} (cleared from other users)`);
     res.json({ success: true });
   } catch (error) {
     console.error("Error updating push token:", error);
