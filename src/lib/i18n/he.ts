@@ -58,7 +58,7 @@ export default {
       appName: "MinyanNow",
       subtitle: "מצאו והצטרפו למניינים בקרבתכם",
       phoneLabel: "מספר טלפון",
-      phonePlaceholder: "050-123-4567",
+      phonePlaceholder: "+972 50 123 4567",
       continueButton: "המשך",
       termsText: "בהמשך, אתם מסכימים ל",
       termsLink: "תנאי השימוש",
@@ -168,6 +168,8 @@ export default {
     locationDenied: "הרשאת מיקום נדחתה",
     loadError: "שגיאה בטעינה",
     retry: "נסה שוב",
+    listEmpty: "אין אירועים קרובים",
+    listEmptySubtitle: "אין עדיין אירועים מתוכננים. צרו את הראשון!",
   },
 
   // Events

@@ -59,6 +59,8 @@ router.get("/", async (req, res) => {
         gte: dateObj,
         lt: new Date(dateObj.getTime() + 24 * 60 * 60 * 1000),
       };
+    } else {
+      where.date = { gte: new Date() };
     }
 
     const events = await prisma.event.findMany({

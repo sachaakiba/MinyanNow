@@ -76,20 +76,36 @@ export const auth = betterAuth({
           throw new Error("SMS service not configured");
         }
       },
-      // NOTE: No custom verifyOTP — better-auth handles verification internally.
-      // It hashes OTP codes before storing them, so a plaintext DB query won't work.
-      // better-auth's built-in verification correctly compares against hashed values.
-      //
-      // Old custom verifyOTP kept for reference:
-      // verifyOTP: async ({ phoneNumber, code }) => {
-      //   if (TEST_PHONE_NUMBERS.includes(phoneNumber)) {
-      //     return code === TEST_OTP_CODE;
-      //   }
-      //   const verification = await prisma.verification.findFirst({
-      //     where: { identifier: phoneNumber, value: code, expiresAt: { gt: new Date() } },
-      //   });
-      //   return !!verification;
-      // },
+      verifyOTP: async ({ phoneNumber, code }) => {
+        if (TEST_PHONE_NUMBERS.includes(phoneNumber)) {
+          return code === TEST_OTP_CODE;
+        }
+
+        const verification = await prisma.verification.findFirst({
+          where: {
+            identifier: phoneNumber,
+            expiresAt: { gt: new Date() },
+          },
+          orderBy: { createdAt: "desc" },
+        });
+
+        if (!verification) {
+          console.log(`❌ [VERIFY OTP] No verification found for ${phoneNumber}`);
+          return false;
+        }
+
+        // better-auth stores OTP as "code:attemptCount"
+        const [storedCode] = verification.value.split(":");
+        const isValid = storedCode === code;
+
+        if (!isValid) {
+          console.log(
+            `❌ [VERIFY OTP] Mismatch for ${phoneNumber}: stored="${storedCode}" vs input="${code}"`
+          );
+        }
+
+        return isValid;
+      },
 
       // Configuration OTP
       otpLength: 6,

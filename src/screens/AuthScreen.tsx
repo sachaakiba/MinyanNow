@@ -16,12 +16,10 @@ import {
   useAlert,
   LanguageSelector,
 } from "../components";
-import { CountrySelector } from "../components/CountrySelector";
 import { PhoneInput } from "../components/PhoneInput";
 import { RootStackParamList } from "../types/navigation";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors";
-import { CountryCode, PHONE_COUNTRIES } from "../types/auth";
 
 type AuthScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,7 +36,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
   const { alertState, showAlert, hideAlert } = useAlert();
 
   // Phone state
-  const [country, setCountry] = useState<CountryCode>("FR");
   const [phoneNumber, setPhoneNumber] = useState("");
 
   // EMAIL AUTH DISABLED - Uncomment to re-enable email login
@@ -50,20 +47,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
   const [error, setError] = useState<string | null>(null);
 
   const validatePhone = () => {
-    const digits = phoneNumber.replace(/\D/g, "");
-    const config = PHONE_COUNTRIES[country];
+    const cleaned = phoneNumber.replace(/\s/g, "");
 
-    if (!digits) {
-      setError(t("auth.phoneAuth.invalidPhone"));
-      return false;
-    }
-
-    if (digits.length !== config.length) {
-      setError(t("auth.phoneAuth.invalidPhone"));
-      return false;
-    }
-
-    if (config.startsWith && !digits.startsWith(config.startsWith)) {
+    if (!cleaned) {
       setError(t("auth.phoneAuth.invalidPhone"));
       return false;
     }
@@ -93,9 +79,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      const digits = phoneNumber.replace(/\D/g, "");
-      const internationalPhone =
-        PHONE_COUNTRIES[country].toInternational(digits);
+      const internationalPhone = phoneNumber.replace(/\s/g, "");
       const result = await sendOTP(internationalPhone);
 
       if (result.success) {
@@ -175,10 +159,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
 
         {/* Form — phone only */}
         <View style={styles.form}>
-          <CountrySelector value={country} onChange={setCountry} />
-          <View style={styles.spacer} />
           <PhoneInput
-            country={country}
             value={phoneNumber}
             onChange={(value) => {
               setPhoneNumber(value);
@@ -186,6 +167,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
             }}
             error={error || undefined}
             label={t("auth.phoneAuth.phoneLabel")}
+            placeholder={t("auth.phoneAuth.phonePlaceholder")}
           />
           <Button
             title={
@@ -279,9 +261,6 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: 24,
-  },
-  spacer: {
-    height: 16,
   },
   button: {
     marginTop: 8,

@@ -172,6 +172,8 @@ export default {
     locationDenied: "Location permission denied",
     loadError: "Error loading",
     retry: "Retry",
+    listEmpty: "No upcoming events",
+    listEmptySubtitle: "There are no events planned yet. Create the first one!",
   },
 
   // Events

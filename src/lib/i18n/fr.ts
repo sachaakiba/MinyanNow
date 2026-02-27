@@ -58,7 +58,7 @@ export default {
       appName: "MinyanNow",
       subtitle: "Trouvez et rejoignez des minyans près de chez vous",
       phoneLabel: "Numéro de téléphone",
-      phonePlaceholder: "06 12 34 56 78",
+      phonePlaceholder: "+33 6 12 34 56 78",
       continueButton: "Continuer",
       termsText: "En continuant, vous acceptez nos",
       termsLink: "Conditions d'utilisation",
@@ -172,6 +172,8 @@ export default {
     locationDenied: "Permission de localisation refusée",
     loadError: "Erreur lors du chargement",
     retry: "Réessayer",
+    listEmpty: "Aucun événement à venir",
+    listEmptySubtitle: "Il n'y a pas encore d'événements prévus. Créez le premier !",
   },
 
   // Events
