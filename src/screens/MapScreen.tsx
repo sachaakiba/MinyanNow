@@ -64,7 +64,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   const [myRequests, setMyRequests] = useState<EventRequest[]>([]);
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
   const [requestLoading, setRequestLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("map");
@@ -121,7 +120,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
   const loadLocationAndEvents = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -156,7 +154,18 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
       setMyRequests(fetchedRequests);
     } catch (err) {
       console.error("Error loading data:", err);
-      setError(t("map.loadError"));
+      setViewMode("list");
+      try {
+        const [fallbackEvents, fallbackRequests] = await Promise.all([
+          eventsApi.getAll(),
+          requestsApi.getMyRequests(),
+        ]);
+        setEvents(fallbackEvents);
+        setMyRequests(fallbackRequests);
+      } catch {
+        setEvents([]);
+        setMyRequests([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -256,20 +265,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>{t("map.loading")}</Text>
-      </View>
-    );
-  }
-
-  if (error && !events.length) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={loadLocationAndEvents}
-        >
-          <Text style={styles.retryButtonText}>{t("map.retry")}</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -451,21 +446,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: colors.text.secondary,
-  },
-  errorText: {
-    fontSize: 16,
-    color: colors.error,
-    marginBottom: 16,
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: colors.text.inverse,
-    fontWeight: "600",
   },
   header: {
     position: "absolute",
