@@ -434,6 +434,9 @@ export default {
     termsOfService: "תנאי שימוש",
     privacyPolicy: "מדיניות פרטיות",
     signOut: "התנתקות",
+    dangerZone: "אזור סכנה",
+    deleteAccount: "מחק את החשבון שלי",
+    deleteAccountSubtitle: "מחק לצמיתות את החשבון והנתונים שלי",
     version: "MinyanNow v{{version}}",
   },
 
@@ -601,6 +604,18 @@ export default {
     signOut: {
       title: "התנתקות",
       message: "האם אתם בטוחים שברצונכם להתנתק?",
+    },
+    deleteAccount: {
+      title: "מחק את החשבון שלי",
+      message: "האם אתם בטוחים שברצונכם למחוק את החשבון? פעולה זו בלתי הפיכה ותמחק את כל הנתונים שלכם.",
+      confirmTitle: "אישור סופי",
+      confirmMessage: "כדי לאשר את המחיקה, הקלידו מחיקה למטה:",
+      confirmPlaceholder: "הקלידו מחיקה",
+      confirmWord: "מחיקה",
+      wrongConfirmation: "מילת האישור שגויה",
+      deleting: "מוחק...",
+      success: "החשבון שלכם נמחק",
+      error: "לא ניתן למחוק את החשבון",
     },
   },
 

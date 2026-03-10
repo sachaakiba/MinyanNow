@@ -441,6 +441,9 @@ export default {
     termsOfService: "Conditions d'utilisation",
     privacyPolicy: "Politique de confidentialité",
     signOut: "Déconnexion",
+    dangerZone: "Zone de danger",
+    deleteAccount: "Supprimer mon compte",
+    deleteAccountSubtitle: "Supprimer définitivement mon compte et mes données",
     version: "MinyanNow v{{version}}",
   },
 
@@ -613,6 +616,18 @@ export default {
     signOut: {
       title: "Déconnexion",
       message: "Êtes-vous sûr de vouloir vous déconnecter ?",
+    },
+    deleteAccount: {
+      title: "Supprimer mon compte",
+      message: "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et entraînera la suppression de toutes vos données.",
+      confirmTitle: "Confirmation finale",
+      confirmMessage: "Pour confirmer la suppression, tapez SUPPRIMER ci-dessous :",
+      confirmPlaceholder: "Tapez SUPPRIMER",
+      confirmWord: "SUPPRIMER",
+      wrongConfirmation: "Le mot de confirmation est incorrect",
+      deleting: "Suppression en cours...",
+      success: "Votre compte a été supprimé",
+      error: "Impossible de supprimer le compte",
     },
   },
 

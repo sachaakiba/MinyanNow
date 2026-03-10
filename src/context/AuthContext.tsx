@@ -83,6 +83,7 @@ interface AuthContextType {
     data: ProfileData,
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
+  clearSession: () => void;
   refreshSession: () => void;
   refreshProfile: () => Promise<void>;
 }
@@ -263,6 +264,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     await signOut();
   };
 
+  // Clear session locally without calling better-auth
+  // Used after account deletion when the session no longer exists on the server
+  const handleClearSession = () => {
+    setUserProfile(null);
+    refetch();
+  };
+
   const refreshSession = () => {
     refetch();
     fetchUserProfile(false);
@@ -291,6 +299,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         // verifyEmailOTP: handleVerifyEmailOTP, // EMAIL AUTH DISABLED
         completeProfile: handleCompleteProfile,
         signOut: handleSignOut,
+        clearSession: handleClearSession,
         refreshSession,
         refreshProfile,
       }}

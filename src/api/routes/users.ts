@@ -481,6 +481,67 @@ router.get("/:userId/id-document", userGuard, async (req, res) => {
   }
 });
 
+// Delete user account and all associated data
+router.delete("/me", userGuard, async (req, res) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const userId = authReq.user.id;
+
+    console.log(`🗑️ Account deletion requested for user ${userId}`);
+
+    // Get user's Cloudinary document IDs before deletion
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        idDocumentId: true,
+        ketoubaDocumentId: true,
+        selfieDocumentId: true,
+      },
+    });
+
+    // Delete Cloudinary documents if they exist
+    const cloudinaryDeletions: Promise<void>[] = [];
+    
+    if (user?.idDocumentId) {
+      cloudinaryDeletions.push(
+        deleteIdDocument(user.idDocumentId).catch((err) => {
+          console.error("Error deleting ID document from Cloudinary:", err);
+        })
+      );
+    }
+    
+    if (user?.ketoubaDocumentId) {
+      cloudinaryDeletions.push(
+        deleteIdDocument(user.ketoubaDocumentId).catch((err) => {
+          console.error("Error deleting Ketouba document from Cloudinary:", err);
+        })
+      );
+    }
+    
+    if (user?.selfieDocumentId) {
+      cloudinaryDeletions.push(
+        deleteIdDocument(user.selfieDocumentId).catch((err) => {
+          console.error("Error deleting Selfie document from Cloudinary:", err);
+        })
+      );
+    }
+
+    // Wait for all Cloudinary deletions (non-blocking errors)
+    await Promise.all(cloudinaryDeletions);
+
+    // Delete user from database (cascades to sessions, accounts, events, event requests)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    console.log(`✅ Account deleted successfully for user ${userId}`);
+    res.json({ success: true, message: "Account deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+});
+
 // Get all documents for a specific user (ID, Ketouba, Selfie)
 router.get("/:userId/documents", userGuard, async (req, res) => {
   try {

@@ -441,6 +441,9 @@ export default {
     termsOfService: "Terms of Service",
     privacyPolicy: "Privacy Policy",
     signOut: "Sign out",
+    dangerZone: "Danger zone",
+    deleteAccount: "Delete my account",
+    deleteAccountSubtitle: "Permanently delete my account and data",
     version: "MinyanNow v{{version}}",
   },
 
@@ -613,6 +616,18 @@ export default {
     signOut: {
       title: "Sign out",
       message: "Are you sure you want to sign out?",
+    },
+    deleteAccount: {
+      title: "Delete my account",
+      message: "Are you sure you want to delete your account? This action cannot be undone and will delete all your data.",
+      confirmTitle: "Final confirmation",
+      confirmMessage: "To confirm deletion, type DELETE below:",
+      confirmPlaceholder: "Type DELETE",
+      confirmWord: "DELETE",
+      wrongConfirmation: "The confirmation word is incorrect",
+      deleting: "Deleting...",
+      success: "Your account has been deleted",
+      error: "Unable to delete account",
     },
   },
 

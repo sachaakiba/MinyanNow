@@ -358,6 +358,12 @@ export const usersApi = {
       body: JSON.stringify(data),
     });
   },
+
+  deleteAccount: async (): Promise<{ success: boolean; message: string }> => {
+    return apiFetch<{ success: boolean; message: string }>("/api/users/me", {
+      method: "DELETE",
+    });
+  },
 };
 
 // Event type labels

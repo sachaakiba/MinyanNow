@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Modal,
   TouchableWithoutFeedback,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
@@ -15,6 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { AlertModal, useAlert } from "../components";
 import { colors } from "../lib/colors";
 import { LANGUAGES, LanguageCode, changeLanguage } from "../lib/i18n";
+import { usersApi } from "../lib/api";
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -63,12 +66,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   navigation,
 }) => {
   const { t, i18n } = useTranslation();
-  const { signOut } = useAuth();
+  const { signOut, clearSession } = useAuth();
   const { alertState, showAlert, hideAlert } = useAlert();
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const currentLanguage = i18n.language as LanguageCode;
   const currentLang = LANGUAGES[currentLanguage] || LANGUAGES.fr;
+  const confirmWord = t("alerts.deleteAccount.confirmWord");
 
   const handleSignOut = () => {
     showAlert(
@@ -93,6 +100,56 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       await changeLanguage(language);
     }
     setLanguageModalVisible(false);
+  };
+
+  const handleDeleteAccount = () => {
+    showAlert(
+      t("alerts.deleteAccount.title"),
+      t("alerts.deleteAccount.message"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.confirm"),
+          style: "destructive",
+          onPress: () => {
+            setDeleteModalVisible(true);
+          },
+        },
+      ],
+      "confirm"
+    );
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirmText.toUpperCase() !== confirmWord.toUpperCase()) {
+      showAlert(
+        t("common.error"),
+        t("alerts.deleteAccount.wrongConfirmation"),
+        undefined,
+        "error"
+      );
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await usersApi.deleteAccount();
+      setDeleteModalVisible(false);
+      setDeleteConfirmText("");
+      // Use clearSession instead of signOut because the session 
+      // was already deleted on the server with cascade delete
+      clearSession();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      showAlert(
+        t("common.error"),
+        t("alerts.deleteAccount.error"),
+        undefined,
+        "error"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -194,11 +251,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {/* Danger Zone */}
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("settings.dangerZone")}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon="🚪"
               title={t("settings.signOut")}
               onPress={handleSignOut}
+              showArrow={false}
+              danger
+            />
+            <SettingItem
+              icon="🗑️"
+              title={t("settings.deleteAccount")}
+              subtitle={t("settings.deleteAccountSubtitle")}
+              onPress={handleDeleteAccount}
               showArrow={false}
               danger
             />
@@ -265,6 +331,90 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     {t("common.cancel")}
                   </Text>
                 </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Delete Account Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!isDeleting) {
+            setDeleteModalVisible(false);
+            setDeleteConfirmText("");
+          }
+        }}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            if (!isDeleting) {
+              setDeleteModalVisible(false);
+              setDeleteConfirmText("");
+            }
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
+                <View style={styles.deleteIconContainer}>
+                  <Text style={styles.deleteIcon}>⚠️</Text>
+                </View>
+                <Text style={styles.modalTitle}>
+                  {t("alerts.deleteAccount.confirmTitle")}
+                </Text>
+                <Text style={styles.deleteModalMessage}>
+                  {t("alerts.deleteAccount.confirmMessage")}
+                </Text>
+
+                <TextInput
+                  style={styles.deleteInput}
+                  placeholder={t("alerts.deleteAccount.confirmPlaceholder")}
+                  placeholderTextColor={colors.text.tertiary}
+                  value={deleteConfirmText}
+                  onChangeText={setDeleteConfirmText}
+                  autoCapitalize="characters"
+                  editable={!isDeleting}
+                />
+
+                <View style={styles.deleteModalButtons}>
+                  <TouchableOpacity
+                    style={styles.deleteModalCancelButton}
+                    onPress={() => {
+                      setDeleteModalVisible(false);
+                      setDeleteConfirmText("");
+                    }}
+                    disabled={isDeleting}
+                  >
+                    <Text style={styles.deleteModalCancelText}>
+                      {t("common.cancel")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.deleteModalConfirmButton,
+                      deleteConfirmText.toUpperCase() !== confirmWord.toUpperCase() &&
+                        styles.deleteModalConfirmButtonDisabled,
+                    ]}
+                    onPress={handleConfirmDelete}
+                    disabled={
+                      isDeleting ||
+                      deleteConfirmText.toUpperCase() !== confirmWord.toUpperCase()
+                    }
+                  >
+                    {isDeleting ? (
+                      <ActivityIndicator color={colors.background.primary} size="small" />
+                    ) : (
+                      <Text style={styles.deleteModalConfirmText}>
+                        {t("common.delete")}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -472,5 +622,61 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.secondary,
     fontWeight: "500",
+  },
+  deleteIconContainer: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  deleteIcon: {
+    fontSize: 48,
+  },
+  deleteModalMessage: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  deleteInput: {
+    backgroundColor: colors.background.secondary,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: colors.text.primary,
+    textAlign: "center",
+    borderWidth: 1,
+    borderColor: colors.border.medium,
+    marginBottom: 20,
+  },
+  deleteModalButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  deleteModalCancelButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: colors.background.secondary,
+    alignItems: "center",
+  },
+  deleteModalCancelText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text.secondary,
+  },
+  deleteModalConfirmButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: colors.error,
+    alignItems: "center",
+  },
+  deleteModalConfirmButtonDisabled: {
+    backgroundColor: colors.border.medium,
+  },
+  deleteModalConfirmText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.background.primary,
   },
 });
